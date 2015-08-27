@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <iterator>
 #include "satsys.hpp"
+#include <type_traits>
 
 /*
  * \file
@@ -163,35 +164,30 @@ public:
   {};
   
   /// Default copy constructor.
-  /// \warning Dont know whay this is necesary !
-#ifdef __clang__
-  /// The noexcept does not work with clang 
-  ObservationType(const ObservationType&) = default;
-#else
-  ObservationType(const ObservationType&) noexcept = default;
-#endif
+  /// \todo The following decleration :
+  ///       ObservationType(const ObservationType&) noexcept = default;
+  ///       does not work with gcc 4.8.3. This probably means that the
+  ///       vector<T> copy constructor is not noexcept. To fix this, use:
+  ObservationType(const ObservationType&)
+    noexcept( std::is_nothrow_copy_constructible<COVec>::value ) = default;
   
   /// Default destructor.
   ~ObservationType() noexcept = default;
   
   /// Default move constructor.
-  /// \warning Dont know whay this is necesary !
-#ifdef __clang__
-  /// The noexcept does not work with clang 
-  ObservationType(ObservationType&&) = default;
-#else
   ObservationType(ObservationType&&) noexcept = default;
-#endif
   
   /// Default assignment operator.
-#ifdef __clang__
-  ObservationType& operator=(const ObservationType&) = default;
-#else
-  ObservationType& operator=(const ObservationType&) noexcept = default;
-#endif
+  /// \note See ObservationType(const ObservationType&) for the reason
+  ///       of the noexcept expression.
+  ObservationType& operator=(const ObservationType&) 
+    noexcept( std::is_nothrow_copy_assignable<COVec>::value ) = default;
   
   /// Default move assignment operator.
-  ObservationType& operator=(ObservationType&&) noexcept = default;
+  /// \note See ObservationType(const ObservationType&) for the reason
+  ///       of the noexcept expression.
+  ObservationType& operator=(ObservationType&&)
+    noexcept( std::is_nothrow_move_assignable<COVec>::value ) = default;
   
   /// \brief Add an observation type. If the type already exists, then 
   ///        just alter the coefficient (to be previous + this one).
