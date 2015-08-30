@@ -66,7 +66,7 @@ static_assert(_RADOME_OFFSET_ < _MAX_ANTENNA_SIZE_,
 static_assert(_MAX_ANTENNA_SIZE_BYTES_ >= _MAX_ANTENNA_SIZE_,
               "Antenna size in bytes < Antenna size ?!?");
 
-/** \details  This class holds a GNSS Antenna + Radome.
+/** \details  This class holds a GNSS Antenna + Radome type.
  *            For the antenna, we need _ANTENNA_TYPE_SIZE_ columns maximum.
  *            First three characters are manufacturer code (except satellites).
  *            Allowed in manufacturer code: '-' and 'A-Z' and '0-9'.
@@ -123,9 +123,15 @@ public:
   Antenna& operator=(Antenna&&) noexcept = default;
 
   /// Equality operator (checks both antenna type and radome).
-  bool operator==(const Antenna& rhs) noexcept
+  bool operator==(const Antenna& rhs) const noexcept
   {
     return ( !std::strncmp(name_,rhs.name_,_MAX_ANTENNA_SIZE_BYTES_) );
+  }
+  
+  /// Inequality operator (checks both antenna type and radome).
+  bool operator!=(const Antenna& rhs) const noexcept
+  {
+    return ( !(*this == rhs) );
   }
 
   /// Destructor.

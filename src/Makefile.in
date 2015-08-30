@@ -284,7 +284,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LIBRARIES = libngpt.a
-libngpt_a_CXXFLAGS = -std=c++11 -g -Wall -Wextra -Werror -pedantic -W -Wshadow -Winline -Wdisabled-optimization
+libngpt_a_CXXFLAGS = -std=c++11 -g -Wall -Wextra -Werror -pedantic -W -Wshadow -Winline -Wdisabled-optimization -DDEBUG
 dist_include_HEADERS = receiver.hpp antenna.hpp satsys.hpp antex.hpp
 dist_libngpt_a_SOURCES = receiver.cpp antenna.cpp satsys.cpp antex.cpp
 all: all-am

@@ -1,7 +1,7 @@
 lib_LIBRARIES = libngpt.a
 
 ## Only use the following flags for debuging purposes
-libngpt_a_CXXFLAGS = -std=c++11 -g -Wall -Wextra -Werror -pedantic -W -Wshadow -Winline -Wdisabled-optimization
+libngpt_a_CXXFLAGS = -std=c++11 -g -Wall -Wextra -Werror -pedantic -W -Wshadow -Winline -Wdisabled-optimization -DDEBUG
 
 dist_include_HEADERS = receiver.hpp antenna.hpp satsys.hpp antex.hpp
 

@@ -119,33 +119,18 @@ public:
   
   /// Assignment not allowed !
   Antex& operator=(const Antex&) = delete;
-  /*
-  /// Move allowed.
-  Antex(Antex&& a) noexcept 
-  : _filename { std::move( a._filename ) },
-    _istream  { std::move( a._istream )  },
-    _satsys   { std::move( a._satsys )   },
-    _version  { std::move( a._version )  },
-    _type     { std::move( a._type )     },
-    _refant   { std::move( a._refant )   }
-  { };
+  
+  /// Move Constructor.
+  Antex(Antex&& a) noexcept = default;
 
-  /// Move assignment allowed.
-  Antex& operator=(Antex&& a) noexcept
-  {
-    if (this != &a ) {
-      _filename = std::move( a._filename );
-      _istream  = std::move( a._istream );
-      _satsys   = std::move( a._satsys );
-      _version  = std::move( a._version );
-      _type     = std::move( a._type );
-      _refant   = std::move( a._refant );
-    }
-    return *this;
-  }*/
+  /// Move assignment operator.
+  Antex& operator=(Antex&& a) noexcept = default;
   
   /// Read the instance header, and assign (most of) the fields.
   void read_header();
+
+  /// Find a specific antenna in the instance.
+  int find_antenna(const Antenna&);
 
 private:
   std::string            _filename; ///< The name of the antex file.
