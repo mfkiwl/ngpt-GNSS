@@ -27,16 +27,13 @@
  */
 ngpt::Antenna::Antenna(const char* c) noexcept
 {
+  std::memset(name_, ' ', _MAX_ANTENNA_SIZE_);
+
   // copy input string
   size_t sz = std::strlen(c);
   sz > ngpt::_MAX_ANTENNA_SIZE_
-  ? std::memcpy(name_,c,ngpt::_MAX_ANTENNA_SIZE_BYTES_)
+  ? std::memcpy(name_,c,_MAX_ANTENNA_SIZE_BYTES_)
   : std::memcpy(name_,c,sz*sizeof(char)) ;
-
-  // pad with whitespaces if needed
-  if (sz < ngpt::_MAX_ANTENNA_SIZE_)
-    while (sz < ngpt::_MAX_ANTENNA_SIZE_)
-      name_[sz++] = ' ';
 }
 
 /** \details  Construct an antenna instance from a given std::string
@@ -61,16 +58,14 @@ ngpt::Antenna::Antenna(const char* c) noexcept
  */
 ngpt::Antenna::Antenna(const std::string& s) noexcept
 {
+  std::memset(name_, ' ', _MAX_ANTENNA_SIZE_);
+
   // copy the input string
   size_t sz = s.size ();
-  if (sz > ngpt::_MAX_ANTENNA_SIZE_)
-  {
-    std::copy(s.begin(),s.begin()+ngpt::_MAX_ANTENNA_SIZE_,name_);
-  }
-  else {
+  if (sz > _MAX_ANTENNA_SIZE_) {
+    std::copy(s.begin(),s.begin()+_MAX_ANTENNA_SIZE_,name_);
+  } else {
     std::copy (s.begin(),s.end(),name_);
-    while (sz < ngpt::_MAX_ANTENNA_SIZE_)
-      name_[sz++] = ' ';
   }
 }
 
@@ -88,20 +83,13 @@ ngpt::Antenna::Antenna(const std::string& s) noexcept
 void ngpt::Antenna::set_radome(const char *c) noexcept
 {
   std::size_t sz = std::strlen(c);
+  if (sz < _ANTENNA_RADOME_SIZE_) {
+    std::memset(name_+_RADOME_OFFSET_, ' ', _ANTENNA_RADOME_SIZE_);
+  }
 
-  sz > ngpt::_ANTENNA_RADOME_SIZE_
+  sz > _ANTENNA_RADOME_SIZE_
   ? std::memcpy(name_+_RADOME_OFFSET_,c,_ANTENNA_RADOME_SIZE_*sizeof(char))
   : std::memcpy(name_+_RADOME_OFFSET_,c,sz*sizeof(char)) ;
-
-  // pad with whitespaces if needed
-  if (sz < ngpt::_ANTENNA_RADOME_SIZE_)
-  {
-    while (sz < ngpt::_ANTENNA_RADOME_SIZE_)
-    {
-      name_[sz+ngpt::_RADOME_OFFSET_] = ' ';
-      sz++;
-    }
-  }
 
   // all one
   return;
@@ -118,19 +106,16 @@ void ngpt::Antenna::set_radome(const std::string& s) noexcept
 {
   // copy the input string
   std::size_t sz = s.size();
-
-  if (sz > ngpt::_ANTENNA_RADOME_SIZE_)
-  {
-    std::copy(s.begin(),s.begin()+ngpt::_ANTENNA_RADOME_SIZE_,
-    name_+ngpt::_RADOME_OFFSET_);
+  
+  if (sz < _ANTENNA_RADOME_SIZE_) {
+    std::memset(name_+_RADOME_OFFSET_, ' ', _ANTENNA_RADOME_SIZE_);
   }
-  else {
-    std::copy(s.begin(),s.end(),name_+ngpt::_RADOME_OFFSET_);
-    while (sz < ngpt::_ANTENNA_RADOME_SIZE_)
-    {
-      name_[sz+ngpt::_RADOME_OFFSET_] = ' ';
-      sz++;
-    }
+
+  if (sz > ngpt::_ANTENNA_RADOME_SIZE_) {
+    std::copy(s.begin(),s.begin()+_ANTENNA_RADOME_SIZE_,
+    name_+_RADOME_OFFSET_);
+  } else {
+    std::copy(s.begin(),s.end(),name_+_RADOME_OFFSET_);
   }
 
   // all done
@@ -156,14 +141,13 @@ void ngpt::Antenna::set_antenna(const char *c) noexcept
 {
   // copy input string
   size_t sz = std::strlen(c);
-  sz > ngpt::_MAX_ANTENNA_SIZE_
-  ? std::memcpy(name_,c,ngpt::_MAX_ANTENNA_SIZE_BYTES_)
-  : std::memcpy(name_,c,sz*sizeof(char)) ;
   
-  // pad with whitespaces if needed
-  if (sz < ngpt::_MAX_ANTENNA_SIZE_)
-    while (sz < ngpt::_MAX_ANTENNA_SIZE_)
-      name_[sz++] = ' ';
+  if (sz > ngpt::_MAX_ANTENNA_SIZE_) {
+    std::memcpy(name_,c,_MAX_ANTENNA_SIZE_BYTES_);
+  } else {
+    std::memset(name_, ' ', _MAX_ANTENNA_SIZE_);
+    std::memcpy(name_,c,sz*sizeof(char)) ;
+  }
     
   return;
 }

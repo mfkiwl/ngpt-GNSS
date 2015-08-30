@@ -21,16 +21,14 @@
  */
 ngpt::Receiver::Receiver (const char* c) noexcept
 {
+  std::memset(name_, ' ', _RECEIVER_MAX_SIZE_);
+  
   // copy input string
   std::size_t sz = std::strlen (c);
+  
   sz > ngpt::_RECEIVER_MAX_SIZE_
   ? std::memcpy (name_,c,ngpt::_RECEIVER_MAX_SIZE_BYTES_)
   : std::memcpy (name_,c,sz*sizeof(char)) ;
-
-  // pad with whitespaces if needed
-  if (sz < ngpt::_RECEIVER_MAX_SIZE_)
-    while (sz < ngpt::_RECEIVER_MAX_SIZE_)
-      name_[sz++] = ' ';
 }
 
 /** \details  Construct a receiver instance from a given a string
@@ -51,13 +49,10 @@ ngpt::Receiver::Receiver (const std::string& s) noexcept
 {
   // copy the input string
   std::size_t sz = s.size();
-  if (sz > ngpt::_RECEIVER_MAX_SIZE_)
-  {
+  if (sz > ngpt::_RECEIVER_MAX_SIZE_) {
     std::copy(s.begin(),s.begin()+ngpt::_RECEIVER_MAX_SIZE_,name_);
-  }
-  else {
+  } else {
+    std::memset(name_, ' ', _RECEIVER_MAX_SIZE_);
     std::copy(s.begin(),s.end(),name_);
-    while (sz < ngpt::_RECEIVER_MAX_SIZE_)
-      name_[sz++] = ' ';
   }
 }
