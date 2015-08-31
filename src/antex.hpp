@@ -131,7 +131,7 @@ public:
   void read_header();
 
   /// Find a specific antenna in the instance.
-  int find_antenna(const Antenna&);
+  int find_antenna(const Antenna&, consider_serial_nr = false);
 
 private:
   std::string            _filename; ///< The name of the antex file.

@@ -89,6 +89,131 @@ private:
 
 public:
 
+  /// Empty constructor; use PcvGrid::__grid_reset__(T z1, T z2, T dz, T da = 0)
+  /// later to re-initialize.
+  explicit PcvGrid() noexcept
+  :dazi_{ 0 }, zen1_{ 0 }, zen2_{ 0 }, dzen_{ 0 }, pcvs_{ nullptr },
+  cols_{ 0 }, rows_{ 0 }
+  {};
+
+  /// Constructor.
+  explicit PcvGrid(T z1, T z2, T dz, T da = 0) noexcept
+  :dazi_{ da }, zen1_{ z1 }, zen2_{ z2 }, dzen_{ dz }, pcvs_{ nullptr },
+  cols_{ static_cast<std::size_t>((z2-z1)/dz)+1 },
+  rows_{ da?
+    static_cast<std::size_t>((PCV_AZIMOUT_STOP-PCV_AZIMOUT_START)/da)+1:
+    1 }
+  {
+    assert( zen2_ >= zen1_ && dzen_ > .0e0 );
+    try {
+      pcvs_ = new S [rows_ * cols_];
+    } catch (std::bad_alloc&) {
+      pcvs_ = nullptr;
+    }
+    assert( pcvs_ );
+  }
+
+  /// Re-initialize.
+  void __grid_reset__(T z1, T z2, T dz, T da = 0) constexpr
+  {
+    if (pcvs_) delete [] pcvs;
+    dazi_ = da;
+    zen1_ = z1;
+    zen2_ = z2;
+    dzen_ = dz; 
+    cols_ = static_cast<std::size_t>((z2-z1)/dz)+1; 
+    rows_ = da?static_cast<std::size_t>((PCV_AZIMOUT_STOP-PCV_AZIMOUT_START)/da)+1:1;
+    try {
+      pcvs_ = new S [rows_ * cols_];
+    } catch (std::bad_alloc&) {
+      pcvs_ = nullptr;
+    }
+    assert( pcvs_ );
+  }
+
+  /// Destructor.
+  ~PcvGrid() noexcept
+  {
+    if (pcvs_)
+      delete [] pcvs;
+  }
+
+  /// Copy constructor.
+  PcvGrid(const PcvGrid& rhs) noexcept
+  :dazi_{ rhs.dazi_ }, 
+  zen1_{ rhs.zen1_ }, 
+  zen2_{ rhs.zen2_ }, 
+  dzen_{ rhs.dzen_ }, 
+  pcvs_{ nullptr },
+  cols_{ rhs.cols_ },
+  rows_{ rhs.rows_ }
+  {
+    if (rhs.pcvs_) {
+      try {
+        pcvs_ = new S [rows_ * cols_];
+        std::copy(rhs.pcvs_, rhs.pcvs_+(rows_*cols_), pcvs_);
+      } catch (std::bad_alloc&) {
+        pcvs_ = nullptr;
+      }
+      assert( pcvs_ );
+    }
+  }
+
+  /// Move constructor.
+  PcvGrid(PcvGrid&& rhs) noexcept
+  :dazi_{ std::move(rhs.dazi_) }, 
+  zen1_{ std::move(rhs.zen1_) }, 
+  zen2_{ std::move(rhs.zen2_) }, 
+  dzen_{ std::move(rhs.dzen_) }, 
+  pcvs_{ rhs.pcvs_ },
+  cols_{ std::move(rhs.cols_) },
+  rows_{ std::move(rhs.rows_) }
+  {
+    rhs.pcvs_ = nullptr;
+  }
+
+  /// Copy assignment operator.
+  PcvGrid& operator=(const PcvGrid& rhs) noexcept
+  {
+    if (this != &rhs) {
+      if (rhs.cols_*rhs.rows_ != cols_*rows_) {
+        if (pcvs_) {
+          delete [] pcvs_;
+        }
+        try {
+          pcvs_ = new S [rhs.cols_*rhs.rows_];
+        } catch (std::bad_alloc&) {
+          pcvs_ = nullptr;
+        }
+      }
+      dazi_ = rhs.dazi_;
+      zen1_ = rhs.zen1_;
+      zen2_ = rhs.zen2_;
+      dzen_ = rhs.dzen_; 
+      cols_ = rhs.cols_;
+      rows_ = rhs.rows_;
+      assert( pcvs_ );
+      std::copy(rhs.pcvs_, rhs.pcvs_+(rows_*cols_), pcvs_);
+    }
+    return *this;
+  }
+  
+  /// Move assignment operator.
+  PcvGrid& operator=(PcvGrid&& rhs) noexcept
+  {
+    if (this != &rhs) {
+      dazi_ = std::move(rhs.dazi_);
+      zen1_ = std::move(rhs.zen1_);
+      zen2_ = std::move(rhs.zen2_);
+      dzen_ = std::move(rhs.dzen_);
+      pcvs_ = rhs.pcvs_;
+      cols_ = std::move(rhs.cols_);
+      rows_ = std::move(rhs.rows_);
+      rhs.pcvs_ = nullptr;
+    }
+    return *this;
+  }
+  
   /// Given a point in a grid, return the neighboring cells. If the grid has
   /// no azimouth-dependent pcv values (i.e. dazi_ = 0), then only the 'zen'
   /// input argument is used; else, both 'zen' and 'azi' are used to find
@@ -250,107 +375,18 @@ public:
 
     return pcvs_[row * cols_ + col];
   }
-  
-  /// Constructor.
-  explicit PcvGrid(T z1, T z2, T dz, T da = 0) noexcept
-  :dazi_{ da }, zen1_{ z1 }, zen2_{ z2 }, dzen_{ dz }, pcvs_{ nullptr },
-  cols_{ static_cast<std::size_t>((z2-z1)/dz)+1 },
-  rows_{ da?
-    static_cast<std::size_t>((PCV_AZIMOUT_STOP-PCV_AZIMOUT_START)/da)+1:
-    1 }
-  {
-    assert( zen2_ >= zen1_ && dzen_ > .0e0 );
-    try {
-      pcvs_ = new S [rows_ * cols_];
-    } catch (std::bad_alloc&) {
-      pcvs_ = nullptr;
-    }
-    assert( pcvs_ );
-  }
-
-  /// Destructor.
-  ~PcvGrid() noexcept
-  {
-    if (pcvs_)
-      delete [] pcvs;
-  }
-
-  /// Copy constructor.
-  PcvGrid(const PcvGrid& rhs) noexcept
-  :dazi_{ rhs.dazi_ }, 
-  zen1_{ rhs.zen1_ }, 
-  zen2_{ rhs.zen2_ }, 
-  dzen_{ rhs.dzen_ }, 
-  pcvs_{ nullptr },
-  cols_{ rhs.cols_ },
-  rows_{ rhs.rows_ }
-  {
-    if (rhs.pcvs_) {
-      try {
-        pcvs_ = new S [rows_ * cols_];
-        std::copy(rhs.pcvs_, rhs.pcvs_+(rows_*cols_), pcvs_);
-      } catch (std::bad_alloc&) {
-        pcvs_ = nullptr;
-      }
-      assert( pcvs_ );
-    }
-  }
-
-  /// Move constructor.
-  PcvGrid(PcvGrid&& rhs) noexcept
-  :dazi_{ std::move(rhs.dazi_) }, 
-  zen1_{ std::move(rhs.zen1_) }, 
-  zen2_{ std::move(rhs.zen2_) }, 
-  dzen_{ std::move(rhs.dzen_) }, 
-  pcvs_{ rhs.pcvs_ },
-  cols_{ std::move(rhs.cols_) },
-  rows_{ std::move(rhs.rows_) }
-  {
-    rhs.pcvs_ = nullptr;
-  }
-
-  /// Copy assignment operator.
-  PcvGrid& operator=(const PcvGrid& rhs) noexcept
-  {
-    if (this != &rhs) {
-      if (rhs.cols_*rhs.rows_ != cols_*rows_) {
-        if (pcvs_) {
-          delete [] pcvs_;
-        }
-        try {
-          pcvs_ = new S [rhs.cols_*rhs.rows_];
-        } catch (std::bad_alloc&) {
-          pcvs_ = nullptr;
-        }
-      }
-      dazi_ = rhs.dazi_;
-      zen1_ = rhs.zen1_;
-      zen2_ = rhs.zen2_;
-      dzen_ = rhs.dzen_; 
-      cols_ = rhs.cols_;
-      rows_ = rhs.rows_;
-      assert( pcvs_ );
-      std::copy(rhs.pcvs_, rhs.pcvs_+(rows_*cols_), pcvs_);
-    }
-    return *this;
-  }
-  
-  /// Move assignment operator.
-  PcvGrid& operator=(PcvGrid&& rhs) noexcept
-  {
-    if (this != &rhs) {
-      dazi_ = std::move(rhs.dazi_);
-      zen1_ = std::move(rhs.zen1_);
-      zen2_ = std::move(rhs.zen2_);
-      dzen_ = std::move(rhs.dzen_);
-      pcvs_ = rhs.pcvs_;
-      cols_ = std::move(rhs.cols_);
-      rows_ = std::move(rhs.rows_);
-      rhs.pcvs_ = nullptr;
-    }
-    return *this;
-  }
 }; // end PcvGrid
+
+class AntennaPattern
+{
+private:
+  PcvGrid<float,double> noazi_pcv_grid_;
+  PcvGrid<float,double> azi_pcv_grid_;
+  char calibration_method_[20];
+  std::vector<ObservationType> otypes_;
+  std::vector<double> neu_;
+
+}
 
 } // end ngpt
 

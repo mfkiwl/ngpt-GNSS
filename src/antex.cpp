@@ -240,7 +240,9 @@ bool __skip_rest_of_antenna__(std::ifstream& fin)
 ///       0 | Success; antenna found.
 ///       1 | Antenna could not be found.
 ///
-int ngpt::Antex::find_antenna(const Antenna& antenna)
+/// \warning 
+/// \todo consider serial numbers.
+int ngpt::Antex::find_antenna(const Antenna& antenna, bool consider_sn)
 {
   char line[MAX_HEADER_CHARS];
   constexpr std::size_t soa_size { std::strlen("START OF ANTENNA") };
