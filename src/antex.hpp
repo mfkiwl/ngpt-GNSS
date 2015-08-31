@@ -124,7 +124,8 @@ public:
   Antex(Antex&& a) noexcept = default;
 
   /// Move assignment operator.
-  Antex& operator=(Antex&& a) noexcept = default;
+  Antex& operator=(Antex&& a) 
+    noexcept(std::is_nothrow_move_assignable<std::ifstream>::value) = default;
   
   /// Read the instance header, and assign (most of) the fields.
   void read_header();
