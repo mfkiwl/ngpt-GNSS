@@ -4,7 +4,7 @@
 #include <string>
 #include <cstring>
 
-/*
+/**
  * \file      antenna.hpp
  *
  * \version   0.10
@@ -19,7 +19,9 @@
  *
  * \note
  *
- * \todo
+ * \todo      If the static-assert block is not commented out (it shouldn't),
+ *            doxygen fails to parse the rest of the file. It is temporarily
+ *            commented out, but there should be a workaround.
  *
  * \copyright Copyright © 2015 Dionysos Satellite Observatory, <br>
  *            National Technical University of Athens. <br>
@@ -40,33 +42,56 @@
 namespace ngpt
 {
 
-/// Maximum size of a char array, holding any antenna type
+/// Maximum size of a char array, holding any antenna type.
 constexpr std::size_t _ANTENNA_TYPE_SIZE_ { 15 };
 
-/// Maximum size of a char array, holding any radome type
+/// Maximum size of a char array, holding any radome type.
 constexpr std::size_t _ANTENNA_RADOME_SIZE_ { 4 };
 
-/// Maximum size a char array, holding any antenna+radome pair
-constexpr std::size_t _MAX_ANTENNA_SIZE_ 
-{ _ANTENNA_TYPE_SIZE_ + 1 + _ANTENNA_RADOME_SIZE_ };
+/// Maximum size of a char array, holding any antenna serial number.
+constexpr std::size_t _ANTENNA_SN_SIZE_ { 10 };
 
-/// Maximum size a char array, holding any antenna+radome pair in bytes
+/// Maximum size a char array, holding any antenna+radome+sn combination.
+constexpr std::size_t _MAX_ANTENNA_SIZE_ 
+{ _ANTENNA_TYPE_SIZE_ + 1 + _ANTENNA_RADOME_SIZE_ + 1 + _ANTENNA_SN_SIZE_ + 1 };
+
+/// Maximum size a char array, holding any antenna+radome pair in bytes.
 constexpr std::size_t _MAX_ANTENNA_SIZE_BYTES_  
 { _MAX_ANTENNA_SIZE_ * sizeof(char) };
 
 /// Offset from the start of a char array holding any antenna+radome pair,
-/// to the radome type
+/// to the start of radome type.
 constexpr std::size_t _RADOME_OFFSET_ { _ANTENNA_TYPE_SIZE_ + 1 };
 
-/// Make sure nothing funny happens !
-static_assert(_MAX_ANTENNA_SIZE_ > _ANTENNA_TYPE_SIZE_ + _ANTENNA_RADOME_SIZE_,
-              "Antenna type and radome sizes do not match!");
-static_assert(_RADOME_OFFSET_ < _MAX_ANTENNA_SIZE_,
-              "Radome offset > Antenna size !");
-static_assert(_MAX_ANTENNA_SIZE_BYTES_ >= _MAX_ANTENNA_SIZE_,
-              "Antenna size in bytes < Antenna size ?!?");
+/// Offset from the start of a char array holding any antenna+radome pair,
+/// to the start of serial number.
+constexpr std::size_t _SN_OFFSET_ 
+{ _RADOME_OFFSET_ + _ANTENNA_RADOME_SIZE_ + 1 };
 
-/** \details  This class holds a GNSS Antenna + Radome type.
+/* -----------------------------------------------------------------
+ * STATIC ASSERT BLOCK.
+ * ------------------------------------------------------------------
+ * if this is NOT commented out, the doxygen will fail to
+ * parse the file correctly.
+ 
+// Make sure nothing funny happens (1) !
+static_assert(_MAX_ANTENNA_SIZE_ > _ANTENNA_TYPE_SIZE_ 
+    + _ANTENNA_RADOME_SIZE_ + _ANTENNA_SN_SIZE_, 
+    "Antenna type and radome sizes do not match!");
+
+// Make sure nothing funny happens (2) !
+static_assert(_SN_OFFSET_ < _MAX_ANTENNA_SIZE_,
+    "Radome offset > Antenna size !");
+
+// Make sure nothing funny happens (3) !
+static_assert(_MAX_ANTENNA_SIZE_BYTES_ >= _MAX_ANTENNA_SIZE_, 
+    "Antenna size in bytes < Antenna size ?!?");
+ * ------------------------------------------------------------------
+ */
+
+/** \class    Antenna
+ *
+ *  \details  This class holds a GNSS Antenna + Radome type and a Serial Number.
  *            For the antenna, we need _ANTENNA_TYPE_SIZE_ columns maximum.
  *            First three characters are manufacturer code (except satellites).
  *            Allowed in manufacturer code: '-' and 'A-Z' and '0-9'.
@@ -122,12 +147,23 @@ public:
   /// Move assignment operator.
   Antenna& operator=(Antenna&&) noexcept = default;
 
-  /// Equality operator (checks both antenna type and radome).
+  /// \brief   Equality operator (checks both antenna type and radome).
+  ///
+  /// \warning Antenna serial numbers are not checked! To compare antenna
+  ///          instances using also the serial numbers, see 
+  ///          Antenna::is_same(const Antenna&) const
   bool operator==(const Antenna& rhs) const noexcept
   {
     return ( !std::strncmp(name_,rhs.name_,_MAX_ANTENNA_SIZE_BYTES_) );
   }
-  
+
+  /// Comparisson function, using also the serial number.
+  bool is_same(const Antenna& rhs) const noexcept
+  {
+    return (*this == rhs) &&
+      (!std::strncmp(name_+_SN_OFFSET_,rhs.name_+_SN_OFFSET_,_ANTENNA_SN_SIZE_));
+  }
+
   /// Inequality operator (checks both antenna type and radome).
   bool operator!=(const Antenna& rhs) const noexcept
   {
@@ -161,17 +197,23 @@ public:
     return std::string(name_,_MAX_ANTENNA_SIZE_);
   }
 
+  /// Clear the name, radome and serial number (all set to whitespace).
+  inline void clear() noexcept
+  {
+    std::memset(name_, ' ', _MAX_ANTENNA_SIZE_);
+  }
+
   /// Set the Radome type.
   void set_radome(const char*) noexcept;
 
   /// Set the Radome type.
   void set_radome(const std::string&) noexcept;
-  
+
   /// Set the Antenna type (+ Radome).
   void set_antenna(const char*) noexcept;
 
 private:
-  char name_[_MAX_ANTENNA_SIZE_]; ///< Combined antenna and radome name.
+  char name_[_MAX_ANTENNA_SIZE_]; ///< Combined antenna, radome and serian num.
 }; // end Antenna
 
 } // end ngpt

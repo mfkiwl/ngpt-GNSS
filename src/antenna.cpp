@@ -83,6 +83,7 @@ ngpt::Antenna::Antenna(const std::string& s) noexcept
 void ngpt::Antenna::set_radome(const char *c) noexcept
 {
   std::size_t sz = std::strlen(c);
+
   if (sz < _ANTENNA_RADOME_SIZE_) {
     std::memset(name_+_RADOME_OFFSET_, ' ', _ANTENNA_RADOME_SIZE_);
   }
@@ -97,7 +98,7 @@ void ngpt::Antenna::set_radome(const char *c) noexcept
 
 /** \details  Set the Radome type of an antenna instance.
  *
- *  \param[in] c An std::string describing the radome type. The string can have
+ *  \param[in] s An std::string describing the radome type. The string can have
  *               any length, but only the first 4 characters are considered.
  *
  *  \throw    Does not throw.
@@ -141,13 +142,13 @@ void ngpt::Antenna::set_antenna(const char *c) noexcept
 {
   // copy input string
   size_t sz = std::strlen(c);
-  
+
   if (sz > ngpt::_MAX_ANTENNA_SIZE_) {
     std::memcpy(name_,c,_MAX_ANTENNA_SIZE_BYTES_);
   } else {
     std::memset(name_, ' ', _MAX_ANTENNA_SIZE_);
     std::memcpy(name_,c,sz*sizeof(char)) ;
   }
-    
+
   return;
 }

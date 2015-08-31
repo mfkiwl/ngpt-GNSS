@@ -4,7 +4,7 @@
 #include <string>
 #include <cstring>
 
-/*
+/**
  * \file      receiver.hpp
  *
  * \version   0.10
@@ -20,7 +20,9 @@
  *
  * \note
  *
- * \todo
+ * \todo      If the static-assert block is not commented out (it shouldn't),
+ *            doxygen fails to parse the rest of the file. It is temporarily
+ *            commented out, but there should be a workaround.
  *
  * \copyright Copyright © 2015 Dionysos Satellite Observatory, <br>
  *            National Technical University of Athens. <br>
@@ -48,9 +50,14 @@ constexpr std::size_t _RECEIVER_MAX_SIZE_ { 20 };
 constexpr std::size_t _RECEIVER_MAX_SIZE_BYTES_
 { _RECEIVER_MAX_SIZE_ * sizeof(char) };
 
+/* -----------------------------------------------------------------
+ * STATIC ASSERT BLOCK.
+ * ------------------------------------------------------------------
 /// Better to be safe than sorry ...
 static_assert(_RECEIVER_MAX_SIZE_BYTES_ >= _RECEIVER_MAX_SIZE_,
               "Receiver size in bytes < Receiver size ?!?");
+ * ------------------------------------------------------------------
+ */
 
 /** \details  This class holds a GNSS receiver. Any receiver is represesnted
  *            by a string of max _RECEIVER_MAX_SIZE_ columns. One space between

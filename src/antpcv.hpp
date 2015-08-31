@@ -188,13 +188,13 @@ public:
   /// (i.e. dazi_!=0), the 4 surounding nodes are used to perform a bilinear
   /// interpolation.
   ///
-  /// \parameter[in] zen The zenith (or nadir) distance to interpolate at.
-  /// \parameter[in] azi The azimouth angle to interpolate at; only considered
-  ///                    in case of an azimouth-dependent grid.
-  /// \return            The pcv value at the point zen or (zen,azi).
+  /// \param[in] zen The zenith (or nadir) distance to interpolate at.
+  /// \param[in] azi The azimouth angle to interpolate at; only considered
+  ///                in case of an azimouth-dependent grid.
+  /// \return        The pcv value at the point zen or (zen,azi).
   ///
-  /// \throw             neighboring_cells() may throw in case the point is
-  ///                    outside grid limits.
+  /// \throw         neighboring_cells() may throw in case the point is
+  ///                outside grid limits.
   ///
   S linear_interpolation(T zen, T azi = .0e0) const
   {
@@ -226,10 +226,10 @@ public:
   /// input argument is used; else, both 'zen' and 'azi' are used to find
   /// the nearest pcv value.
   ///
-  /// \parameter[in] zen The zenith (or nadir) distance to interpolate at.
-  /// \parameter[in] azi The azimouth angle to interpolate at; only considered
-  ///                    in case of an azimouth-dependent grid.
-  /// \return            The pcv value at the point zen or (zen,azi).
+  /// \param[in] zen The zenith (or nadir) distance to interpolate at.
+  /// \param[in] azi The azimouth angle to interpolate at; only considered
+  ///                in case of an azimouth-dependent grid.
+  /// \return        The pcv value at the point zen or (zen,azi).
   ///
   S nearest_neighbor(T zen, T azi = 0) const noexcept
   {
