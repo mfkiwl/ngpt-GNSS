@@ -1,22 +1,105 @@
+#ifndef __GRID_HPP__
+#define __GRID_HPP__
+
 #include <tuple>
 #include <cstring>
 
-class NoAziGridImpl<typename T, typename S>
+/**
+ * \file
+ *
+ * \version
+ *
+ * \author    xanthos@mail.ntua.gr <br>
+ *            danast@mail.ntua.gr
+ *
+ * \date
+ *
+ * \brief
+ *
+ * \details
+ *
+ * \note
+ *
+ * \todo
+ *
+ * \copyright Copyright © 2015 Dionysos Satellite Observatory, <br>
+ *            National Technical University of Athens. <br>
+ *            This work is free. You can redistribute it and/or modify it under
+ *            the terms of the Do What The Fuck You Want To Public License,
+ *            Version 2, as published by Sam Hocevar. See http://www.wtfpl.net/
+ *            for more details.
+ *
+ * <b><center><hr>
+ * National Technical University of Athens <br>
+ *      Dionysos Satellite Observatory     <br>
+ *        Higher Geodesy Laboratory        <br>
+ *      http://dionysos.survey.ntua.gr
+ * <hr></center></b>
+ *
+ */
+
+namespace ngpt
 {
+
+template<bool Do>
+class RangeChecker
+{};
+
+template<T>
+class RangeChecker<false>
+{
+  static constexpr bool validate_index() const noexcept { return true; }
+};
+template<T>
+class RangeChecker<true>
+{
+  static constexpr bool
+  validate_index(std::size_t pts,  val)
+  const noexcept { return val >=0 ; }
+};
+
+/// \class   TickAxisImpl
+/// \details This class is used to represent a tick axis, starting from tick
+///          with value start_, ending to tick stop_ with a step size of 
+///          step_. Note that stop_ does not have to be greater than start_,
+///          i.e. the axis can be in either ascending or descending order.
+///
+template<typename T>
+class TickAxisImpl
+{
+private:
+  T           start_;
+  T           stop_;
+  T           step_;
+  std::size_t npts;
+
 public:
-  NoAziGridImpl(T s,  T e, T d) noexcept
+  explicit TickAxisImpl(T s,  T e, T d) noexcept
   : start_{s}, stop_{e}, step_{d},
   npts_{static_cast<std::size_t>((e-s)/d)+1}
   {};
-  ~NoAziGridImpl() {};
-  NoAziGridImpl(const NoAziGridImpl&) noexcept = default;
-  NoAziGridImpl& operator=(const NoAziGridImpl&) noexcept = default;
-  NoAziGridImpl(NoAziGridImpl&&) noexcept = default;
-  NoAziGridImpl& operator=(NoAziGridImpl&&) noexcept = default;
+
+  virtual ~TickAxisImpl() {};
+
+  TickAxisImpl(const TickAxisImpl&) noexcept = default;
+
+  TickAxisImpl& operator=(const TickAxisImpl&) noexcept = default;
+  
+  TickAxisImpl(TickAxisImpl&&) noexcept = default;
+  
+  TickAxisImpl& operator=(TickAxisImpl&&) noexcept = default;
+  
   T min() const noexcept { return start_; }
+  
   T max() const noexcept { return stop_; }
-  // todo: should i hold the checks here?
-  auto neighbor_nodes(T x)
+
+  T step() const noexcept { return step_; }
+
+  bool is_ascending() const noexcept { return stop_-start_ > 0; }
+
+  std::size_t size() const noexcept { return npts_; }
+  
+  virtual auto neighbor_nodes(T x)
   {
     // find tick on the left.
     T tmp { (x - start_) / step_ };
@@ -50,13 +133,56 @@ public:
       std::make_tuple{idx, idx*step_+start_}:
       std::make_tuple{npts_-1, stop_};
   }
-private:
-  T start_;
-  T stop_;
-  T step_;
-  std::size_t npts;
+
 };
 
+template<typename T, bool RangeCheck>
+class TickAxis : TickAxisImpl<T>
+{
+public:
+  explicit TickAxis(T start, T stop, T step) noexcept
+  :TickAxisImpl<T>(start,stop,step){};
+};
+
+template<typename T, true>
+class TickAxis : TickAxisImpl<T>
+{
+public:
+  explicit TickAxis(T start, T stop, T step) noexcept
+  :TickAxisImpl<T>(start,stop,step){};
+  
+  auto neighbor_nodes(T x)
+  {
+    // find tick on the left.
+    T tmp { (x - start_) / step_ };
+    if (tmp < static_cast<T>(0) || tmp >= npts_) {
+      throw std::out_of_range (
+        "ERROR. PcvGrid_Noazi::neighboring_cells() -> out_of_range !!");
+     }
+    std::size_t l_idx { static_cast<std::size_t>(tmp) };
+
+    // assuming ascending grid
+    std::size_t r_idx { l_idx + 1 };
+    if (r_idx >= npts_) {
+      throw std::out_of_range (
+        "ERROR. PcvGrid_Noazi::neighboring_cells() -> out_of_range !!");
+    }
+
+    return std::make_tuple{
+      l_idx, l_idx*step_ + start_, r_idx, r_idx*step_ + start_,
+    }
+  }/*
+}
+
+template<typename T, false>
+class TickAxis : TickAxisImpl<T>
+{
+public:
+  explicit TickAxis(T start, T stop, T step) noexcept
+  :TickAxisImpl<T>(start,stop,step){};
+}
+
+// --------------------------------------------- //
 class AziGridImpl<typename T, typename S>
 {
 public:
@@ -119,3 +245,5 @@ public:
     }
   }
 };
+
+#endif

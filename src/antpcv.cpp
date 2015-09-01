@@ -1,6 +1,45 @@
+#ifndef __GRID__HPP__
+#define __GRID__HPP__
+
 #include <cassert>
 #include "antpcv.hpp"
 
+/**
+ * \file
+ *
+ * \version
+ *
+ * \author    xanthos@mail.ntua.gr <br>
+ *            danast@mail.ntua.gr
+ *
+ * \date
+ *
+ * \brief
+ *
+ * \details
+ *
+ * \note
+ *
+ * \todo
+ *
+ * \copyright Copyright © 2015 Dionysos Satellite Observatory, <br>
+ *            National Technical University of Athens. <br>
+ *            This work is free. You can redistribute it and/or modify it under
+ *            the terms of the Do What The Fuck You Want To Public License,
+ *            Version 2, as published by Sam Hocevar. See http://www.wtfpl.net/
+ *            for more details.
+ *
+ * <b><center><hr>
+ * National Technical University of Athens <br>
+ *      Dionysos Satellite Observatory     <br>
+ *        Higher Geodesy Laboratory        <br>
+ *      http://dionysos.survey.ntua.gr
+ * <hr></center></b>
+ *
+ */
+
+namespace ngpt
+{
 /// Constructor.
 ngpt::PcvGrid_Noazi::PcvGrid_Noazi(grid_t z1, grid_t z2, grid_t dz) noexcept
 :zen1_{ z1 },
