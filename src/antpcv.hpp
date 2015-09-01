@@ -2,7 +2,8 @@
 #define _PCV_ANTEX_HPP_
 
 #include <algorithm>
-#include "antex.hpp"
+//#include "antex.hpp"
+#include "obstype.hpp"
 
 /**
  * \file
@@ -46,11 +47,6 @@ namespace ngpt
 /// dependent 1-dimensional grid (denoted as 'NOAZI'). 
 enum class AtxPcvType : char { AZI, NOAZI };
 
-/// Azimouth-dependent pcv, always start at azimouth = 0.0 (see, antex V1.4).
-constexpr double PCV_AZIMOUT_START { 0.0e0 };
-
-/// Azimouth-dependent pcv, always start at azimouth = 360.0 (see, antex V1.4).
-constexpr double PCV_AZIMOUT_STOP { 360.0e0 };
 
 /// Simple struct to denote a point on a grid. Note that for a one-dimensional
 /// grid, y is not used!
@@ -75,318 +71,152 @@ struct GridPoint
 ///           always have to be multiples of 'DZEN'. 'ZEN2' always has to be 
 ///           greater than 'ZEN1'.
 ///
-template<typename T, typename S>
+class PcvGrid_Noazi
+{
+
+typedef float  grid_t;  /// Type of data describing the grid nodes.
+typedef double data_t;  /// Type of data describing the grid values.
+
+public:
+
+  /// Empty constructor; use PcvGrid_Noazi::grid_reset(T z1, T z2, T dz)
+  /// later to re-initialize.
+  explicit PcvGrid_Noazi() noexcept
+  :zen1_{ 0 },
+  zen2_{ 0 },
+  dzen_{ 0 },
+  pcvs_{ nullptr },
+  npts_{ 0 }
+  {};
+
+  /// Constructor.
+  explicit PcvGrid_Noazi(grid_t z1, grid_t z2, grid_t dz) noexcept;
+
+  /// Destructor.
+  ~PcvGrid_Noazi() noexcept { if (pcvs_) delete [] pcvs_; }
+
+  /// Copy constructor.
+  PcvGrid_Noazi(const PcvGrid_Noazi&) noexcept;
+
+  /// Move constructor.
+  PcvGrid_Noazi(PcvGrid_Noazi&&) noexcept;
+
+  /// Copy assignment operator.
+  PcvGrid_Noazi& operator=(const PcvGrid_Noazi&) noexcept;
+  
+  /// Move assignment operator.
+  PcvGrid_Noazi& operator=(PcvGrid_Noazi&&) noexcept;
+  
+  /// Re-initialize.
+  void grid_reset_size(grid_t z1, grid_t z2, grid_t dz) noexcept;
+  
+  std::vector<GridPoint<grid_t,data_t>> neighboring_cells(grid_t zen) const;
+
+  data_t linear_interpolation(grid_t zen) const;
+
+  data_t nearest_neighbor(grid_t zen) const noexcept;
+
+private:
+  grid_t       zen1_;  ///< Starting zenith angle (degrees).
+  grid_t       zen2_;  ///< End zenith angle (degrees).
+  grid_t       dzen_;  ///< Increment in zenith angle.
+  data_t       *pcvs_; ///< Pointer to start of actual pcv value.
+  std::size_t  npts_;  ///< Number of zenith points (nodes).
+
+}; // end PcvGrid_Noazi
+
+///
+/// \note  
+///        - 360 degrees have to be divisible by dazi_. For non-azimuth-
+///           dependent phase center variations '0.0' has to be specified.
+///        - ZEN1 / ZEN2 / DZEN : For receiver antennas, Zenith distance 
+///           'ZEN1' to 'ZEN2' with increment 'DZEN' (in degrees). 'DZEN'
+///           has to be > 0.0. 'ZEN1' and 'ZEN2' always have to be multiples of
+///           'DZEN'. 'ZEN2' always has to be greater than 'ZEN1'.
+///        - ZEN1 / ZEN2 / DZEN : For satellite antennas, Definition of the 
+///           grid in nadir angle: Nadir angle 'ZEN1' to 'ZEN2' with increment 
+///           'DZEN' (in degrees). 'DZEN' has to be > 0.0. 'ZEN1' and 'ZEN2' 
+///           always have to be multiples of 'DZEN'. 'ZEN2' always has to be 
+///           greater than 'ZEN1'.
+///
 class PcvGrid
 {
+
 private:
-  T  dazi_; ///< Increment of the azimuth: 0 to 360 with increment dazi_ (degrees).
-  T  zen1_; ///< Starting zenith angle (degrees).
-  T  zen2_; ///< End zenith angle (degrees).
-  T  dzen_; ///< Increment in zenith angle.
-  S *pcvs_; ///< Pointer to start of actual pcv value.
-  std::size_t rows_; ///< Number of azimout points (nodes); at least 1.
-  std::size_t cols_; ///< Number of zenith points (nodes).
+typedef float  grid_t;  /// Type of data describing the grid nodes.
+typedef double data_t;  /// Type of data describing the grid values.
+
+/// Azimouth-dependent pcv, always start at azimouth = 0.0 (see, antex V1.4).
+static constexpr grid_t PCV_AZIMOUTH_START { 0.0e0 };
+
+/// Azimouth-dependent pcv, always start at azimouth = 360.0 (see, antex V1.4).
+static constexpr grid_t PCV_AZIMOUTH_STOP { 360.0e0 };
 
 public:
 
   /// Empty constructor; use PcvGrid::__grid_reset__(T z1, T z2, T dz, T da = 0)
   /// later to re-initialize.
   explicit PcvGrid() noexcept
-  :dazi_{ 0 }, zen1_{ 0 }, zen2_{ 0 }, dzen_{ 0 }, pcvs_{ nullptr },
-  cols_{ 0 }, rows_{ 0 }
+  :dazi_{ 0 },
+  zen1_{ 0 },
+  zen2_{ 0 },
+  dzen_{ 0 },
+  pcvs_{ nullptr },
+  cols_{ 0 },
+  rows_{ 0 }
   {};
 
   /// Constructor.
-  explicit PcvGrid(T z1, T z2, T dz, T da = 0) noexcept
-  :dazi_{ da }, zen1_{ z1 }, zen2_{ z2 }, dzen_{ dz }, pcvs_{ nullptr },
-  cols_{ static_cast<std::size_t>((z2-z1)/dz)+1 },
-  rows_{ da?
-    static_cast<std::size_t>((PCV_AZIMOUT_STOP-PCV_AZIMOUT_START)/da)+1:
-    1 }
-  {
-    assert( zen2_ >= zen1_ && dzen_ > .0e0 );
-    try {
-      pcvs_ = new S [rows_ * cols_];
-    } catch (std::bad_alloc&) {
-      pcvs_ = nullptr;
-    }
-    assert( pcvs_ );
-  }
+  explicit PcvGrid(grid_t z1, grid_t z2, grid_t dz, grid_t da) noexcept;
 
   /// Re-initialize.
-  void __grid_reset__(T z1, T z2, T dz, T da = 0) constexpr
-  {
-    if (pcvs_) delete [] pcvs;
-    dazi_ = da;
-    zen1_ = z1;
-    zen2_ = z2;
-    dzen_ = dz; 
-    cols_ = static_cast<std::size_t>((z2-z1)/dz)+1; 
-    rows_ = da?static_cast<std::size_t>((PCV_AZIMOUT_STOP-PCV_AZIMOUT_START)/da)+1:1;
-    try {
-      pcvs_ = new S [rows_ * cols_];
-    } catch (std::bad_alloc&) {
-      pcvs_ = nullptr;
-    }
-    assert( pcvs_ );
-  }
+  void grid_reset_size(grid_t z1, grid_t z2, grid_t dz, grid_t da) noexcept;
 
   /// Destructor.
-  ~PcvGrid() noexcept
-  {
-    if (pcvs_)
-      delete [] pcvs;
-  }
+  ~PcvGrid() noexcept { if (pcvs_) delete[] pcvs_; }
 
   /// Copy constructor.
-  PcvGrid(const PcvGrid& rhs) noexcept
-  :dazi_{ rhs.dazi_ }, 
-  zen1_{ rhs.zen1_ }, 
-  zen2_{ rhs.zen2_ }, 
-  dzen_{ rhs.dzen_ }, 
-  pcvs_{ nullptr },
-  cols_{ rhs.cols_ },
-  rows_{ rhs.rows_ }
-  {
-    if (rhs.pcvs_) {
-      try {
-        pcvs_ = new S [rows_ * cols_];
-        std::copy(rhs.pcvs_, rhs.pcvs_+(rows_*cols_), pcvs_);
-      } catch (std::bad_alloc&) {
-        pcvs_ = nullptr;
-      }
-      assert( pcvs_ );
-    }
-  }
+  PcvGrid(const PcvGrid&) noexcept;
 
   /// Move constructor.
-  PcvGrid(PcvGrid&& rhs) noexcept
-  :dazi_{ std::move(rhs.dazi_) }, 
-  zen1_{ std::move(rhs.zen1_) }, 
-  zen2_{ std::move(rhs.zen2_) }, 
-  dzen_{ std::move(rhs.dzen_) }, 
-  pcvs_{ rhs.pcvs_ },
-  cols_{ std::move(rhs.cols_) },
-  rows_{ std::move(rhs.rows_) }
-  {
-    rhs.pcvs_ = nullptr;
-  }
+  PcvGrid(PcvGrid&&) noexcept;
 
   /// Copy assignment operator.
-  PcvGrid& operator=(const PcvGrid& rhs) noexcept
-  {
-    if (this != &rhs) {
-      if (rhs.cols_*rhs.rows_ != cols_*rows_) {
-        if (pcvs_) {
-          delete [] pcvs_;
-        }
-        try {
-          pcvs_ = new S [rhs.cols_*rhs.rows_];
-        } catch (std::bad_alloc&) {
-          pcvs_ = nullptr;
-        }
-      }
-      dazi_ = rhs.dazi_;
-      zen1_ = rhs.zen1_;
-      zen2_ = rhs.zen2_;
-      dzen_ = rhs.dzen_; 
-      cols_ = rhs.cols_;
-      rows_ = rhs.rows_;
-      assert( pcvs_ );
-      std::copy(rhs.pcvs_, rhs.pcvs_+(rows_*cols_), pcvs_);
-    }
-    return *this;
-  }
+  PcvGrid& operator=(const PcvGrid&) noexcept;
   
   /// Move assignment operator.
-  PcvGrid& operator=(PcvGrid&& rhs) noexcept
-  {
-    if (this != &rhs) {
-      dazi_ = std::move(rhs.dazi_);
-      zen1_ = std::move(rhs.zen1_);
-      zen2_ = std::move(rhs.zen2_);
-      dzen_ = std::move(rhs.dzen_);
-      pcvs_ = rhs.pcvs_;
-      cols_ = std::move(rhs.cols_);
-      rows_ = std::move(rhs.rows_);
-      rhs.pcvs_ = nullptr;
-    }
-    return *this;
-  }
+  PcvGrid& operator=(PcvGrid&&) noexcept;
   
-  /// Given a point in a grid, return the neighboring cells. If the grid has
-  /// no azimouth-dependent pcv values (i.e. dazi_ = 0), then only the 'zen'
-  /// input argument is used; else, both 'zen' and 'azi' are used to find
-  /// the neighboring nodes. The returned vector of grid points, follows the
-  /// clockwise order:
-  ///
-  /// x denotes the point x(zen, azi)
-  /// 2-D grid  1-D grid
-  ///
-  ///  1    2
-  ///  +----+
-  ///  | x  |      
-  ///  +----+     +---x---+
-  ///  0    3     0       1
-  ///
-  /// \param[in] zen  The zenith (or nadir) angle to interpolate at.
-  /// \param[in] azi  The azimouth angle to interpolate at (only used if
-  ///                 the grid is azimouth-dependent).
-  /// \return         A vector of GridPoint instances (as ploted above), in
-  ///                 clockwise order, bordering the input point. The size
-  ///                 of the vector is 2 or a one-dimensional grid, or 4 for
-  ///                 a two-dimensional grid. Also note that for a 
-  ///                 one-dimensional grid, the y component of the returned
-  ///                 GridPoint is unused.
-  /// \throw          The function will throw an std::out_of_range if the input
-  ///                 point falls outside of the grid.
-  ///
-  std::vector<GridPoint<T,S>> neighboring_cells(T zen, T azi = .0e0) const
-  {
-    // find tick on the left.
-    T tmp { (zen - zen1_) / dzen_ };
-    if (tmp < static_cast<T>(0) || tmp >= cols_) {
-      throw std::out_of_range (
-      "ERROR. PcvGrid::neighboring_cells() -> out_of_range !!");
-    }
-    std::size_t left_tick_index { static_cast<std::size_t>(tmp) };
+  std::vector<GridPoint<grid_t,data_t>>
+  neighboring_cells(grid_t zen, grid_t azi) const;
 
-    // zen2 > zen1, so
-    std::size_t right_tick_index { left_tick_index + 1 };
-    if (right_tick_index >= cols_) {
-      throw std::out_of_range (
-      "ERROR. PcvGrid::neighboring_cells() -> out_of_range !!");
-    }
+  data_t linear_interpolation(grid_t zen, grid_t azi) const;
 
-    // If we are in a one-dimensional grid, that's it !
-    if (!dazi_) {
-      return std::vector<GridPoint<T,S>> {
-        {zen1_+left_tick_index*dzen_, (T)0, pcvs_[left_tick_index]},
-        {zen1_+right_tick_index*dzen_, (T)0, pcvs_[right_tick_index]}
-      };
-    }
+  data_t nearest_neighbor(grid_t zen, grid_t azi) const noexcept;
 
-    // Do the same for the y-axis (i.e. azimouth axis).
-    tmp { (azi - static_cast<T>(PCV_AZIMOUT_STOP)) / dazi_ };
-    if (tmp < static_cast<T>(0) || tmp >= rows_) {
-      throw std::out_of_range (
-      "ERROR. PcvGrid::neighboring_cells() -> out_of_range !!");
-    }
-    std::size_t left_tick_index_2 { static_cast<std::size_t>(tmp) };
+private:
+  grid_t      dazi_;  ///< Increment of the azimuth: 0 to 360 with increment dazi_ (degrees).
+  grid_t      zen1_;  ///< Starting zenith angle (degrees).
+  grid_t      zen2_;  ///< End zenith angle (degrees).
+  grid_t      dzen_;  ///< Increment in zenith angle.
+  data_t      *pcvs_; ///< Pointer to start of actual pcv value.
+  std::size_t cols_;  ///< Number of zenith points (nodes).
+  std::size_t rows_;  ///< Number of azimout points (nodes); at least 1.
 
-    // azi_stop > azi_start, so
-    std::size_t right_tick_index_2 { left_tick_index_2 + 1 };
-    if (right_tick_index_2 >= rows_) {
-      throw std::out_of_range (
-      "ERROR. PcvGrid::neighboring_cells() -> out_of_range !!");
-    }
-
-    //
-    //  1    2
-    //  +----+
-    //  |    |
-    //  +----+
-    //  0    3
-    //
-    S* ptr { left_tick_index_2*cols_+left_tick_index };
-    T x0 { zen1_+left_tick_index*dzen_ };
-    T x1 { zen1_+right_tick_index*dzen_ };
-    T y0 { static_cast<T>(PCV_AZIMOUT_START)_+left_tick_index_2*dazi_ };
-    T y1 { static_cast<T>(PCV_AZIMOUT_START)_+right_tick_index_2*dazi_ };
-    return std::vector<GridPoint<T,S>> {
-      // Node 0 
-      { x0, y0, *ptr },
-      // Node 1
-      {x0, y1, *(ptr+cols_) },
-      // Node 2
-      {x1, y1, *(ptr+cols_+1) },
-      // Node 3
-      {x1, y0, *(ptr+1) }
-    };
-  }
-
-  /// This function will perform a linear (or bilinear) interpolation, to
-  /// compute the value at point (zen,azi), using the sourounding nodes.
-  /// In case of a one-dimensional grid (i.e. dazi_=0), only the input
-  /// parameter zen is considered, and the interolation is performed using the
-  /// nodes left and right of the point. In case of a two-dimensional grid
-  /// (i.e. dazi_!=0), the 4 surounding nodes are used to perform a bilinear
-  /// interpolation.
-  ///
-  /// \param[in] zen The zenith (or nadir) distance to interpolate at.
-  /// \param[in] azi The azimouth angle to interpolate at; only considered
-  ///                in case of an azimouth-dependent grid.
-  /// \return        The pcv value at the point zen or (zen,azi).
-  ///
-  /// \throw         neighboring_cells() may throw in case the point is
-  ///                outside grid limits.
-  ///
-  S linear_interpolation(T zen, T azi = .0e0) const
-  {
-    std::vector<GridPoint<T,S>> cells { this->neighboring_cells(zen, azi); }
-    
-    if (!dazi_) {
-      return cells[0].val + (cells[1].val - cells[0].val) * 
-      ((zen-cells[0].x)/(cells[1].x-cells[0].x));
-    }
-
-    // Reference for bilinear 
-    // https://en.wikipedia.org/wiki/Bilinear_interpolation
-    S x1  { static_cast<S>(cells[0].x) };
-    S x2  { static_cast<S>(cells[2].x) };
-    S y1  { static_cast<S>(cells[0].y) };
-    S y2  { static_cast<S>(cells[1].y) };
-    S f11 { cells[0].val };
-    S f12 { cells[1].val };
-    S f22 { cells[2].val };
-    S f21 { cells[3].val };
-
-    S f_xy1 { ((x2-zen)/(x2-x1))*f11 + ((zen-x1)/(x2-x1))*f21 };
-    S f_xy2 { ((x2-zen)/(x2-x1))*f12 + ((zen-x1)/(x2-x1))*f22 };
-    return ((y2-azi)/(y2-y1))*f_xy1 + ((azi-y1)/(y2-y1))*f_xy2;
-  }
-
-  /// Interpolate using the nearest-neighbor algorithm. If the grid has no
-  /// azimouth-dependent pcv values (i.e. dazi_ = 0), then only the 'zen'
-  /// input argument is used; else, both 'zen' and 'azi' are used to find
-  /// the nearest pcv value.
-  ///
-  /// \param[in] zen The zenith (or nadir) distance to interpolate at.
-  /// \param[in] azi The azimouth angle to interpolate at; only considered
-  ///                in case of an azimouth-dependent grid.
-  /// \return        The pcv value at the point zen or (zen,azi).
-  ///
-  S nearest_neighbor(T zen, T azi = 0) const noexcept
-  {
-    std::size_t col { 
-      static_cast<std::size_t>((zen + dzen_/2 - zen1_) / dzen_ ) 
-    };
-    if (col >= cols_)
-      col = cols_ - 1;
-
-    std::size_t row;
-    if ( dazi_ ) {
-      row = static_cast<std::size_t>((azi + dazi_/2 - PCV_AZIMOUT_START) / dazi_ ) 
-      if (row >= rows_)
-        row = rows_ - 1;
-    } else {
-      row = 0;
-    }
-
-    return pcvs_[row * cols_ + col];
-  }
 }; // end PcvGrid
 
 class AntennaPattern
 {
 private:
-  PcvGrid<float,double> noazi_pcv_grid_;
-  PcvGrid<float,double> azi_pcv_grid_;
-  char calibration_method_[20];
-  std::vector<ObservationType> otypes_;
-  std::vector<double> neu_;
+  std::vector<PcvGrid_Noazi> noazi_pcv_grid_; ///< NOAZI pattern; one for each observation type.
+  std::vector<PcvGrid> azi_pcv_grid_;         ///< Azimouth-dependent pattern; one for each observation type.
+  char calibration_method_[20];               ///< Calibration method.
+  std::vector<ngpt::ObservationType> otypes_; ///< The observations types for wich we have pcv grids.
+  std::vector<double> neu_;                   ///< North, east and up pc corrections.
 
-}
+public:
+  explicit AntennaPattern(double zen1, double zen2
+};
 
 } // end ngpt
 

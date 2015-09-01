@@ -127,7 +127,7 @@ libngpt_a_AR = $(AR) $(ARFLAGS)
 libngpt_a_LIBADD =
 dist_libngpt_a_OBJECTS = libngpt_a-receiver.$(OBJEXT) \
 	libngpt_a-antenna.$(OBJEXT) libngpt_a-satsys.$(OBJEXT) \
-	libngpt_a-antex.$(OBJEXT)
+	libngpt_a-antex.$(OBJEXT) libngpt_a-antpcv.$(OBJEXT)
 libngpt_a_OBJECTS = $(dist_libngpt_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -285,8 +285,8 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LIBRARIES = libngpt.a
 libngpt_a_CXXFLAGS = -std=c++11 -g -Wall -Wextra -Werror -pedantic -W -Wshadow -Winline -Wdisabled-optimization -DDEBUG
-dist_include_HEADERS = receiver.hpp antenna.hpp satsys.hpp antex.hpp
-dist_libngpt_a_SOURCES = receiver.cpp antenna.cpp satsys.cpp antex.cpp
+dist_include_HEADERS = receiver.hpp antenna.hpp satsys.hpp antex.hpp antpcv.hpp
+dist_libngpt_a_SOURCES = receiver.cpp antenna.cpp satsys.cpp antex.cpp antpcv.cpp
 all: all-am
 
 .SUFFIXES:
@@ -366,6 +366,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libngpt_a-antenna.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libngpt_a-antex.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libngpt_a-antpcv.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libngpt_a-receiver.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libngpt_a-satsys.Po@am__quote@
 
@@ -438,6 +439,20 @@ libngpt_a-antex.obj: antex.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='antex.cpp' object='libngpt_a-antex.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libngpt_a_CXXFLAGS) $(CXXFLAGS) -c -o libngpt_a-antex.obj `if test -f 'antex.cpp'; then $(CYGPATH_W) 'antex.cpp'; else $(CYGPATH_W) '$(srcdir)/antex.cpp'; fi`
+
+libngpt_a-antpcv.o: antpcv.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libngpt_a_CXXFLAGS) $(CXXFLAGS) -MT libngpt_a-antpcv.o -MD -MP -MF $(DEPDIR)/libngpt_a-antpcv.Tpo -c -o libngpt_a-antpcv.o `test -f 'antpcv.cpp' || echo '$(srcdir)/'`antpcv.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libngpt_a-antpcv.Tpo $(DEPDIR)/libngpt_a-antpcv.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='antpcv.cpp' object='libngpt_a-antpcv.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libngpt_a_CXXFLAGS) $(CXXFLAGS) -c -o libngpt_a-antpcv.o `test -f 'antpcv.cpp' || echo '$(srcdir)/'`antpcv.cpp
+
+libngpt_a-antpcv.obj: antpcv.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libngpt_a_CXXFLAGS) $(CXXFLAGS) -MT libngpt_a-antpcv.obj -MD -MP -MF $(DEPDIR)/libngpt_a-antpcv.Tpo -c -o libngpt_a-antpcv.obj `if test -f 'antpcv.cpp'; then $(CYGPATH_W) 'antpcv.cpp'; else $(CYGPATH_W) '$(srcdir)/antpcv.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libngpt_a-antpcv.Tpo $(DEPDIR)/libngpt_a-antpcv.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='antpcv.cpp' object='libngpt_a-antpcv.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libngpt_a_CXXFLAGS) $(CXXFLAGS) -c -o libngpt_a-antpcv.obj `if test -f 'antpcv.cpp'; then $(CYGPATH_W) 'antpcv.cpp'; else $(CYGPATH_W) '$(srcdir)/antpcv.cpp'; fi`
 install-dist_includeHEADERS: $(dist_include_HEADERS)
 	@$(NORMAL_INSTALL)
 	@list='$(dist_include_HEADERS)'; test -n "$(includedir)" || list=; \

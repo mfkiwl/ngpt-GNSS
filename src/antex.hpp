@@ -4,6 +4,7 @@
 #include <fstream>
 #include "satsys.hpp"
 #include "antenna.hpp"
+# include "antpcv.hpp"
 
 /**
  * \file
@@ -131,7 +132,10 @@ public:
   void read_header();
 
   /// Find a specific antenna in the instance.
-  int find_antenna(const Antenna&, consider_serial_nr = false);
+  int find_antenna(const Antenna&/*bool, consider_serial_nr = false*/);
+  
+  /// Read antenna calibration pattern.
+  AntennaPattern read_pattern();
 
 private:
   std::string            _filename; ///< The name of the antex file.

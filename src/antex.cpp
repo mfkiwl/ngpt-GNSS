@@ -132,6 +132,61 @@ void ngpt::Antex::read_header()
   return;
 }
 
+/// \details This function is used to read an antenna calibration info block out
+///          of an Antex instance. After it is handed an input
+///          file stream (i.e. that of an Antex instance), positioned at the
+///          begining of a 'METH / BY / # / DATE' field, it will continue
+///          reading the antenna block untill the 'END OF ANTENNA' field.
+///
+/// \return  Everything other than 0 denots a failure.
+///
+/// \todo    Need to also read 'FREQ RMS'
+ngpt::AntennaPattern ngpt::Antex::read_pattern()
+{
+  char line[MAX_HEADER_CHARS];
+  char grid_line[MAX_GRID_CHARS];
+
+
+  // next field is 'METH / BY / # / DATE'
+  char clbr[20];
+  if (fin.getline(line, MAX_HEADER_CHARS) &&
+    !strncmp(line+60, "METH / BY / # / DATE", 20))
+  {
+    std::memcpy(clbr, line, 20);
+  }
+
+  // next field is 'DAZI'
+  double dazi;
+  if (fin.getline(line, MAX_HEADER_CHARS) &&
+    !strncmp(line+60, "DAZI", 4)) 
+  {
+    dazi = std::stoi(line+2, nullptr);
+  }
+
+  // next field is 'ZEN1 / ZEN2 / DZEN'
+  double zen1,  sen2,  dzen;
+  if (fin.getline(line, MAX_HEADER_CHARS) &&
+    !strncmp(line+60, "ZEN1 / ZEN2 / DZEN", 18))
+  {
+    zen1 = std::stoi(line+2, nullptr);
+    zen2 = std::stoi(line+8, nullptr);
+    dzen = std::stoi(line+14, nullptr);
+    // see the decleration of MAX_GRID_CHARS for why this is needed.
+    assert( 8*(std::size_t)((zen2-zen1)/dzen) < MAX_GRID_CHARS-10  );
+  }
+
+  // next field is '# OF FREQUENCIES'
+  int num_of_freqs;
+  if (fin.getline(line, MAX_HEADER_CHARS) && 
+    !strncmp(line+60, "# OF FREQUENCIES", 16))
+  {
+    num_of_freqs = std::stoi(line, nullptr);
+  }
+  
+  // Construct an AntennaPattern
+  ngpt::AntennaPattern antpat ();
+}
+
 /// \details This is only a utility function. After it is handed an input
 ///          file stream (i.e. that of an Antex instance), positioned at the
 ///          begining of a 'METH / BY / # / DATE' field, it will continue
@@ -140,7 +195,7 @@ void ngpt::Antex::read_header()
 /// \return  Everything other than 0 denots a failure.
 ///
 /// \todo    Need to also read 'FREQ RMS'
-bool __skip_rest_of_antenna__(std::ifstream& fin)
+int __skip_rest_of_antenna__(std::ifstream& fin)
 {
   static char line[MAX_HEADER_CHARS];
   static char grid_line[MAX_GRID_CHARS];
@@ -242,7 +297,7 @@ bool __skip_rest_of_antenna__(std::ifstream& fin)
 ///
 /// \warning 
 /// \todo consider serial numbers.
-int ngpt::Antex::find_antenna(const Antenna& antenna, bool consider_sn)
+int ngpt::Antex::find_antenna(const Antenna& antenna/*, bool consider_sn*/)
 {
   char line[MAX_HEADER_CHARS];
   constexpr std::size_t soa_size { std::strlen("START OF ANTENNA") };
