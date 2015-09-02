@@ -1,5 +1,7 @@
 #! /usr/bin/python
 
+import sys
+
 class Grid:
   
   def __init__(self, f, t, s):
@@ -51,6 +53,11 @@ x = Grid(-5.0, 5.0, 2.5)
 y = Grid(5.0, -5.0, -2.5)
 
 x.print_grid()
+print "Left node for 1.2", x.left_node(1.2)[0],"=",x.left_node(1.2)[1]
+y.print_grid()
+print "Left node for 1.2", y.left_node(1.2)[0],"=",y.left_node(1.2)[1]
+sys.exit(0)
+
 print "Grid x: left node for %+3.1f is %+3.1f at index %02i" %(-6, x.left_node(-6)[1], x.left_node(-6)[0])
 print "Grid x: left node for %+3.1f is %+3.1f at index %02i" %(-4.9, x.left_node(-4.9)[1], x.left_node(-4.9)[0])
 print "Grid x: left node for %+3.1f is %+3.1f at index %02i" %(-2.4, x.left_node(-2.4)[1], x.left_node(-2.4)[0])
@@ -65,7 +72,6 @@ print "Grid x: nearest node for %+3.1f is %+3.1f at index %02i" %(-2.6, x.neares
 print "Grid x: nearest node for %+3.1f is %+3.1f at index %02i" %(-.1, x.nearest_node(-.1)[1], x.nearest_node(-.1)[0])
 print "Grid x: nearest node for %+3.1f is %+3.1f at index %02i" %(2.6, x.nearest_node(2.6)[1], x.nearest_node(2.6)[0])
 
-y.print_grid()
 print "Grid y: left node for %+3.1f is %+3.1f at index %02i" %(-6, y.left_node(-6)[1], y.left_node(-6)[0])
 print "Grid y: left node for %+3.1f is %+3.1f at index %02i" %(-4.9, y.left_node(-4.9)[1], y.left_node(-4.9)[0])
 print "Grid y: left node for %+3.1f is %+3.1f at index %02i" %(-2.4, y.left_node(-2.4)[1], y.left_node(-2.4)[0])
