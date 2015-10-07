@@ -1,58 +1,105 @@
+#include <string>
+#include <cstring>
+#include <algorithm>
 #include "receiver.hpp"
 
-/** \details  Construct a receiver instance from a given char array
- *            describing the receiver type. The receiver type can hold
- *            at maximum _RECEIVER_MAX_SIZE_ chars, so any larger input array
- *            will be truncated. Also note that any smaller input array will be
- *            truncated with whitespace characters up to a size of
- *            _RECEIVER_MAX_SIZE_. I.e., given the input array:
- *            " SEPT POLARX2C        |  L1/L2,code & carrier, all-in-view incl. 4 L2C ch."
- *            the mtype array will hold the value " SEPT POLARX2C        "
- *            The C-string array can have any length, but only the first
- *            _RECEIVER_MAX_SIZE_ are considered.
- *
- *  \throw    Does not throw.
- *
- *  \warning  The behavior is undefined if there is no null character in the
- *            character array pointed to by c (see std::strlen)
- *
- *  \param[in] c An array of chars, describing the receiver type (const char*).
- *
- */
-ngpt::Receiver::Receiver (const char* c) noexcept
+using ngpt::Receiver;
+
+Receiver::Receiver() noexcept 
 {
-  std::memset(name_, ' ', _RECEIVER_MAX_SIZE_);
-  
-  // copy input string
-  std::size_t sz = std::strlen (c);
-  
-  sz > ngpt::_RECEIVER_MAX_SIZE_
-  ? std::memcpy (name_,c,ngpt::_RECEIVER_MAX_SIZE_BYTES_)
-  : std::memcpy (name_,c,sz*sizeof(char)) ;
+  this->nullify();
 }
 
-/** \details  Construct a receiver instance from a given a string
- *            describing the receiver type. The receiver type can hold
- *            at maximum _RECEIVER_MAX_SIZE_ chars, so any larger input array
- *            will be truncated. Also note that any smaller input array will be
- *            truncated with whitespace characters up to a size of
- *            _RECEIVER_MAX_SIZE_. I.e., given the input array:
- *            " SEPT POLARX2C        |  L1/L2,code & carrier, all-in-view incl. 4 L2C ch."
- *            the mtype array will hold the value " SEPT POLARX2C        "
- *
- *  \throw    Does not throw.
- *
- *  \param[in] s As std::string, describing the receiver type.
- *
- */
-ngpt::Receiver::Receiver (const std::string& s) noexcept
+/// Constructor from receiver type.
+Receiver::Receiver(const char* c) noexcept
 {
-  // copy the input string
-  std::size_t sz = s.size();
-  if (sz > ngpt::_RECEIVER_MAX_SIZE_) {
-    std::copy(s.begin(),s.begin()+ngpt::_RECEIVER_MAX_SIZE_,name_);
-  } else {
-    std::memset(name_, ' ', _RECEIVER_MAX_SIZE_);
-    std::copy(s.begin(),s.end(),name_);
+  this->copy_from_cstr(c);
+}
+
+/// Constructor from receiver type.
+Receiver::Receiver(const std::string& s) noexcept
+{
+  this->copy_from_str(s);
+}
+
+/// Copy constructor.
+Receiver::Receiver(const Receiver& rhs) noexcept
+{
+  std::memcpy(name_, rhs.name_, receiver_details::receiver_max_bytes);
+}
+
+/// Assignment operator.
+Receiver& Receiver::operator=(const Receiver& rhs) noexcept
+{
+  if (this!=&rhs)
+  {
+    std::memcpy(name_, rhs.name_, receiver_details::receiver_max_bytes);
   }
+  return *this;
+}
+
+/// Assignment operator (from c-string).
+Receiver& Receiver::operator=(const char* c) noexcept
+{
+#ifdef DEBUG
+  printf("\n[DEBUG MSG]:: Using Receiver& operator=(const char* c)\n");
+#endif
+  this->copy_from_cstr(c);
+  return *this;
+}
+
+/// Assignment operator (from std::string).
+Receiver& Receiver::operator=(const std::string& s) noexcept
+{
+#ifdef DEBUG
+  printf("\n[DEBUG MSG]:: Using Receiver& operator=(const std::string)\n");
+#endif
+  this->copy_from_str(s);
+  return *this;
+}
+
+/// Equality operator.
+bool Receiver::operator==(const Receiver& rhs) noexcept
+{
+  return ( !std::strncmp(name_ ,rhs.name_ , 
+        receiver_details::receiver_max_bytes) );
+}
+
+/// Pointer to receiver name.
+/// \warning  This is not a c-string! no terminating '\0' char.
+inline 
+const char* Receiver::name() const noexcept
+{
+  return name_;
+}
+
+/// Receiver name as string.
+std::string Receiver::toString() const noexcept
+{
+  return std::string(name_, receiver_details::receiver_max_chars);
+}
+
+/// set all chars to '\0'.
+inline 
+void Receiver::nullify() noexcept
+{
+  std::memset(name_, '\0', receiver_details::receiver_max_chars);
+}
+
+/// copy from an std::string (to name).
+inline 
+void Receiver::copy_from_str(const std::string& s) noexcept
+{
+  this->nullify();
+  // std::basic_string::copy can only throw if max_chars >= 0, i.e. NEVER !
+  s.copy(name_, receiver_details::receiver_max_chars, 0);
+}
+
+/// copy from a c-string.
+inline
+void Receiver::copy_from_cstr(const char* c) noexcept
+{
+  this->nullify();
+  std::memcpy(name_, c, std::min(std::strlen(c), 
+        receiver_details::receiver_max_chars)*sizeof(char));
 }

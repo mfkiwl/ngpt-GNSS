@@ -7,7 +7,7 @@ AM_INIT_AUTOMAKE
 
 AC_LANG(C++)
 
-AC_CONFIG_SRCDIR([src/receiver.cpp])
+AC_CONFIG_SRCDIR([src/receiver.hpp])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.

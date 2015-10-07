@@ -1,8 +1,6 @@
 #ifndef _GNSS_RECEIVER_
 #define _GNSS_RECEIVER_
 
-#include <string>
-#include <cstring>
 
 /**
  * \file      receiver.hpp
@@ -43,26 +41,29 @@
 namespace ngpt
 {
 
-/// Maximum size of a char array, holding any receiver type
-constexpr std::size_t _RECEIVER_MAX_SIZE_ { 20 };
+  /// Namespace to hide receiver specific details.
+  namespace receiver_details
+  {
+    /// Maximum size of a char array, holding any receiver type.
+    constexpr std::size_t receiver_max_chars { 20 };
 
-/// Maximum size a char array, holding any receiver in bytes
-constexpr std::size_t _RECEIVER_MAX_SIZE_BYTES_
-{ _RECEIVER_MAX_SIZE_ * sizeof(char) };
+    /// Maximum size a char array, holding any receiver in bytes.
+    constexpr std::size_t receiver_max_bytes
+    { receiver_max_chars * sizeof(char) };
 
-/* -----------------------------------------------------------------
- * STATIC ASSERT BLOCK.
- * ------------------------------------------------------------------
-/// Better to be safe than sorry ...
-static_assert(_RECEIVER_MAX_SIZE_BYTES_ >= _RECEIVER_MAX_SIZE_,
-              "Receiver size in bytes < Receiver size ?!?");
- * ------------------------------------------------------------------
- */
+    /// Better to be safe than sorry ...
+    static_assert(receiver_max_bytes >= receiver_max_chars, 
+                  "Receiver size in bytes < Receiver size ?!?");
+  }
 
-/** \details  This class holds a GNSS receiver. Any receiver is represesnted
- *            by a string of max _RECEIVER_MAX_SIZE_ columns. One space between
- *            manufacturer name and model name. Allowed in model name: 'A-Z'
- *            and '0-9' and space and '-_+'.
+/** \details  This class holds a GNSS receiver. Any receiver is represented
+ *            by an array of chars of maximum receiver_details::receiver_max_chars 
+ *            elements. One space between manufacturer name and model name. 
+ *            Allowed in model name: 
+ *            -# 'A-Z'
+ *            -# '0-9' 
+ *            -# space and 
+ *            -# '-_+'.
  *            Example: 'ASHTECH 3DF-XXIV', 'TPS ODYSSEY_E'.
  *
  * Reference: <a href="https://igscb.jpl.nasa.gov/igscb/station/general/rcvr_ant.tab">
@@ -73,59 +74,57 @@ class Receiver
 public:
 
   /// Default constructor.
-  Receiver() noexcept {};
+  Receiver() noexcept;
 
   /// Constructor from receiver type.
-  explicit Receiver (const char*) noexcept;
+  explicit Receiver(const char*) noexcept;
 
   /// Constructor from receiver type.
-  explicit Receiver (const std::string&) noexcept;
+  explicit Receiver(const std::string&) noexcept;
 
   /// Copy constructor.
-  Receiver(const Receiver& rhs) noexcept
-  {
-    std::memcpy(name_,rhs.name_,_RECEIVER_MAX_SIZE_BYTES_);
-  }
+  Receiver(const Receiver&) noexcept;
 
   /// Move constructor.
   Receiver(Receiver&&) noexcept = default;
 
   /// Assignment operator.
-  Receiver& operator=(const Receiver& rhs) noexcept
-  {
-    if (this!=&rhs)
-    {
-      std::memcpy(name_,rhs.name_,_RECEIVER_MAX_SIZE_BYTES_);
-    }
-    return *this;
-  }
+  Receiver& operator=(const Receiver&) noexcept;
+
+  /// Assignment operator (from c-string).
+  Receiver& operator=(const char*) noexcept;
+
+  /// Assignment operator (from std::string).
+  Receiver& operator=(const std::string&) noexcept;
 
   /// Move assignment operator.
   Receiver& operator=(Receiver&&) noexcept = default;
 
   /// Equality operator.
-  bool operator==(const Receiver& rhs) noexcept
-  {
-    return ( !std::strncmp(name_,rhs.name_,_RECEIVER_MAX_SIZE_) );
-  }
+  bool operator==(const Receiver&) noexcept;
 
   /// Destructor.
   ~Receiver() noexcept = default;
 
   /// Pointer to receiver name.
-  inline const char* name() const noexcept
-  {
-    return name_;
-  }
+  inline const char* name() const noexcept;
 
   /// Receiver name as string.
-  inline std::string toString() const noexcept
-  {
-    return std::string(name_,_RECEIVER_MAX_SIZE_);
-  }
+  std::string toString() const noexcept;
 
 private:
-  char name_[_RECEIVER_MAX_SIZE_]; ///< Receiver type name.
+
+  /// set all chars to '\0'.
+  inline void nullify() noexcept;
+
+  /// copy from an std::string (to name).
+  inline void copy_from_str(const std::string&) noexcept;
+
+  /// copy from a c-string.
+  inline  void copy_from_cstr(const char*) noexcept;
+
+  /// this array holds the receiver name; no '\0' !
+  char name_[receiver_details::receiver_max_chars];
 }; // end Receiver
 
 } // end ngpt

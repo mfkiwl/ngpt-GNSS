@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<book xml:id="ngpt_doc" 
+  xmlns="http://docbook.org/ns/docbook" version="5.0" 
+  xmlns:xi="http://www.w3.org/2001/XInclude">
+  <info>
+    <title>My First Book</title>
+    <author>
+      <personname><firstname>Jane</firstname><surname>Doe</surname></personname>
+    </author>
+    <copyright><year>2010</year><holder>Jane Doe</holder></copyright>
+  </info>
+  <xi:include href="receiver.xml"/>
+</book>
+
+<!--
+     xsltproc -xinclude -o mybook.html /usr/share/sgml/docbook/xsl-ns-stylesheets/html/docbook.xsl main.xml
+-->

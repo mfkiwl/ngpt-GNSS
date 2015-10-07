@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter xml:id="installation" xmlns="http://docbook.org/ns/docbook" version="5.0" >
+  <title>GNSS Receivers</title>
+  <section xml:id="chap_rec_01"><title>Introduction</title>
+    <para>To describe a GNSS receiver, we use the IGS standards; all information
+      presented here, is recorded in the 
+      <ulink url='https://igscb.jpl.nasa.gov/igscb/station/general/rcvr_ant.tab'>rcvr_ant.tab</ulink>
+      document maintained by IGS.</para>
+    </section>
+      <section xml:id="chap_rec_02"><title>Receiver Representation</title>
+        <para>According to the IGS convention, a GNSS receiver can be represented by
+        a string of (maximum) 20 columns. One [white]space between manufacturer name 
+        and model name is inserted. Valid characters in model name include: 
+        <itemizedlist mark='opencircle'>
+          <listitem><para><userinput>A-Z</userinput> i.e. all uppercase letters,</para></listitem>
+          <listitem><para><userinput>0-9</userinput> i.e. all integers,</para></listitem>
+          <listitem><para><userinput>space</userinput> i.e. whitespace characters,</para></listitem>
+          <listitem><para><userinput>-_+</userinput>i.e. the characters '+', '-' and '_'</para></listitem>
+        </itemizedlist>
+      </para>
+      <para> The following receivers are example cases of valid models, recorded in
+        <ulink url='https://igscb.jpl.nasa.gov/igscb/station/general/rcvr_ant.tab'>rcvr_ant.tab</ulink>:
+        <example xml:id="rec.receiverex1">
+          <title>Valid GNSS Receivers</title>
+          <screen>
+            +----------------------+-------------------------------------------------------+
+            | ASHTECH Receivers    |                                                       |
+            | IGS Codes-20 columns |                      Description                      |
+            | XXXXXXXXXXXXXXXXXXXX |                                                       |
+            +----------------------+-------------------------------------------------------+
+            | ASHTECH xxxxxxxx     | Note: Ashtech receiver types xxxxxxxx are passed      |
+            |                      |  automatically through firmware to S- and B-files     |
+            | ASHTECH 3DF-XXIV     |  4x6 channel, L1 only                                 |
+            | ASHTECH 802147_A     |  ProMark 800, 120 channels GPS L1/L2/L5, GLONASS,     |
+            |                      |   Galileo, SBAS integrated receiver/antenna           |
+            | ASHTECH D-XII        |  12  channel, L1 only                                 |
+
+            | JAVAD Receivers      |                                                       |
+            | IGS Codes-20 columns |                      Description                      |
+            | XXXXXXXXXXXXXXXXXXXX |                                                       |
+            +----------------------+-------------------------------------------------------+
+            | JAVAD DUO_G2         | 216 channels GPS L1, Galileo E1                       |
+            | JAVAD DUO_G2 DELTA   | 216 channels GPS L1, Galileo E1                       |
+            | JAVAD DUO_G2 SIGMA   | 216 channels GPS L1, Galileo E1                       |
+
+            | LEICA Receivers      |                                                       |
+            | IGS Codes-20 columns |                      Description                      |
+            | XXXXXXXXXXXXXXXXXXXX |                                                       |
+            +----------------------+-------------------------------------------------------+
+            | LEICA ATX1230        |  12 channel L1/L2 receiver, Smartantenna              |
+            | LEICA ATX1230+GNSS   |  120 channel GPS L1/L2/L5, GLONASS, Galileo, BeiDou   |
+            |                      |  Smartantenna                                         |
+            | LEICA CRS1000        |  12 channel L1/L2, continuous reference station       |
+            | LEICA GG02PLUS       |  72 channel GPS L1/L2, GLONASS GNSS/GIS Smartantenna  |
+          </screen>
+        </example>
+    </para>
+  </section>
+  <section xml:id="chap_rec_03"><title>Usage</title>
+    <para>The (GNSS) Receiver class is declared in the header file 
+      <filename class='headerfile'>src/receiver.hpp</filename>, while the definition source 
+      file is <filename class='cppfile'>src/receiver.cpp</filename>. Example usage of the 
+      class is made available in the <filename class='cppfile'>test/test_receiver.cpp</filename> 
+      file.</para>
+    <important><para>The <classname>Receiver</classname> class is contained in the
+        <classname>ngpt</classname> namespace.</para></important>
+
+    <para>To use the class, you will need to include the header file 
+      <filename class='headerfile'>receiver.hpp</filename>. Construction of an instance 
+      of the <classname>Receiver</classname> class, can be achieved either with an 
+      <classname>std::string</classname> or a <classname>c-string</classname>. For 
+      example: 
+      <example xml:id="rec_ex1"><title><classname>Receiver</classname> Construction</title> 
+        <programlisting linenumbering='numbered'> 
+          #include "receiver.hpp" 
+          // ...
+
+          using ngpt::Receiver;
+
+          /*
+          ...
+           */
+          Receiver recvr_1 ( "JAVAD TR_G4 ALPHA" ); // from c-str
+          Receiver recvr_2 ( std::string( "JAVAD TR_G4 ALPHA" ) ); // from std::string
+          /*
+          ...
+          */
+    </programlisting></example></para>
+    
+    <para>You can also assign a <classname>Receiver</classname> to an 
+      <classname>std::string</classname> or <classname>a c-string</classname>. 
+      This sounds weird, but comes handy:
+      <example xml:id="rec_ex2"><title><classname>Receiver</classname> Assignment</title>
+        <programlisting linenumbering='numbered'> 
+          #include "receiver.hpp" 
+          // ...
+
+          using ngpt::Receiver;
+
+          /*
+          ...
+          */
+          Receiver recvr_1, recvr_2;
+          recvr_1 = "JAVAD TR_G4 ALPHA";
+          recvr_2 = std::string( "JAVAD TR_G4 ALPHA" ); 
+          /*
+          ...
+          */
+  </programlisting></example></para>
+</section>
+
+<section xml:id="chap_rec_04"><title>Implementation</title>
+  <para><classname>Receiver</classname> is a very simple, elementary class; each instance
+    only stores an array of 20 characters. Be carefull though, 
+    <caution><para><classname>Receiver</classname> only owns a char array not a 
+        <classname>c-string</classname>!</para></caution>
+    Bad things can happen if this is not taken into account.</para>
+  <para>The size of the stored array is always reffered to using a constant, hide in
+    a namespace (the same goes for the array size in bytes);
+      <example xml:id="rec_ex3"><title><classname>Receiver</classname> Constants</title>
+        <programlisting linenumbering='numbered'>
+        /// Namespace to hide receiver specific details.
+        namespace receiver_details
+        {
+          /// Maximum size of a char array, holding any receiver type.
+          constexpr std::size_t receiver_max_chars { 20 };
+
+          /// Maximum size a char array, holding any receiver in bytes.
+          constexpr std::size_t receiver_max_bytes
+          { receiver_max_chars * sizeof(char) };
+
+          /// Better to be safe than sorry ...
+          static_assert(receiver_max_bytes >= receiver_max_chars, 
+                        "Receiver size in bytes less than Receiver size ?!?");
+        }
+    </programlisting></example>
+    Never use the number 20 to refer to the size of the character array; always
+    use <parameter>receiver_details::receiver_max_chars</parameter> to refer to the
+    (maximum) size of the character array (and <parameter>receiver_details::receiver_max_bytes</parameter>
+    for the size in bytes).</para>
+  <para>One ambiguous decision, is to define assignment operators using (as the
+    right operand) a <classname>std::string</classname> or a <classname>c-string</classname>
+    (see <xref linkend="rec_ex2"/>). This could potentialy lead to misuse, but it
+    really is handy!.</para>
+</section>
+</chapter>
