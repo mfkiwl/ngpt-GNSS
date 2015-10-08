@@ -24,13 +24,13 @@ int main ()
     r7 = std::string("JAVAD TR");
     
     // Print the receiver names
-    std::cout<<"Receiver r1 type: "<< r1.toString();
-    std::cout<<"\nReceiver r2 type: "<< r2.toString();
-    std::cout<<"\nReceiver r3 type: "<< r3.toString();
-    std::cout<<"\nReceiver r4 type: "<< r4.toString();
-    std::cout<<"\nReceiver r5 type: "<< r5.toString();
-    std::cout<<"\nReceiver r6 type: "<< r6.toString();
-    std::cout<<"\nReceiver r7 type: "<< r7.toString();
+    std::cout<<"Receiver r1 type: ["<< r1.toString() << "]";
+    std::cout<<"\nReceiver r2 type: ["<< r2.toString() << "]";
+    std::cout<<"\nReceiver r3 type: ["<< r3.toString() << "]";
+    std::cout<<"\nReceiver r4 type: ["<< r4.toString() << "]";
+    std::cout<<"\nReceiver r5 type: ["<< r5.toString() << "]";
+    std::cout<<"\nReceiver r6 type: ["<< r6.toString() << "]";
+    std::cout<<"\nReceiver r7 type: ["<< r7.toString() << "]";
     
     // Check wether some receivers are the same
     std::cout<<"\nAre r1 and r2 the same ? " << ( (r1==r2)?"yes":"no" );

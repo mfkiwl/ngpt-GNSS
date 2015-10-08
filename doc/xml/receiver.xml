@@ -86,7 +86,7 @@
           ...
           */
     </programlisting></example></para>
-    
+
     <para>You can also assign a <classname>Receiver</classname> to an 
       <classname>std::string</classname> or <classname>a c-string</classname>. 
       This sounds weird, but comes handy:
@@ -142,5 +142,91 @@
     right operand) a <classname>std::string</classname> or a <classname>c-string</classname>
     (see <xref linkend="rec_ex2"/>). This could potentialy lead to misuse, but it
     really is handy!.</para>
+
+  <para>As mentioned, a <classname>Receiver</classname> instance can hold up to
+    <parameter>receiver_details::receiver_max_chars</parameter> characters. That 
+    means, that if a <classname>Receiver</classname> is assigned a model name larger
+    than <parameter>receiver_details::receiver_max_chars</parameter> (in characters), 
+    then the name will be truncated. On the other hand, if the assigned is less
+    than <parameter>receiver_details::receiver_max_chars</parameter> characters,
+    all unused character fields will be set to <parameter>'\0'</parameter> (this
+    is also what happens when a <classname>Receiver</classname> is zero-initialized).</para>
 </section>
+<section xml:id="chap_rec_05"><title>Examples</title>
+  <para>The following is a close copy of the example file <filename class='cppfile'>test/test_receiver.cpp</filename>
+    which shows how to use the class.
+    <example xml:id="rec_ex4"><title><classname>Receiver</classname> Example</title>
+      <programlisting linenumbering='numbered'>
+        #include &lt;iostream&gt;
+        #include &lt;climits&gt;
+        #include "receiver.hpp"
+
+        using namespace ngpt;
+
+        int main ()
+        {
+
+        /*
+         * Construct some Receiver instances, using various
+         * constructors.
+         */
+        // an std::string; note the leading whitespace
+        std::string srec { " GEODETIC III L1/L2   " };
+        // this c-string is too long .. will be truncated
+        char buf[] = {"JAVAD TR_G3 ALPHA                   FOO             BAR"};
+        // construct using a c-string; note the trailing whitespace chars !
+        Receiver r1 { "JAVAD TR_G3 ALPHA    " };
+        // construct using a c-string
+        Receiver r2 { "JAVAD TR_G4 ALPHA" };
+        Receiver r3 { buf };
+        // construct from std::string
+        Receiver r4 { srec };
+        // construct from std::string; will be truncated ..
+        Receiver r5 { std::string("JAVAD TR_G3 ALPHA tooooolongstring..") };
+
+        /* using the assignment operator */
+        Receiver r6, r7; // fill with '\0'
+        // too long !
+        r6 = "JAVAD TR_G3 ALPHA                   FOO             BAR";
+        // too short !
+        r7 = std::string("JAVAD TR");
+
+        /* Print the receiver names */
+        std::cout&lt;&lt;"Receiver r1 type: ["&lt;&lt; r1.toString() &lt;&lt; "]";
+        std::cout&lt;&lt;"\nReceiver r2 type: ["&lt;&lt; r2.toString() &lt;&lt; "]";
+        std::cout&lt;&lt;"\nReceiver r3 type: ["&lt;&lt; r3.toString() &lt;&lt; "]";
+        std::cout&lt;&lt;"\nReceiver r4 type: ["&lt;&lt; r4.toString() &lt;&lt; "]";
+        std::cout&lt;&lt;"\nReceiver r5 type: ["&lt;&lt; r5.toString() &lt;&lt; "]";
+        std::cout&lt;&lt;"\nReceiver r6 type: ["&lt;&lt; r6.toString() &lt;&lt; "]";
+        std::cout&lt;&lt;"\nReceiver r7 type: ["&lt;&lt; r7.toString() &lt;&lt; "]";
+
+        /* Check wether some receivers are the same */
+        std::cout&lt;&lt;"\nAre r1 and r2 the same ? " &lt;&lt; ( (r1==r2)?"yes":"no" );
+        std::cout&lt;&lt;"\nAre r1 and r3 the same ? " &lt;&lt; ( (r1==r3)?"yes":"no" );
+        std::cout&lt;&lt;"\nAre r1 and r4 the same ? " &lt;&lt; ( (r1==r4)?"yes":"no" );
+
+        /* Print the size of each instance */
+         std::cout&lt;&lt;"\nSize of receiver object = " &lt;&lt; sizeof(r1)  
+                  &lt;&lt; " bytes or " &lt;&lt; sizeof(r1)*CHAR_BIT &lt;&lt; " bits";
+
+        std::cout&lt;&lt;"\n";
+        return 0;
+        }
+        </programlisting></example></para>
+
+  <para>Compiling &amp; running the above (<prompt>$></prompt> <userinput>test/testReceiver</userinput>), will produce the following output
+    <screen>
+      Receiver r1 type: [JAVAD TR_G3 ALPHA   ]
+      Receiver r2 type: [JAVAD TR_G4 ALPHA]
+      Receiver r3 type: [JAVAD TR_G3 ALPHA   ]
+      Receiver r4 type: [ GEODETIC III L1/L2 ]
+      Receiver r5 type: [JAVAD TR_G3 ALPHA to]
+      Receiver r6 type: [JAVAD TR_G3 ALPHA   ]
+      Receiver r7 type: [JAVAD TR]
+      Are r1 and r2 the same ? no
+      Are r1 and r3 the same ? yes
+      Are r1 and r4 the same ? no
+      Size of receiver object = 20 bytes or 160 bits
+      </screen></para>
+  </section>
 </chapter>
