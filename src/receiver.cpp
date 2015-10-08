@@ -2,6 +2,10 @@
 #include <cstring>
 #include <algorithm>
 #include "receiver.hpp"
+#ifdef DEBUG
+#include <regex>
+#include <iostream>
+#endif
 
 using ngpt::Receiver;
 
@@ -103,3 +107,28 @@ void Receiver::copy_from_cstr(const char* c) noexcept
   std::memcpy(name_, c, std::min(std::strlen(c), 
         receiver_details::receiver_max_chars)*sizeof(char));
 }
+
+#ifdef DEBUG
+/// Validate the receiver model; a receiver model, according to the IGS
+/// conventions, may be a sequence of any of the characters:
+///  -# 'A-Z'
+///  -# '0-9' 
+///  -# space and 
+///  -# '-_+'.
+/// 
+/// \return true if the model name matches the specifications; false
+///         otherwise.
+/// \note   To perform the check, the receiver model name is compared against
+///         the regular expression: '[A-Z,0-9, ,+,-,_]+$'
+bool Receiver::validate() const
+{
+  std::regex valid ( "[A-Z -_\\+]+$" );
+  // return std::regex_match(this->toString(), valid);
+  // std::string str (this->toString());
+  char str[21];
+  std::memset(str, '\0', 21);
+  std::memcpy(str, name_, 20*sizeof(char));
+  std::cout <<"\nREGEX -> greping string ["<<str<<"]";
+  return std::regex_match(str, valid);
+}
+#endif

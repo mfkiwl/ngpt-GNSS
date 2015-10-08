@@ -112,6 +112,11 @@ public:
   /// Receiver name as string.
   std::string toString() const noexcept;
 
+#ifdef DEBUG
+  /// Validate the receiver model.
+  bool validate() const;
+#endif
+
 private:
 
   /// set all chars to '\0'.
