@@ -113,23 +113,24 @@ public:
   std::string toString() const noexcept;
 
 #ifdef DEBUG
-  /// Validate the receiver model.
+  /// Validate the receiver model (according to IGS).
   bool validate() const;
 #endif
 
 private:
 
-  /// set all chars to '\0'.
+  /// Set all chars to '\0'.
   inline void nullify() noexcept;
 
-  /// copy from an std::string (to name).
+  /// Copy from an std::string (to name).
   inline void copy_from_str(const std::string&) noexcept;
 
-  /// copy from a c-string.
+  /// Copy from a c-string.
   inline  void copy_from_cstr(const char*) noexcept;
 
-  /// this array holds the receiver name; no '\0' !
-  char name_[receiver_details::receiver_max_chars];
+  /// This array holds the receiver name; last char always '\0' !
+  char name_[receiver_details::receiver_max_chars + 1];
+
 }; // end Receiver
 
 } // end ngpt
