@@ -1,7 +1,6 @@
 #ifndef _GNSS_RECEIVER_
 #define _GNSS_RECEIVER_
 
-
 /**
  * \file      receiver.hpp
  *
@@ -14,13 +13,9 @@
  *
  * \brief     Receiver Class for GNSS.
  *
- * \details
+ * \details   This file declarea a Receiver Class for GNSS. Reference is
+ *            the IGS rcvr_ant.tab (see https://igscb.jpl.nasa.gov/igscb/station/general/rcvr_ant.tab)
  *
- * \note
- *
- * \todo      If the static-assert block is not commented out (it shouldn't),
- *            doxygen fails to parse the rest of the file. It is temporarily
- *            commented out, but there should be a workaround.
  *
  * \copyright Copyright © 2015 Dionysos Satellite Observatory, <br>
  *            National Technical University of Athens. <br>
@@ -58,13 +53,35 @@ namespace ngpt
 
 /** \details  This class holds a GNSS receiver. Any receiver is represented
  *            by an array of chars of maximum receiver_details::receiver_max_chars 
- *            elements. One space between manufacturer name and model name. 
+ *            elements. One space between manufacturer name and model name.
+ *
+ *            The class has a (single) member holding a \c cstring, representing
+ *            the model name. The model name can be of maximum 
+ *            receiver_details::receiver_max_chars characters. One more char is
+ *            reserved (the last one) to add the '\0' character. So the size of the
+ *            member char-array is actually receiver_details::receiver_max_chars + 1.
+ *
+ *            Never mess with the last character! You can't if you use the
+ *            interface.
+ *
  *            Allowed in model name: 
  *            -# 'A-Z'
  *            -# '0-9' 
  *            -# space and 
  *            -# '-_+'.
  *            Example: 'ASHTECH 3DF-XXIV', 'TPS ODYSSEY_E'.
+ *
+ * \todo      -# Sould the move constructors be enabled ?
+ *
+ * \bug       -# The function validate does not work as expected 
+ *               \see Receiver::validate().
+ *               For example the following: 
+ *               \code{.cpp}
+ *               Receiver rec {" GEODETIC III L1/L2   "};
+ *               bool ok = rec.validate();
+ *               \endcode
+ *               Will set \c ok to \c true , even though the character \c '/'
+ *               is not allowed.
  *
  * Reference: <a href="https://igscb.jpl.nasa.gov/igscb/station/general/rcvr_ant.tab">
  *            IGS rcvr_ant.tab</a>
@@ -112,10 +129,8 @@ public:
   /// Receiver name as string.
   std::string toString() const noexcept;
 
-#ifdef DEBUG
   /// Validate the receiver model (according to IGS).
   bool validate() const;
-#endif
 
 private:
 

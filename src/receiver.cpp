@@ -1,11 +1,8 @@
 #include <string>
 #include <cstring>
 #include <algorithm>
-#include "receiver.hpp"
-#ifdef DEBUG
 #include <regex>
-#include <iostream>
-#endif
+#include "receiver.hpp"
 
 using ngpt::Receiver;
 
@@ -132,7 +129,6 @@ void Receiver::copy_from_cstr(const char* c) noexcept
         receiver_details::receiver_max_bytes) );
 }
 
-#ifdef DEBUG
 /// Validate the receiver model; a receiver model, according to the IGS
 /// conventions, may be a sequence of any of the characters:
 ///  -# 'A-Z'
