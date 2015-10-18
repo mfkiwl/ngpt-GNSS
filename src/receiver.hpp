@@ -55,29 +55,32 @@ namespace ngpt
                   "Receiver size in bytes < Receiver size ?!?");
   }
 
-/** \details  This class holds a GNSS receiver. Any receiver is represented
- *            by an array of chars of maximum receiver_details::receiver_max_chars 
- *            elements. One space between manufacturer name and model name.
+/** \class   Receiver
  *
- *            The class has a (single) member holding a \c cstring, representing
- *            the model name. The model name can be of maximum 
- *            receiver_details::receiver_max_chars characters. One more char is
- *            reserved (the last one) to add the '\0' character. So the size of the
- *            member char-array is actually receiver_details::receiver_max_chars + 1.
+ * \details  This class holds a GNSS receiver. Any receiver is represented
+ *           by an array of chars of maximum receiver_details::receiver_max_chars 
+ *           elements. One space between manufacturer name and model name.
  *
- *            Never mess with the last character! You can't if you use the
- *            interface.
+ *           The class has a (single) member holding a \c cstring, representing
+ *           the model name. The model name can be of maximum 
+ *           receiver_details::receiver_max_chars characters. One more char is
+ *           reserved (the last one) to add the '\0' character. So the size of the
+ *           member char-array is actually receiver_details::receiver_max_chars + 1.
  *
- *            Allowed in model name: 
+ *           Never mess with the last character! You can't if you use the
+ *           interface.
+ *
+ *           Allowed in model name: 
  *            -# 'A-Z'
  *            -# '0-9' 
  *            -# space and 
  *            -# '-_+'.
- *            Example: 'ASHTECH 3DF-XXIV', 'TPS ODYSSEY_E'.
+ *           
+ *           Example: 'ASHTECH 3DF-XXIV', 'TPS ODYSSEY_E'.
  *
- * \todo      -# Sould the move constructors be enabled ?
+ * \todo     -# Sould the move constructors be enabled ?
  *
- * \bug       -# The function validate does not work as expected 
+ * \bug      -# The function validate does not work as expected 
  *               \see Receiver::validate().
  *               For example the following: 
  *               \code{.cpp}
@@ -87,7 +90,9 @@ namespace ngpt
  *               Will set \c ok to \c true , even though the character \c '/'
  *               is not allowed.
  *
- * \cite         rcvr_ant
+ * References \cite rcvr_ant
+ *
+ * \example   test_receiver.cpp
  */
 class Receiver
 {

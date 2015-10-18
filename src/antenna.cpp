@@ -90,7 +90,7 @@ Antenna& Antenna::operator=(const char* c) noexcept
 /// \note         If the size of the input std::string is less than antenna_model_max_chars
 ///               the radome is automatically set to 'NONE'.
 ///
-Antenna::Antenna::operator=(const std::string& s) noexcept
+Antenna& Antenna::operator=(const std::string& s) noexcept
 {
   this->copy_from_str(s);
   return *this;
@@ -100,7 +100,7 @@ Antenna::Antenna::operator=(const std::string& s) noexcept
 ///
 /// \warning This function will NOT check the antenna serial number.
 ///
-bool Antenna::operator==(const Antenna& rhs) noexcept
+bool Antenna::operator==(const Antenna& rhs) const noexcept
 {
   return ( !std::strncmp(name_ ,rhs.name_ , 
         antenna_model_max_chars+1+antenna_radome_max_chars+1) );
@@ -110,7 +110,7 @@ bool Antenna::operator==(const Antenna& rhs) noexcept
 /// if the Antenna is the same, i.e. they share the same model, radome and
 /// serial number.
 ///
-bool Antenna::is_same(const Antenna& rhs) noexcept
+bool Antenna::is_same(const Antenna& rhs) const noexcept
 {
   return ( !std::strncmp(name_ ,rhs.name_ , antenna_full_max_chars) );
 }
@@ -129,9 +129,15 @@ std::string Antenna::radome_str() const noexcept
   return std::string(name_+antenna_model_max_chars+1, antenna_radome_max_chars);
 }
 
+/// Antenna model/radome pair as string.
+///
+std::string Antenna::toString() const noexcept
+{
+  return std::string(name_, antenna_model_max_chars+1+antenna_radome_max_chars);
+}
 /// Set all chars in \c name_ to \c '\0'. 
 inline 
-void Antenna::nullify noexcept
+void Antenna::nullify() noexcept
 {
   std::memset( name_, '\0', antenna_full_max_chars * sizeof(char) );
 }
@@ -147,29 +153,47 @@ void Antenna::nullify_antenna() noexcept
   std::memset( name_, '\0', chars * sizeof(char) );
 }
 
+/// Set all chars corresponding to the antenna name plus radome in \c name_,
+/// to \c ' ' (i.e. whitespace char). Note that the serial number will be left 
+/// as is.
+///
+inline 
+void Antenna::wspaceify_antenna() noexcept
+{
+  std::size_t chars { antenna_model_max_chars + 1 
+    + antenna_radome_max_chars + 1 };
+  std::memset( name_, ' ', chars * sizeof(char) );
+}
+
 /// Set radome to 'NONE'
 inline
 void Antenna::set_none_radome() noexcept
 {
   std::memcpy(name_+antenna_model_max_chars+1, none_radome, 
-      antenna_radome_max_chars * sizeof char);
+      antenna_radome_max_chars * sizeof(char));
 }
 
-/// Copy from an std::string (to \c name_).
+/// \details     Set an antenna/radome pair from an std::string. The input 
+///              antenna/radome pair, should follow the conventions in 
+///              \cite rcvr_ant . Note that the function will leave the antenna
+///              serial number as is.
 ///
-/// \param[in] s An std::string representing a valid receiver model name.
+/// \param[in] c An std::string representing a valid antenna model name, or 
+///              optionaly aan antenna/radome pair.
 ///
-/// \note        The characters copied from the input std::string \c s are 
-///              <tt>min( s.size(), receiver_details::receiver_max_chars )</tt>.
-///
-/// \warning     This function asserts that 
-///              <tt>receiver_details::receiver_max_chars > 0</tt> ; else the 
-///              \c nothrow specification is not valid.
+/// \note        The function's behaviour depends on the size of the provided
+///              input std::string. So, if
+///              - the input string has length <= antenna_model_max_chars then
+///                it is assumed that the c-string only describes the antenna
+///                model. The radome type is set to 'NONE'.
+///              - the input string has length > antenna_model_max_chars then
+///                it is assumed that the c-string is a full pair of antenna
+///                model/radome (as described in \cite rcvr_ant ).
 ///
 void Antenna::copy_from_str(const std::string& s) noexcept
 {
-  // set antenna model+radome to '\0'
-  this->nullify_antenna();
+  // set antenna model+radome to ' '
+  this->wspaceify_antenna();
   
   // size of input string
   std::size_t str_size { s.size() };
@@ -187,26 +211,27 @@ void Antenna::copy_from_str(const std::string& s) noexcept
   }
 }
 
-/// Set an antenna/radome pair from a c-string. The input antenna/radome pair, 
-/// should follow the conventions in https://igscb.jpl.nasa.gov/igscb/station/general/rcvr_ant.tab
-/// Note that the function will leave the antenna serial number as is.
+/// \details     Set an antenna/radome pair from a c-string. The input 
+///              antenna/radome pair, should follow the conventions in 
+///              \cite rcvr_ant . Note that the function will leave the antenna
+///              serial number as is.
 ///
-/// \param[in] c A \c cstring representing a valid antenna model name plus 
-///              radome.
+/// \param[in] c A \c cstring representing a valid antenna model name, or 
+///              optionaly aan antenna/radome pair.
 ///
 /// \note        The function's behaviour depends on the size of the provided
 ///              input c-string. So, if
-///              # the input c-string has length <= antenna_model_max_chars then
+///              - the input c-string has length <= antenna_model_max_chars then
 ///                it is assumed that the c-string only describes the antenna
 ///                model. The radome type is set to 'NONE'.
-///              # the input c-string has length > antenna_model_max_chars then
+///              - the input c-string has length > antenna_model_max_chars then
 ///                it is assumed that the c-string is a full pair of antenna
 ///                model/radome (as described in \cite rcvr_ant ).
 ///
 void Antenna::copy_from_cstr(const char* c) noexcept
 {
   // set antenna model+radome to null.
-  this->nullify_antenna();
+  this->wspaceify_antenna();
 
   // get the size of the input string.
   std::size_t ant_size { std::strlen(c) };
@@ -238,8 +263,10 @@ void Antenna::copy_from_cstr(const char* c) noexcept
 ///
 /// \bug    This seems to also match the \c '/' character though it shouldn't !
 ///
+/*
 bool Antenna::validate() const
 {
   std::regex valid ( "[A-Z -_\\+]+$" );
   return std::regex_match(name_, valid);
 }
+*/

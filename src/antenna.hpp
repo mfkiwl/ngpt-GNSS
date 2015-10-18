@@ -60,14 +60,15 @@ namespace ngpt
 
 /** \class    Antenna
  *
- *  \details  This class holds a GNSS Antenna + Radome type and a Serial Number.
+ * \details  This class holds a GNSS Antenna either for a satellite or a 
+ *           receiver. Every antenna is repreesnted by a specific Antenna model
+ *           name, a Radome model and a Serial Number. These are all concateneted
+ *           is a char array (but not exactly a c-string). See the note below
+ *           for how this character array is formed.
  *
- * Reference: <a href="https://igscb.jpl.nasa.gov/igscb/station/general/rcvr_ant.tab">
- *            IGS rcvr_ant.tab</a>,
- *            <a href="https://igscb.jpl.nasa.gov/igscb/station/general/blank.log">
- *            IGS log file</a>.
+ * References \cite rcvr_ant
  *
- * \note      The c-string array allocated for each instance, looks like:
+ * \note     The c-string array allocated for each instance, looks like:
  * \verbatim
   N = antenna_model_max_chars
   M = antenna_radome_max_chars
@@ -84,16 +85,19 @@ namespace ngpt
                       ^                  ^                          ^
                       |                  |                          |
             whitespace character         |                          |
-                                   whitespace character             |
+                                       '\0'                         |
                                                                    '\0'
   \endverbatim
+ *
+ * \example  test_antenna.cpp
+ *           An example to show how to use the Antenna class.
  */
 class Antenna
 {
 public:
 
   /// Default constructor.
-  Antenna() noexcept { };
+  Antenna() noexcept;
 
   /// Constructor from Antenna type plus Radome (if any).
   explicit Antenna (const char*) noexcept;
@@ -102,95 +106,68 @@ public:
   explicit Antenna (const std::string&) noexcept;
 
   /// Copy constructor.
-  Antenna(const Antenna& rhs) noexcept
-  {
-    std::memcpy(name_,rhs.name_,_MAX_ANTENNA_SIZE_BYTES_);
-  }
+  Antenna(const Antenna&) noexcept;
 
   /// Move constructor.
   Antenna(Antenna&&) noexcept = default;
 
   /// Assignment operator.
-  Antenna& operator=(const Antenna& rhs) noexcept
-  {
-    if (this!=&rhs)
-    {
-      std::memcpy(name_,rhs.name_,_MAX_ANTENNA_SIZE_BYTES_);
-    }
-    return *this;
-  }
+  Antenna& operator=(const Antenna&) noexcept;
+
+  /// Assignment operator from a c-string.
+  Antenna& operator=(const char*) noexcept;
+
+  /// Assignment operator from an std::string.
+  Antenna& operator=(const std::string&) noexcept;
 
   /// Move assignment operator.
   Antenna& operator=(Antenna&&) noexcept = default;
 
-  /// \brief   Equality operator (checks both antenna type and radome).
-  ///
-  /// \warning Antenna serial numbers are not checked! To compare antenna
-  ///          instances using also the serial numbers, see 
-  ///          Antenna::is_same(const Antenna&) const
-  bool operator==(const Antenna& rhs) const noexcept
-  {
-    return ( !std::strncmp(name_,rhs.name_,_MAX_ANTENNA_SIZE_BYTES_) );
-  }
-
-  /// Comparisson function, using also the serial number.
-  bool is_same(const Antenna& rhs) const noexcept
-  {
-    return (*this == rhs) &&
-      (!std::strncmp(name_+_SN_OFFSET_,rhs.name_+_SN_OFFSET_,_ANTENNA_SN_SIZE_));
-  }
-
-  /// Inequality operator (checks both antenna type and radome).
-  bool operator!=(const Antenna& rhs) const noexcept
-  {
-    return ( !(*this == rhs) );
-  }
+  /// Equality operator (checks both antenna type and radome).
+  bool operator==(const Antenna&) const noexcept;
+  
+  /// Equality operator (checks antenna type, radome and serial nr).
+  bool is_same(const Antenna&) const noexcept;
 
   /// Destructor.
   ~Antenna() noexcept {};
 
-  /// Pointer to antenna name.
-  inline const char* name() const noexcept
-  {
-    return name_;
-  }
+  /// Antenna model name as string.
+  std::string model_str() const noexcept;
 
-  /// Pointer to (start of) radome.
-  inline const char* radome() const noexcept
-  {
-    return name_+_RADOME_OFFSET_;
-  }
+  /// Antenna radome name as string.
+  std::string radome_str() const noexcept;
 
-  /// Get the radome type (as String).
-  inline std::string radome_to_string() const noexcept
-  {
-    return std::string { name_+_RADOME_OFFSET_,_ANTENNA_RADOME_SIZE_ };
-  }
-
-  /// Antenna+Radome  as string.
-  inline std::string to_string() const noexcept
-  {
-    return std::string(name_,_MAX_ANTENNA_SIZE_);
-  }
-
-  /// Clear the name, radome and serial number (all set to whitespace).
-  inline void clear() noexcept
-  {
-    std::memset(name_, ' ', _MAX_ANTENNA_SIZE_);
-  }
-
-  /// Set the Radome type.
-  void set_radome(const char*) noexcept;
-
-  /// Set the Radome type.
-  void set_radome(const std::string&) noexcept;
-
-  /// Set the Antenna type (+ Radome).
-  void set_antenna(const char*) noexcept;
+  /// Antenna model/radome to string.
+  std::string toString() const noexcept;
 
 private:
 
-  ///< Combined antenna, radome and serian num.
+  /// Set all chars in \c name_ to \c '\0'. 
+  inline
+  void nullify() noexcept;
+
+  /// Set all chars corresponding to the antenna name plus radome in \c name_,
+  /// to \c '\0'. 
+  inline 
+  void nullify_antenna() noexcept;
+
+  /// Set all chars corresponding to the antenna name plus radome in \c name_,
+  /// to \c ' '. 
+  inline 
+  void wspaceify_antenna() noexcept;
+
+  /// Set radome to 'NONE'
+  inline
+  void set_none_radome() noexcept;
+
+  /// Copy from an std::string (to \c name_).
+  void copy_from_str(const std::string&) noexcept;
+
+  /// Set an antenna/radome pair from a c-string. The input antenna/radome pair, 
+  void copy_from_cstr(const char*) noexcept;
+
+  /// Combined antenna, radome and serian number.
   char name_[antenna_details::antenna_full_max_chars]; 
 
 }; // end Antenna

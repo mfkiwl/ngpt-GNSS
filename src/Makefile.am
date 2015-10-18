@@ -4,8 +4,8 @@ lib_LIBRARIES = libngpt.a
 libngpt_a_CXXFLAGS = -std=c++14 -g -Wall -Wextra -Werror -pedantic -W \
 					 -Wshadow -Winline -Wdisabled-optimization -DDEBUG
 
-dist_include_HEADERS = receiver.hpp 
+dist_include_HEADERS = receiver.hpp antenna.hpp
 ## antenna.hpp satsys.hpp antex.hpp antpcv.hpp
 
-dist_libngpt_a_SOURCES = receiver.cpp 
+dist_libngpt_a_SOURCES = receiver.cpp antenna.cpp
 ## antenna.cpp satsys.cpp antex.cpp antpcv.cpp
