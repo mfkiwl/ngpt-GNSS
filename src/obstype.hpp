@@ -4,8 +4,8 @@
 #include <vector>
 #include <algorithm>
 #include <iterator>
-#include "satsys.hpp"
 #include <type_traits>
+#include "satsys.hpp"
 
 /*
  * \file
@@ -62,14 +62,19 @@ enum class OBSERVATION_TYPE : char
 /// A missing attribute (e.g. RINEX v2.xx is always denoted as '?').
 struct Attribute
 {
-  explicit Attribute(char c) noexcept : _c(c) {};
-  bool operator==(const Attribute& a) const noexcept {return (_c == a._c);}
+  explicit Attribute(char c) noexcept 
+    : _c(c) 
+  {};
+  bool operator==(const Attribute& a) const noexcept 
+  {
+    return (_c == a._c);
+  }
   char _c;
 };
 
 /// Class to hold a raw, rinex observable.
 /// This is a helper class, do not use in real code.
-class _RawObs_ 
+class _RawObs_
 {
 private:
   SATELLITE_SYSTEM _satsys;     ///< Satellite system.
@@ -80,14 +85,14 @@ private:
 public:
   /// Constructor from a full set.
   explicit 
-  _RawObs_(SATELLITE_SYSTEM s,OBSERVATION_TYPE o,short int f,Attribute a) 
+  _RawObs_(SATELLITE_SYSTEM s, OBSERVATION_TYPE o, short int f, Attribute a) 
   noexcept
   :_satsys{s}, _obstype{o}, _nfrequency{f}, _attribute{a}
   {};
 
   /// Constructor from a full set where the attribute is a 'char'.
   explicit 
-  _RawObs_(SATELLITE_SYSTEM s,OBSERVATION_TYPE o,short int f,char c) 
+  _RawObs_(SATELLITE_SYSTEM s, OBSERVATION_TYPE o, short int f, char c) 
   noexcept
   :_satsys{s}, _obstype{o}, _nfrequency{f}, _attribute(Attribute{c})
   { };
@@ -149,18 +154,18 @@ public:
   
   /// Constructor from a full set.
   explicit
-  ObservationType(SATELLITE_SYSTEM s,OBSERVATION_TYPE o,short int f,
-    Attribute a,double coef = 1.0e0)
+  ObservationType(SATELLITE_SYSTEM s, OBSERVATION_TYPE o, short int f,
+    Attribute a, double coef = 1.0e0)
   noexcept
-  : _cov{ {coef, _RawObs_(s,o,f,a)} }
+  : _cov{ {coef, _RawObs_(s, o, f, a)} }
   {};
   
   /// Constructor from a full set where the attribute is a 'char'.
   explicit
-  ObservationType(SATELLITE_SYSTEM s,OBSERVATION_TYPE o,short int f,char c,
+  ObservationType(SATELLITE_SYSTEM s, OBSERVATION_TYPE o, short int f, char c,
     double coef = 1.0e0)
   noexcept
-  : _cov{ {coef, _RawObs_(s,o,f,Attribute{c})} }
+  : _cov{ {coef, _RawObs_(s, o, f, Attribute{c})} }
   {};
   
   /// Default copy constructor.
@@ -192,12 +197,13 @@ public:
   /// \brief Add an observation type. If the type already exists, then 
   ///        just alter the coefficient (to be previous + this one).
   ///
-  std::size_t add_type(const _RawObs_& t,double coef = 1.0e0) noexcept
+  std::size_t add_type(const _RawObs_& t, double coef = 1.0e0) noexcept
   {
     // Check if it (i.e. _RawObs_) already exists.
     auto it = std::find_if(std::begin(_cov), std::end(_cov),
-      [&t](const /*auto C++14*/CoefObsPair& i) ->bool { return i.second == t; }
-      );
+      [&t](const /*auto C++14*/CoefObsPair& i) ->bool { 
+        return i.second == t; 
+      });
     if (it == std::end(_cov))
       _cov.emplace_back(coef, t);
     else
@@ -209,8 +215,8 @@ public:
   /// \brief Add an observation type. If the type already exists, then just 
   ///        alter the coefficient.
   ///
-  inline std::size_t add_type(SATELLITE_SYSTEM s,OBSERVATION_TYPE o,short int f,
-    char c,double coef = 1.0e0) noexcept
+  inline std::size_t add_type(SATELLITE_SYSTEM s, OBSERVATION_TYPE o, short int f,
+    char c, double coef = 1.0e0) noexcept
   {
     return this->add_type(_RawObs_ (s,o,f,Attribute{c}), coef);
   }

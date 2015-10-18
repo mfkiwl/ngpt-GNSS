@@ -1,6 +1,8 @@
 #ifndef _GNSS_ANTENNA_
 #define _GNSS_ANTENNA_
 
+#include <regex>
+
 /**
  * \file      antenna.hpp
  *
@@ -96,6 +98,13 @@ class Antenna
 {
 public:
 
+  /// Antenna Type: Receiver or Satellite.
+  enum class Antenna_Type : char 
+  { 
+    Receiver_Antenna, 
+    Satellite_Antenna 
+  };
+
   /// Default constructor.
   Antenna() noexcept;
 
@@ -141,6 +150,14 @@ public:
   /// Antenna model/radome to string.
   std::string toString() const noexcept;
 
+  /*
+  /// Validae antenna model/radome
+  template<Antenna_Type T>
+    bool validate() const 
+  {
+  }
+  */
+
 private:
 
   /// Set all chars in \c name_ to \c '\0'. 
@@ -167,10 +184,31 @@ private:
   /// Set an antenna/radome pair from a c-string. The input antenna/radome pair, 
   void copy_from_cstr(const char*) noexcept;
 
+  /// Validate receiver antenna
+  bool validate_receiver_antenna() const;
+  
+  /// Validate satellite antenna
+  bool validate_satellite_antenna() const;
+
   /// Combined antenna, radome and serian number.
   char name_[antenna_details::antenna_full_max_chars]; 
 
 }; // end Antenna
+
+/* TODO: the methods validate_receiver_antenna and validate_satellite_antenna
+ * do not compile
+ *
+template<>
+  bool Antenna::validate<Antenna::Antenna_Type::Receiver_Antenna>() const
+{
+  return this->validate_receiver_antenna();
+}
+template<>
+  bool Antenna::validate<Antenna::Antenna_Type::Satellite_Antenna>() const
+{
+  return this->validate_satellite_antenna();
+}
+*/
 
 } // end ngpt
 

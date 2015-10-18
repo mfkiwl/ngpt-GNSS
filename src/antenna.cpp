@@ -1,7 +1,6 @@
 #include <string>
 #include <cstring>
 #include <algorithm>
-#include <regex>
 #include "antenna.hpp"
 
 using ngpt::Antenna;
@@ -248,25 +247,78 @@ void Antenna::copy_from_cstr(const char* c) noexcept
   }
 }
 
-/// Validate the receiver model; a receiver model, according to the IGS
-/// conventions, may be a sequence of any of the characters:
-///  -# 'A-Z'
-///  -# '0-9' 
-///  -# space 
-///  -# '-_+'
-/// 
-/// \return true if the model name matches the specifications; false
-///         otherwise.
-///
-/// \note   To perform the check, the receiver model name is compared against
-///         the regular expression: '[A-Z,0-9, ,\\+,-,_]+$'
-///
-/// \bug    This seems to also match the \c '/' character though it shouldn't !
-///
 /*
-bool Antenna::validate() const
+ * TODO The following methods do not compile !!
+
+/// \details Specialization for Receiver Antennas. Validate model/radome based
+///          on \cite rcvr_ant . Specifically:
+///          - First three characters are manufacturer code
+///          Allowed in manufacturer code: - and A-Z and 0-9
+///          - Allowed in model name: /-_.+ and A-Z and 0-9
+///          - Model name must start with A-Z or 0-9
+///          - 4 columns; A-Z and 0-9 allowed
+///
+bool Antenna::validate_receiver_antenna() const
 {
-  std::regex valid ( "[A-Z -_\\+]+$" );
-  return std::regex_match(name_, valid);
+  // validate whitespace between model name and radome
+  if ( !(name_[antenna_model_max_chars] == ' ') ) {
+    return false;
+  }
+  
+  // First three characters are manufacturer code;
+  // Allowed in manufacturer code: - and A-Z and 0-9
+  std::string man { name_, 3 };
+  std::regex  valid_man ( "[A-Z0-9-]+" );
+  if ( !std::regex_match(man, valid_man) ) {
+    return false;
+  }
+
+  // Allowed in model name: /-_.+ and A-Z and 0-9
+  // Model name must start with A-Z or 0-9
+  std::string mod { name_+2,  antenna_model_max_chars};
+  std::regex  valid_mod ( "[A-Z0-9][A-Z0-9-_/ \\.\\+]+" );
+  if ( !std::regex_match(mod, valid_mod) ) {
+    return false;
+  }
+
+  // radome: 4 columns; A-Z and 0-9 allowed
+  std::string rad { name_+antenna_model_max_chars+1,  antenna_radome_max_chars};
+  std::regex  valid_rad ( "[A-Z0-9]+" );
+  if ( !std::regex_match(rad, valid_rad) ) {
+    return false;
+  }
+  
+  return true;
+}
+
+/// \details Specialization for Satellite Antennas. Validate model/radome based
+///          on \cite rcvr_ant . Specifically:
+///          - Allowed in model name: /-_.+ and A-Z and 0-9
+///          - Model name must start with A-Z or 0-9
+///          - 4 columns; A-Z and 0-9 allowed
+///
+bool Antenna::validate_satellite_antenna() const
+{
+  // validate whitespace between model name and radome
+  if ( !(name_[antenna_model_max_chars] == ' ') ) {
+    return false;
+  }
+  
+  // Allowed in model name: /-_.+ and A-Z and 0-9
+  // Model name must start with A-Z or 0-9
+  std::string mod { name_,  antenna_model_max_chars};
+  std::regex valid_mod ( "[A-Z0-9][A-Z0-9-_/ \\.\\+]+" );
+  if ( !std::regex_match(mod, valid_mod) ) {
+    return false;
+  }
+
+  // radome: 4 columns; A-Z and 0-9 allowed
+  std::string rad { name_+antenna_model_max_chars+1,  antenna_radome_max_chars};
+  std::regex  valid_rad ( "[A-Z0-9]+" );
+  if ( !std::regex_match(rad, valid_rad) ) {
+    return false;
+  }
+  
+  return true;
 }
 */

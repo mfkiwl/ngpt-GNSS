@@ -58,7 +58,7 @@ enum class SATELLITE_SYSTEM : char
 /// Traits for Satellite Systems
 template<SATELLITE_SYSTEM S>
   struct SatelliteSystemTraits
-  { };
+{ };
 
 /// Specialize traits for Satellite System Gps
 template<>

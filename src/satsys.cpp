@@ -147,22 +147,22 @@ double ngpt::nominal_frequency(int band, ngpt::SATELLITE_SYSTEM s)
     {
       case SATELLITE_SYSTEM::GPS :
         return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>
-        ::frequency_map.at(band);
+          ::frequency_map.at(band);
       case SATELLITE_SYSTEM::GLONASS :
         return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::GLONASS>
-        ::frequency_map.at(band);
+          ::frequency_map.at(band);
       case SATELLITE_SYSTEM::SBAS :
         return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::SBAS>
-        ::frequency_map.at(band);
+          ::frequency_map.at(band);
       case SATELLITE_SYSTEM::GALILEO :
         return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::GALILEO>
-        ::frequency_map.at(band);
+          ::frequency_map.at(band);
       case SATELLITE_SYSTEM::BDS :
         return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::BDS>
-        ::frequency_map.at(band);
+          ::frequency_map.at(band);
       case SATELLITE_SYSTEM::QZSS :
         return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::QZSS>
-        ::frequency_map.at(band);
+          ::frequency_map.at(band);
       default:
         // std::map.at() will throw an std::out_of_range; let's do the
         // same so we won;t have to catch more than one exception types.
