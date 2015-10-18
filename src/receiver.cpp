@@ -66,7 +66,7 @@ Receiver& Receiver::operator=(const std::string& s) noexcept
 bool Receiver::operator==(const Receiver& rhs) noexcept
 {
   return ( !std::strncmp(name_ ,rhs.name_ , 
-        receiver_details::receiver_max_bytes) );
+        receiver_details::receiver_max_chars) );
 }
 
 /// Pointer to receiver name.
@@ -149,4 +149,3 @@ bool Receiver::validate() const
   std::regex valid ( "[A-Z -_\\+]+$" );
   return std::regex_match(name_, valid);
 }
-#endif

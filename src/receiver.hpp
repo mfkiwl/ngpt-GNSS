@@ -14,7 +14,7 @@
  * \brief     Receiver Class for GNSS.
  *
  * \details   This file declarea a Receiver Class for GNSS. Reference is
- *            the IGS rcvr_ant.tab (see https://igscb.jpl.nasa.gov/igscb/station/general/rcvr_ant.tab)
+ *            the IGS rcvr_ant.tab (see \cite rcvr_ant ).
  *
  *
  * \copyright Copyright © 2015 Dionysos Satellite Observatory, <br>
@@ -39,14 +39,18 @@ namespace ngpt
   /// Namespace to hide receiver specific details.
   namespace receiver_details
   {
-    /// Maximum size of a char array, holding any receiver type.
+    /// Maximum number of characters describing a GNSS receiver.
+    /// \warning The character '\0' is not included.
+    ///
     constexpr std::size_t receiver_max_chars { 20 };
 
-    /// Maximum size a char array, holding any receiver in bytes.
+    /// Maximum size of a char array, holding any receiver (in bytes).
+    /// \warning The character '\0' is not included.
+    ///
     constexpr std::size_t receiver_max_bytes
     { receiver_max_chars * sizeof(char) };
 
-    /// Better to be safe than sorry ...
+    /// Better be safe than sorry ...
     static_assert(receiver_max_bytes >= receiver_max_chars, 
                   "Receiver size in bytes < Receiver size ?!?");
   }
@@ -83,8 +87,7 @@ namespace ngpt
  *               Will set \c ok to \c true , even though the character \c '/'
  *               is not allowed.
  *
- * Reference: <a href="https://igscb.jpl.nasa.gov/igscb/station/general/rcvr_ant.tab">
- *            IGS rcvr_ant.tab</a>
+ * \cite         rcvr_ant
  */
 class Receiver
 {

@@ -1,9 +1,6 @@
 #ifndef _GNSS_ANTENNA_
 #define _GNSS_ANTENNA_
 
-#include <string>
-#include <cstring>
-
 /**
  * \file      antenna.hpp
  *
@@ -18,10 +15,6 @@
  *            satellites.
  *
  * \note
- *
- * \todo      If the static-assert block is not commented out (it shouldn't),
- *            doxygen fails to parse the rest of the file. It is temporarily
- *            commented out, but there should be a workaround.
  *
  * \copyright Copyright © 2015 Dionysos Satellite Observatory, <br>
  *            National Technical University of Athens. <br>
@@ -42,75 +35,58 @@
 namespace ngpt
 {
 
-/// Maximum size of a char array, holding any antenna type.
-constexpr std::size_t _ANTENNA_TYPE_SIZE_ { 15 };
+  /// Namespace to hide antenna specific details.
+  namespace antenna_details
+  {
+    /// Maximum number of characters describing a GNSS antenna model 
+    /// (no radome).
+    constexpr std::size_t antenna_model_max_chars { 15 };
 
-/// Maximum size of a char array, holding any radome type.
-constexpr std::size_t _ANTENNA_RADOME_SIZE_ { 4 };
+    /// Maximum number of characters describing a GNSS antenna radome type.
+    constexpr std::size_t antenna_radome_max_chars { 4 };
 
-/// Maximum size of a char array, holding any antenna serial number.
-constexpr std::size_t _ANTENNA_SN_SIZE_ { 10 };
+    /// Maximum number of characters describing a GNSS antenna serial number.
+    constexpr std::size_t antenna_serial_max_chars { 20 };
 
-/// Maximum size a char array, holding any antenna+radome+sn combination.
-constexpr std::size_t _MAX_ANTENNA_SIZE_ 
-{ _ANTENNA_TYPE_SIZE_ + 1 + _ANTENNA_RADOME_SIZE_ + 1 + _ANTENNA_SN_SIZE_ + 1 };
-
-/// Maximum size a char array, holding any antenna+radome pair in bytes.
-constexpr std::size_t _MAX_ANTENNA_SIZE_BYTES_  
-{ _MAX_ANTENNA_SIZE_ * sizeof(char) };
-
-/// Offset from the start of a char array holding any antenna+radome pair,
-/// to the start of radome type.
-constexpr std::size_t _RADOME_OFFSET_ { _ANTENNA_TYPE_SIZE_ + 1 };
-
-/// Offset from the start of a char array holding any antenna+radome pair,
-/// to the start of serial number.
-constexpr std::size_t _SN_OFFSET_ 
-{ _RADOME_OFFSET_ + _ANTENNA_RADOME_SIZE_ + 1 };
-
-/* -----------------------------------------------------------------
- * STATIC ASSERT BLOCK.
- * ------------------------------------------------------------------
- * if this is NOT commented out, the doxygen will fail to
- * parse the file correctly.
- 
-// Make sure nothing funny happens (1) !
-static_assert(_MAX_ANTENNA_SIZE_ > _ANTENNA_TYPE_SIZE_ 
-    + _ANTENNA_RADOME_SIZE_ + _ANTENNA_SN_SIZE_, 
-    "Antenna type and radome sizes do not match!");
-
-// Make sure nothing funny happens (2) !
-static_assert(_SN_OFFSET_ < _MAX_ANTENNA_SIZE_,
-    "Radome offset > Antenna size !");
-
-// Make sure nothing funny happens (3) !
-static_assert(_MAX_ANTENNA_SIZE_BYTES_ >= _MAX_ANTENNA_SIZE_, 
-    "Antenna size in bytes < Antenna size ?!?");
- * ------------------------------------------------------------------
- */
+    /// Mximum size to represent all fields, including whitespace and null-
+    /// terminating chars.
+    /// \warning No null-terminating character.
+    constexpr std::size_t antenna_full_max_chars
+    {  antenna_model_max_chars  + 1 /* whitespace */
+     + antenna_radome_max_chars + 1 /* whitespace */
+     + antenna_serial_max_chars
+    };
+  }
 
 /** \class    Antenna
  *
  *  \details  This class holds a GNSS Antenna + Radome type and a Serial Number.
- *            For the antenna, we need _ANTENNA_TYPE_SIZE_ columns maximum.
- *            First three characters are manufacturer code (except satellites).
- *            Allowed in manufacturer code: '-' and 'A-Z' and '0-9'.
- *            Allowed in model name: '/-_.+' and 'A-Z' and '0-9'. Model name
- *            must start with 'A-Z' or '0-9'.
- *            Radomes: _ANTENNA_RADOME_SIZE_ columns; 'A-Z' and '0-9' allowed.
- *            Antenna+Radome: Combine them with the radome code in columns
- *            17-20. Fill with spaces between the end of the antenna and column
- *            17.
- *            Example: AOAD/M_T        SCIT
- *            To represent an antenna+radome, we use a _MAX_ANTENNA_SIZE_ char
- *            array, where
- *            [ 0 - _ANTENNA_TYPE_SIZE_ )              is the antenna name,
- *            [ _ANTENNA_TYPE_SIZE_ ]                  whitespace
- *            [ _RADOME_OFFSET_ - _MAX_ANTENNA_SIZE_ ) is the radome name (if
- *            any)
  *
  * Reference: <a href="https://igscb.jpl.nasa.gov/igscb/station/general/rcvr_ant.tab">
- *            IGS rcvr_ant.tab</a>
+ *            IGS rcvr_ant.tab</a>,
+ *            <a href="https://igscb.jpl.nasa.gov/igscb/station/general/blank.log">
+ *            IGS log file</a>.
+ *
+ * \note      The c-string array allocated for each instance, looks like:
+ * \verbatim
+  N = antenna_model_max_chars
+  M = antenna_radome_max_chars
+  K = antenna_serial_max_chars
+  [0,     N)       antenna model name
+  [N+1,   N+M+1)   antenna radome name
+  [N+M+2, N+M+K+2) antenna serial number
+
+  | model name      |   | radome      |     | serial number     |       |
+  v                 v   v             v     v                   v       v
+  +---+---+-...-+---+---+---+-...-+---+-----+-----+-...-+-------+-------+
+  | 0 | 1 |     |N-1| N |N+1|     |N+M|N+M+1|N+M+2|     |N+M+K+1|N+M+K+2|
+  +---+---+-...-+---+---+---+-...-+---+-----+-----+-...-+-------+-------+
+                      ^                  ^                          ^
+                      |                  |                          |
+            whitespace character         |                          |
+                                   whitespace character             |
+                                                                   '\0'
+  \endverbatim
  */
 class Antenna
 {
@@ -213,7 +189,10 @@ public:
   void set_antenna(const char*) noexcept;
 
 private:
-  char name_[_MAX_ANTENNA_SIZE_]; ///< Combined antenna, radome and serian num.
+
+  ///< Combined antenna, radome and serian num.
+  char name_[antenna_details::antenna_full_max_chars]; 
+
 }; // end Antenna
 
 } // end ngpt
