@@ -43,15 +43,16 @@ namespace ngpt
 {
 
 /// Enumeration for known Satellite systems.
-/// This is extracted from RINEX v3.02
+/// This is extracted from \cite rnx303
 enum class SATELLITE_SYSTEM : char
 {
   GPS,
   GLONASS,
   SBAS,
-  GALILEO,
-  BDS,
+  Galileo,
+  BeiDou,
   QZSS,
+  IRNSS,
   MIXED
 };
 
@@ -84,7 +85,7 @@ template<>
 
 /// Specialize traits for Satellite System Galileo
 template<>
-  struct SatelliteSystemTraits<SATELLITE_SYSTEM::GALILEO>
+  struct SatelliteSystemTraits<SATELLITE_SYSTEM::Galileo>
 {
   /// Identifier
   static constexpr char identifier { 'E' };
@@ -117,10 +118,21 @@ template<>
 
 /// Specialize traits for Satellite System BDS
 template<>
-  struct SatelliteSystemTraits<SATELLITE_SYSTEM::BDS>
+  struct SatelliteSystemTraits<SATELLITE_SYSTEM::BeiDou>
 {
   /// Identifier
-  static constexpr char identifier { 'B' };
+  static constexpr char identifier { 'C' };
+
+  /// Dictionary holding pairs of <frequency band, freq. value>.
+  static const std::map<int, double> frequency_map;
+};
+
+/// Specialize traits for Satellite System IRNSS
+template<>
+  struct SatelliteSystemTraits<SATELLITE_SYSTEM::IRNSS>
+{
+  /// Identifier
+  static constexpr char identifier { 'I' };
 
   /// Dictionary holding pairs of <frequency band, freq. value>.
   static const std::map<int, double> frequency_map;

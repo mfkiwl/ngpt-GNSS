@@ -47,19 +47,18 @@ namespace ngpt
 {
 
 /// Enumeration for known Obsrvation Types.
-/// This is extracted from RINEX v3.02.
+/// This is extracted from \cite rnx303 .
 enum class OBSERVATION_TYPE : char 
 {
   PSEUDORANGE,
   CARRIER_PHASE,
   DOPPLER,
   SIGNAL_STRENGTH,
-  IONOSPHERE_PHASE_DELAY, /// see RINEX v3.02, sec. 5.12
-  RECEIVER_CHANNEL_NUMBER /// see RINEX v3.02, sec. 5.13
+  IONOSPHERE_PHASE_DELAY, /// \cite rnx303 , sec. 5.12
+  RECEIVER_CHANNEL_NUMBER /// \cite rnx303 , sec. 5.13
 };
 
-/// Struct to hold observable attributes. See RINEX v3.02
-/// A missing attribute (e.g. RINEX v2.xx is always denoted as '?').
+/// Struct to hold observable attributes. See \cite rnx303
 struct Attribute
 {
   explicit Attribute(char c) noexcept 
@@ -76,6 +75,7 @@ struct Attribute
 /// This is a helper class, do not use in real code.
 class _RawObs_
 {
+
 private:
   SATELLITE_SYSTEM _satsys;     ///< Satellite system.
   OBSERVATION_TYPE _obstype;    ///< Observation type.
@@ -83,9 +83,10 @@ private:
   Attribute        _attribute;  ///< Attribute.
 
 public:
+
   /// Constructor from a full set.
   explicit 
-  _RawObs_(SATELLITE_SYSTEM s, OBSERVATION_TYPE o, short int f, Attribute a) 
+  _RawObs_(SATELLITE_SYSTEM s, OBSERVATION_TYPE o, short int f, Attribute a)
   noexcept
   :_satsys{s}, _obstype{o}, _nfrequency{f}, _attribute{a}
   {};
@@ -95,7 +96,7 @@ public:
   _RawObs_(SATELLITE_SYSTEM s, OBSERVATION_TYPE o, short int f, char c) 
   noexcept
   :_satsys{s}, _obstype{o}, _nfrequency{f}, _attribute(Attribute{c})
-  { };
+  {};
   
   /// Equality operator / comparisson.
   bool operator==(const _RawObs_& rhs) const noexcept
