@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter xml:id="time" xmlns="http://docbook.org/ns/docbook" version="5.0" >
+  <title>Time Systems and Scales</title>
+  <section xml:id="chap_tm_01"><title>GNSS Time Scales</title>
+    <para>In the following, the GNSS Time Scales are described, according to
+      RINEX v303.</para>
+    <para>The time system identifiers used in RINEX files are:
+      <itemizedlist mark='opencircle'>
+        <listitem><para>GPS to identify GPS time</para></listitem>
+        <listitem><para>GLO the GLONASS UTC time system</para></listitem>
+        <listitem><para>GAL Galileo time</para></listitem>
+        <listitem><para>QZS QZSS time</para></listitem>
+        <listitem><para>BDT BDS time</para></listitem>
+        <listitem><para>IRN IRNSS time</para></listitem>
+      </itemizedlist></para>
+    <para>Apart from the small errors in the realizations of the different time systems, the relations between
+      the systems are:
+      <table frame='all'><title>GNSS Time Scale Relations</title>
+        <tgroup cols='7' align='left' colsep='1' rowsep='1'>
+          <tbody>
+            <row><entry>GLO</entry><entry>=</entry><entry>UTC</entry><entry>=</entry><entry>GPS</entry><entry>-</entry><entry>&#916;tLS</entry></row>
+            <row><entry>GPS</entry><entry>=</entry><entry>GAL</entry><entry>=</entry><entry>UTC</entry><entry>+</entry><entry>&#916;tLS</entry></row>
+            <row><entry>GPS</entry><entry>=</entry><entry>QZS</entry><entry>=</entry><entry>UTC</entry><entry>+</entry><entry>&#916;tLS</entry></row>
+            <row><entry>GPS</entry><entry>=</entry><entry>IRN</entry><entry>=</entry><entry>UTC</entry><entry>+</entry><entry>&#916;tLS</entry></row>
+            <row><entry>BDT</entry><entry>=</entry><entry>   </entry><entry> </entry><entry>UTC</entry><entry>+</entry><entry>&#916;tLS<subscript>BDS</subscript></entry></row>
+          </tbody>
+        </tgroup>
+      </table>
+      Where:
+      &#916;tLS = Delta time between GPS and UTC due to leap seconds, as transmitted by the GPS satellites in the almanac
+      &#916;tLS<subscript>BDS</subscript> = Delta time between BDT and UTC due to leap seconds, as transmitted by the BDS satellites in the almanac
+      (See BDS-SIS-ICD-2.0 Section 5.2.4.17)</para>
+    <section><title>GPS Time</title>
+      <para>GPS time runs, apart from small differences (&lt;&lt; 1 microsecond), parallel to UTC. But it is a
+        continuous time scale, i.e. it does not insert any leap seconds. GPS time is usually expressed in
+        GPS weeks and GPS seconds past 00:00:00 (midnight) Saturday/Sunday. GPS time started with
+        week zero at 00:00:00 UT (midnight) on January 6, 1980. Between 1980 and 2012 16 leap
+        seconds have been introduced into UTC.</para>
+      <para>The GPS week is transmitted by the satellites as a 10 bit number. It has a roll-over after week
+        1023. The first roll-over happened on August 22, 1999, 00:00:00 GPS time.</para>
+      <para>In order to avoid ambiguities, the GPS week reported in the RINEX navigation message files is a
+        continuous number without roll-over, i.e. ...1023, 1024, 1025, ...</para>
+    </section>
+    <section><title>QZSS Time</title>
+      <para>QZSS runs on QZSS time, which conforms to UTC Japan Standard Time Group (JSTG) time
+        and the offset with respect to GPS time is controlled. The following properties apply to the
+        QZSS time definition: the length of one second is defined with respect to International Atomic
+        Time (TAI); QZSS time is aligned with GPS time (offset from TAI by integer seconds); the
+        QZSS week number is defined with respect to the GPS week.</para>
+    </section>
+    <section><title>GLONASS Time</title>
+      <para>GLONASS is basically running on UTC (or, more precisely, GLONASS system time linked to
+        UTC(SU)), i.e. the time tags are given in UTC and not GPS time. It is not a continuous time, i.e.
+        it introduces the same leap seconds as UTC. The reported GLONASS time has the same hours as
+        UTC and not UTC+3 h as the original GLONASS System Time!</para>
+    </section>
+    <section><title>Galileo Time</title>
+      <para>Galileo runs on Galileo System Time (GST), which is, apart from small differences (tens of
+        nanoseconds), nearly identical to GPS time:
+        <itemizedlist mark='opencircle'>
+          <listitem><para>The Galileo week starts at midnight Saturday/Sunday at the same second as the GPS week</para></listitem>
+          <listitem><para>The GST week as transmitted by the satellites is a 12 bit value with a roll-over after week
+              4095. The GST week started at zero at the first roll-over of the broadcast GPS week after
+              1023, i.e. at Sun, 22-Aug-1999 00:00:00 GPS time.</para></listitem>
+        </itemizedlist>
+        In order to remove possible misunderstandings and ambiguities, the Galileo week reported in the
+        RINEX navigation message files is a continuous number without roll-over, i.e., ...4095,4096,4097,... 
+        and it is aligned to the GPS week.</para>
+    </section>
+    <section><title>BeiDou (BDS) Time</title>
+      <para>The BDS Time (BDT) System is a continuous timekeeping system, with its length of second 
+        being an SI second. BDT zero time started at 00:00:00 UTC on January 1<superscript>st</superscript>, 2006 (GPS week
+        1356) therefore BDT is 14 seconds behind GPS time. BDT is synchronized with UTC within 100
+        nanoseconds (modulo 1 second).</para>
+      <para><itemizedlist mark='opencircle'>
+          <listitem><para>The BDT week starts at midnight Saturday/Sunday</para></listitem>
+          <listitem><para>The BDT week is transmitted by the satellites as a 13 bit number. It has a roll-over after
+              week 8191. In order to avoid ambiguities, the BDT week reported in the RINEX
+              navigation message files is a continuous number without roll-over, i.e. ...8191, 8192,
+              8193, ...</para></listitem>
+        </itemizedlist>
+      </para>
+    </section>
+    <section><title>IRNSS Time</title>
+      <para>IRNSS runs on Indian Regional Navigation Satellite System Time (IRNSST). The IRNSST
+        start epoch is 00:00:00 on Sunday August 22<superscript>nd</superscript>, 1999, which corresponds to August 21<superscript>st</superscript>, 1999
+        23:59:47 UTC (same time as the first GPS week roll over). Seconds of week are counted from
+        00:00:00 IRNSST hours Saturday/Sunday midnight which also corresponds to the start of the
+        GPS week. Week numbers are consecutive from the start time and will roll over after week 1023
+        (at the same time as GPS and QZSS roll over).</para>
+    </section>
+  </section>
+  </chapter>

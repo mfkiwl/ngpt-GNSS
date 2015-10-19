@@ -10,6 +10,7 @@
     <copyright><year>2010</year><holder>Jane Doe</holder></copyright>
   </info>
   <xi:include href="receiver.xml"/>
+  <xi:include href="time.xml"/>
 </book>
 
 <!--
