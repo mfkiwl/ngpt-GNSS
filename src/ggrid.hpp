@@ -1,12 +1,13 @@
 #ifndef _T_GRID_HPP_
 #define _T_GRID_HPP_
 
-// JUST FOR DEBUGING
-#include <iostream>
-
 #include <assert.h>
 #include <stdexcept>
 #include <utility>
+
+#ifdef DEBUG
+  #include <iostream>
+#endif
 
 /**
  * \file
