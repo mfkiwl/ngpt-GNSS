@@ -90,4 +90,46 @@
         (at the same time as GPS and QZSS roll over).</para>
     </section>
   </section>
+  <section xml:id="chap_tm_02"><title>Astronomical Time Scales</title>
+    <section><title>Atomic time: TAI</title>
+      <para>The unit of proper time is the SI second, defined as “the duration of 9,192,631,770 periods of the 
+        radiation corresponding to the transition between the two hyperfine levels of the ground state
+        of the caesium 133 atom”, the latter being at 0 K and in zero magnetic field. The duration was
+        chosen to match the existing astronomical time scale, and is consequently a fossil of the solar
+        day length during the 19th century. The SI second is the unit of TAI and UTC, and is inherited
+        by the relativistic time scales TCG and TCB.</para>
+      <para>TAI is a laboratory time scale, independent of astronomical phenomena apart from having been
+        synchronized to solar time when first introduced (at the start of 1958). It is realized through
+        a changing population of about 200 high-precision atomic clocks held at standards institutes
+        in various countries. There is an elaborate process of continuous intercomparison, leading to a
+        weighted average of all the clocks involved. TAI is close to proper time for an observer on the
+        geoid, and is an appropriate choice for terrestrial applications where continuity through UTC
+        leap seconds (see 3.5.1) is a requirement. It is not disseminated directly as a time service, but
+        can easily be realized from GPS or UTC. 5 The SOFA software supports transformations between
+        TAI and three other time scales, namely UTC, UT1 and TT.</para>
+    </section>
+    <section><title>Solar Time: UT1 and UTC</title>
+      <para>UT1 (or plain UT) is the modern equivalent of mean solar time, and is really an angle rather than
+        time in the physics sense. Originally defined in terms of a point in the sky called “the fictitious
+        mean Sun”, UT1 is now defined through its relationship with Earth rotation angle (formerly
+        through sidereal time). Because the Earth’s rotation rate is slightly irregular—for geophysical
+        reasons—and is gradually decreasing, the UT1 second is not precisely matched to the SI second.
+        This makes UT1 itself unsuitable for use as a time scale in physics applications. However, some
+        applications do require UT1, such as pointing a telescope or antenna at a celestial target, delay
+        calculations in interferometers, and diurnal aberration, parallax and Doppler corrections.</para>
+      <para>UTC is a compromise between the demands of precise timekeeping and the desire to maintain
+        the current relationship between civil time and daylight. Since its introduction in 1960, UTC
+        has been kept roughly in step with UT1 by a variety of adjustments agreed in advance and
+        then carried out in a coordinated manner by the providers of time services—hence the name.
+        Though rate changes were used until 1972, since then all such adjustments have been made by
+        occasionally inserting a whole second, called a leap second, a procedure that can be thought of
+        as stopping the UTC clock for a second to let the Earth catch up. Leap seconds are discussed
+        below.</para>
+      <para>To obtain UT1 starting from UTC, it is necessary to look up the value of &#916;UT1 = UT1−UTC for
+        the date concerned in tables published by the International Earth Rotation and Reference Systems 
+        Service (IERS); this is then added to the UTC. The quantity UT1−UTC, which typically
+        changes by 1-2 ms per day, can be obtained only by observation, principally very long baseline
+        interferometry (VLBI) using extragalactic radio sources, though seasonal effects are present and
+        the IERS listings are able to predict some way into the future with adequate accuracy for most
+        applications.</para>
   </chapter>

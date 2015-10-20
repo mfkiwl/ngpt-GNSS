@@ -198,12 +198,10 @@ public:
   auto 
     nearest_neighbor(T x) noexcept
   {
+    if ( x<= start_ ) return std::make_tuple((std::size_t)0, start_);
+    if ( x>= stop_ ) return std::make_tuple(npts_-1, stop_);
     std::size_t idx { static_cast<std::size_t>((x+(step_/(T)2)-start_)/step_) };
-    if ( idx < npts_ ) {
-      return std::make_tuple(idx, idx*step_+start_);
-    } else {
-      return std::make_tuple(npts_-1, stop_);
-    }
+    return std::make_tuple(idx, idx*step_+start_);
   }
 
 };

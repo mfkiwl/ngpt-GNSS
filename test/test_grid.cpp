@@ -20,6 +20,25 @@ int main()
   std::cout << "\nThe neighbor tick points to value " << pt << " are:"
     << "\n\tLeft : index: " << std::get<0>(tpl2) << " with value: " << std::get<1>(tpl2)
     << "\n\tRight: index: " << std::get<2>(tpl2) << " with value: " << std::get<3>(tpl2);
+  
+  pt = -14.5;
+  try {
+    tpl = gridA.nearest_neighbor(pt);
+    std::cout <<"\nCalling nearest_neighbor on a TickAxis from " << gridA.from()
+      << " to " << gridA.to() << " with step " << gridA.step() << ".";
+    std::cout << "\nThe nearest tick point to value " << pt
+      << " is at index: " << std::get<0>(tpl) << " with value: " << std::get<1>(tpl);
+  } catch (std::out_of_range&) {
+    std::cout << "\nEXCEPTION CAUGHT! Trying to compute nearest_neighbor fpr point " << pt;
+  }
+  try {
+    tpl2 = gridA.neighbor_nodes(pt);
+    std::cout << "\nThe neighbor tick points to value " << pt << " are:"
+      << "\n\tLeft : index: " << std::get<0>(tpl2) << " with value: " << std::get<1>(tpl2)
+      << "\n\tRight: index: " << std::get<2>(tpl2) << " with value: " << std::get<3>(tpl2);
+  } catch (std::out_of_range&) {
+    std::cout << "\nEXCEPTION CAUGHT! Trying to compute neighbor_nodes fpr point " << pt;
+  }
 
   std::cout << "\n";
   return 0;
