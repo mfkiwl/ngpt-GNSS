@@ -180,14 +180,6 @@ public:
     return neighbor_nodes_impl(x, do_range_check{});
   }
 
-  /*
-  S linear_interpolation(T x)
-  {
-    auto t { this->neighboring_cells(x) };
-    return std::get<1>(t) + (std::get<3>(t) -std::get<1>(t)) *
-      static_cast<S>((x-std::get<0>(t))/(std::get<2>(t)-std::get<0>(t)));
-  }*/
-  
   /// Given a value \p x on the (tick) axis, compute and return the nearest
   /// tick (on the axis), i.e. either the left or the right one.
   /// The function will not check wether the input \p x point lays between
@@ -206,33 +198,71 @@ public:
 
 };
 
-/*
-template<typename T, typename S, bool RangeCheck, std::size_t Dim>
-GridSkeleton
+enum class Grid_Dimension : char
+{
+  OneDim,
+  TwoDim
+};
+
+/// A skeleton for a generic, two-dimensional grid.
+template<typename T, bool RangeCheck, Grid_Dimension Dim>
+class GridSkeleton
 {};
 
-template<typename T, typename S, bool RangeCheck>
-GridSkeleton<T, S, RangeCheck, 1>
+template<typename T, bool RangeCheck>
+class GridSkeleton<T, RangeCheck, Grid_Dimension::OneDim>
 :TickAxisImpl<T, RangeCheck>
 {
 public:
-  explicit GridSkeleton(T x1, T x2, T dx) noexcept
-  :TickAxisImpl<T, RangeCheck>(x1, x2, dx)
+  explicit constexpr
+    GridSkeleton(T x1, T x2, T dx) noexcept
+    : TickAxisImpl<T, RangeCheck>(x1, x2, dx)
   {};
 };
 
-template<typename T, typename S, bool RangeCheck>
-GridSkeleton<T, S, RangeCheck, 2>
+template<typename T, bool RangeCheck>
+class GridSkeleton<T, RangeCheck, Grid_Dimension::TwoDim>
 {
 private:
   TickAxisImpl<T, RangeCheck> xaxis_;
   TickAxisImpl<T, RangeCheck> yaxis_;
+
 public:
-  explicit GridSkeleton(T x1, T x2, T dx, T y1, T y2, T dy) noexcept
-  :xaxis_(x1, x2, dx), yaxis_(y1, y2, dy)
-  {};
+  /// Default constructor.
+  explicit constexpr
+    GridSkeleton(T x1, T x2, T dx, T y1, T y2, T dy) noexcept
+  : xaxis_(x1, x2, dx),
+    yaxis_(y1, y2, dy)
+  {}
+
+  auto
+    nearest_neighbor(T x, T y) noexcept
+  {
+    auto t1 { xaxis_.nearest_neighbor(x) };
+    auto t2 { yaxis_.nearest_neighbor(y) };
+    return std::tuple_cat(t1, t2);
+  }
+
+  ///   [1]    [2]
+  /// ...+-----+...  -> y_1
+  ///    |     |
+  ///    |   p |
+  /// ...+-----+...  -> y_0
+  ///   [0]    [3]
+  ///    |     |
+  ///    v     v
+  ///   x_0   x_1
+  auto
+    neighbor_nodes(T x, T y)
+    const noexcept( !RangeCheck )
+    {
+      auto t1 { xaxis_.neighbor_nodes(x) };
+      auto t2 { yaxis_.neighbor_nodes(y) };
+      // TODO: this is not right! place in right order
+      return std::tuple_cat(t1, t2); 
+    };
+
 };
-*/
 
 /*
 class AziGridImpl<typename T, typename S>

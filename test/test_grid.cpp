@@ -40,6 +40,21 @@ int main()
     std::cout << "\nEXCEPTION CAUGHT! Trying to compute neighbor_nodes fpr point " << pt;
   }
 
+  // Make a 2-D Grid skeleton
+  float azi1 (0), azi2(360), dazi(5);
+  float ele1 (0), ele2(90),  dele(2.5);
+  ngpt::GridSkeleton<float, true, ngpt::Grid_Dimension::TwoDim>
+    d2grd (ele1, ele2, dele, azi1, azi2, dazi);
+
+  float ptx (21.34), pty (254.12);
+  auto smth = d2grd.nearest_neighbor(ptx, pty);
+  std::cout <<"\nCalling nearest_neighbor on a 2-D Grid (Skeleton) ";
+  std::cout << "\nThe neighbor tick point to point " << ptx << ", "<< pty << " is:"
+    << "\n\tXaxis-> index: " << std::get<0>(smth) << " with value: " << std::get<1>(smth)
+    << "\n\tYaxis-> index: " << std::get<2>(smth) << " with value: " << std::get<3>(smth)
+    << "\n";
+
+
   std::cout << "\n";
   return 0;
 }
