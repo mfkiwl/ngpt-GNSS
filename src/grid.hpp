@@ -172,6 +172,18 @@ public:
   { 
     return npts_;
   }
+
+  constexpr bool
+    far_left(T x) const noexcept
+  {
+    return this->is_ascending() ? x < start_ : x > start_ ;
+  }
+
+  constexpr bool
+    far_right(T x) const noexcept
+  {
+    return this->is_ascending() ? x > stop_ : x < stop_;
+  }
   
   auto 
     neighbor_nodes(T x) 
@@ -188,10 +200,13 @@ public:
   /// \return A tuple containing {nearet_tick_index, nearest_tick_value}
   ///
   auto 
-    nearest_neighbor(T x) noexcept
+    nearest_neighbor(T x) const noexcept
   {
-    if ( x<= start_ ) return std::make_tuple((std::size_t)0, start_);
-    if ( x>= stop_ ) return std::make_tuple(npts_-1, stop_);
+    if ( this->far_left(x) ) {
+      return std::make_tuple((std::size_t)0, start_);
+    } else if ( this->far_right(x) ) {
+      return std::make_tuple(npts_-1, stop_);
+    }
     std::size_t idx { static_cast<std::size_t>((x+(step_/(T)2)-start_)/step_) };
     return std::make_tuple(idx, idx*step_+start_);
   }
