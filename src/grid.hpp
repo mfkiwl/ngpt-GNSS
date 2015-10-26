@@ -2,7 +2,9 @@
 #define __NGPT_GRID_HPP__
 
 #include <tuple>
+#include <limits>
 #include <cstring>
+#include <cassert>
 
 /**
  * \file
@@ -47,6 +49,22 @@ namespace ngpt
 ///          with value start_, ending to tick stop_ with a step size of 
 ///          step_. Note that stop_ does not have to be greater than start_,
 ///          i.e. the axis can be in either ascending or descending order.
+///          The representation of the tick-axis is always from start_ to stop_
+///          like:
+/// \verbatim
+///
+///    start_ + step_
+///          ^
+///          | 
+/// [index]  |
+///    [0]  [1]  [2]         npts_-1
+/// ..--+----+----+--...--+----+--..
+///     |                      |
+///     v                      v
+///   start_                 stop_
+/// [left]         -->            [right]
+///
+/// \endverbatim
 ///
 /// Template Parameters:
 ///          - T                : type of ticks (e.g. float)
@@ -55,6 +73,22 @@ namespace ngpt
 template<typename T, bool RangeCheck>
 class TickAxisImpl
 {
+public:
+
+  /// A simple class to represent a tick point. Each instance has two
+  /// values; one (i.e. \p index_) represents the tick-point's index, the other
+  /// (i.e. value_) represents it's value.
+  /// For example, for a TickAxisImpl with start=0, stop=10, step=2.5, the
+  /// second tick point can be represented as axis_tick{1, start+step};
+  struct axis_tick {
+    std::size_t index_;
+    T           value_;
+    explicit constexpr axis_tick(std::size_t i) noexcept 
+    : index_(i)/*,
+      value_(start_ + i*step_)*/
+    {}
+  };
+
 private:
 
   T           start_; ///< left-most tick point.
@@ -84,19 +118,19 @@ private:
   ///                                   tick
   /// \endverbatim
   ///
-  auto
+  auto constexpr
     neighbor_nodes_impl(T x, std::true_type)
     const noexcept( !do_range_check::value )
   {
-    // find tick on the left.
-    T tmp { (x - start_) / step_ };
-    if (tmp < static_cast<T>(0) || tmp >= npts_) {
+    if ( this->out_of_range(x) ) {
       throw std::out_of_range (
         "ERROR. TickAxisImpl<>::neighbor_nodes_impl -> out_of_range !!");
     }
-    std::size_t l_idx { static_cast<std::size_t>(tmp) };
 
-    // assuming ascending grid
+    // find tick on the left.
+    std::size_t l_idx { static_cast<std::size_t>((x - start_) / step_) };
+
+    // find tick on the right.
     std::size_t r_idx { l_idx + 1 };
     if (r_idx >= npts_) {
       throw std::out_of_range (
@@ -104,34 +138,39 @@ private:
     }
 
     return std::make_tuple(
-        l_idx, l_idx*step_ + start_, r_idx, r_idx*step_ + start_ );
+        l_idx, l_idx*step_ + start_, 
+        r_idx, r_idx*step_ + start_);
   }
 
   /// Does exactly the same as neighbor_nodes_impl(T x, std::true_type) but
   /// with no range checks.
-  auto 
+  auto constexpr
     neighbor_nodes_impl(T x, std::false_type)
     const noexcept( !do_range_check::value )
   {
     // find tick on the left.
-    T tmp { (x - start_) / step_ };
-    std::size_t l_idx { static_cast<std::size_t>(tmp) };
+    std::size_t l_idx { static_cast<std::size_t>((x - start_) / step_) };
 
-    // assuming ascending grid
+    // find tick on the right.
     std::size_t r_idx { l_idx + 1 };
 
     return std::make_tuple(
-      l_idx, l_idx*step_ + start_, r_idx, r_idx*step_ + start_ );
+      l_idx, l_idx*step_ + start_,
+      r_idx, r_idx*step_ + start_);
   }
 
-
 public:
+
+  /// Constructor.
   explicit constexpr TickAxisImpl(T s,  T e, T d) noexcept
   : start_{s},
     stop_{e},
     step_{d},
     npts_{static_cast<std::size_t>((e-s)/d)+1}
-  {};
+  {
+    assert( static_cast<int>((e-s)/d) + 1 > 0 );
+    assert( npts_ < std::numeric_limits<int>::max() );
+  };
 
   virtual ~TickAxisImpl() {};
 
@@ -143,49 +182,89 @@ public:
   
   TickAxisImpl& operator=(TickAxisImpl&&) noexcept = default;
   
+  /// Return the left-most tick.
   constexpr T 
     from() const noexcept
   { 
     return start_; 
   }
   
+  /// Return the right-most tick.
   constexpr T 
     to() const noexcept 
   { 
     return stop_;
   }
 
+  /// Return the axis step size.
   constexpr T 
     step() const noexcept 
   { 
     return step_;
   }
 
+  /// Check if the axis is in ascending order.
   constexpr bool 
     is_ascending() const noexcept 
   { 
     return stop_-start_ > 0;
   }
 
+  /// Return the number of tick-points.
   constexpr std::size_t 
     size() const noexcept 
   { 
     return npts_;
   }
 
+  /// Check if the given input value \p x is left from start_ (i.e. if it is
+  /// between the given limits on the left side).
+  /// \return \p true if \p x in on the right of start_, false otherwise (i.e.
+  ///         if false is returned, the input \p x value lays outside the axis
+  ///         limits on the left).
+  ///
   constexpr bool
     far_left(T x) const noexcept
   {
     return this->is_ascending() ? x < start_ : x > start_ ;
   }
 
+  /// Check if the given input value \p x is right from stop_ (i.e. if it is
+  /// between the given limits on the right side).
+  /// \return \p true if \p x lays on the left of stop_, false otherwise (i.e.
+  ///         if false is returned, the input \p x value lays outside the axis
+  ///         limits on the right).
+  ///
   constexpr bool
     far_right(T x) const noexcept
   {
     return this->is_ascending() ? x > stop_ : x < stop_;
   }
+
+  /// Check if the given input value \p x lays between the limits of the tick
+  /// axis.
+  /// \return An integer is returned, which can be:
+  ///         Return Value | Explanation
+  ///         -------------|-------------------------------------------------
+  ///                   -1 | \p x is left from the starting point (outside limits).
+  ///                    0 | \p x is inside the axis limits.
+  ///                    1 | \p x is right from the ending point (outside limits).
+  ///
+  constexpr int
+    out_of_range(T x) const noexcept
+  {
+    if ( this->far_left(x) ) {
+      return -1;
+    }
+
+    if ( this->far_right(x) ) {
+      return 1;
+    }
+
+    return 0;
+  }
   
-  auto 
+  auto constexpr
     neighbor_nodes(T x) 
     const noexcept( !RangeCheck )
   {
@@ -199,7 +278,7 @@ public:
   ///
   /// \return A tuple containing {nearet_tick_index, nearest_tick_value}
   ///
-  auto 
+  auto constexpr
     nearest_neighbor(T x) const noexcept
   {
     if ( this->far_left(x) ) {
@@ -278,41 +357,6 @@ public:
     };
 
 };
-
-/*
-class AziGridImpl<typename T, typename S>
-{
-public:
-  AziGridImpl(T s1,  T e1, T d1, T s2,  T e2, T d2) noexcept
- : xaxis_{s1, e1, d1}, yaxis_{s2, e2, d2}{};
-  ~AziGridImpl() { data_ = nullptr; }
-  AziGridImpl(const AziGridImpl&) noexcept = default;
-  AziGridImpl& operator=(const AziGridImpl&) noexcept = default;
-  AziGridImpl(AziGridImpl&&) noexcept = default;
-  AziGridImpl& operator=(AziGridImpl&&) noexcept = default;
-  auto neighbor_nodes(T x, T y)                              // x0,  y0,  x1,  y1
-  {
-    auto t1 { xaxis_.neighbor_nodes(x) };
-    auto t2 { yaxis_.neighbor_nodes(y) };
-    return std::tuple_cat(t1, t2);
-  }
-  //S linear_interpolation(T x)
-  //{
-  //  auto t { this->neighboring_cells(x) };
-  //  return std::get<1>(t) + (std::get<3>(t) -std::get<1>(t)) *
-  //  static_cast<S>((x-std::get<0>(t))/(std::get<2>(t)-std::get<0>(t)));
-  //}
-  auto nearest_neighbor(T x, T y) noexcept
-  {
-    auto tx { xaxis_.nearest_neighbor(x) };
-    auto ty { yaxis_.nearest_neighbor(y) };
-    ///  HERE ------------------------------------ //
-  }
-private:
-  NoAziGridImpl<T, S> xaxis_;
-  NoAziGridImpl<T, S> yaxis_;
-};
-*/
 
 /*
 class AntennaPattern
