@@ -312,6 +312,8 @@ public:
     GridSkeleton(T x1, T x2, T dx) noexcept
     : TickAxisImpl<T, RangeCheck>(x1, x2, dx)
   {};
+
+  virtual ~GridSkeleton() {};
 };
 
 template<typename T, bool RangeCheck>
@@ -328,6 +330,8 @@ public:
   : xaxis_(x1, x2, dx),
     yaxis_(y1, y2, dy)
   {}
+  
+  virtual ~GridSkeleton() {};
 
   auto
     nearest_neighbor(T x, T y) noexcept

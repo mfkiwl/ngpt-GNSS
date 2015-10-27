@@ -289,7 +289,7 @@ int __skip_rest_of_antenna__(std::ifstream& fin)
 
 ///
 /// \return An integer denoting the exit status.
-/// Integer | Status            
+/// Integer | Status
 /// --------|----------------------------------------------
 ///      -1 | ANTEX format error; something went wrong while reading.
 ///       0 | Success; antenna found.
