@@ -16,8 +16,10 @@ libngpt_a_CXXFLAGS = -std=c++14\
 dist_include_HEADERS   = receiver.hpp \
 												 antenna.hpp \
 												 satsys.hpp \
-												 grid.hpp
+												 grid.hpp \
+												 antex.hpp
 
 dist_libngpt_a_SOURCES = receiver.cpp \
 												 antenna.cpp \
-												 satsys.cpp
+												 satsys.cpp \
+												 antex.cpp

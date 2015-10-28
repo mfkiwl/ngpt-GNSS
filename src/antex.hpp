@@ -1,10 +1,10 @@
-#ifndef _ANTEX_HPP_
-#define _ANTEX_HPP_
+#ifndef __ANTEX_HPP__
+#define __ANTEX_HPP__
 
 #include <fstream>
 #include "satsys.hpp"
 #include "antenna.hpp"
-# include "antpcv.hpp"
+// #include "antpcv.hpp"
 
 /**
  * \file
@@ -93,7 +93,7 @@
 namespace ngpt
 {
 
-class Antex
+class antex
 {
   /// Let's not write this more than once.
   typedef std::ifstream::pos_type pos_type;
@@ -113,29 +113,36 @@ class Antex
 
 public:
   /// Constructor from filename.
-  Antex(const char*);
+  antex(const char*);
+
+  /// Destructor
+  /// TODO: closing the file is not mandatory, but nevertheless
+  ~antex() noexcept 
+  { 
+    if ( _istream.is_open() ) _istream.close();
+  }
   
   /// Copy not allowed !
-  Antex(const Antex&) = delete;
+  antex(const antex&) = delete;
   
   /// Assignment not allowed !
-  Antex& operator=(const Antex&) = delete;
+  antex& operator=(const antex&) = delete;
   
   /// Move Constructor.
-  Antex(Antex&& a) noexcept = default;
+  antex(antex&& a) noexcept = default;
 
   /// Move assignment operator.
-  Antex& operator=(Antex&& a) 
+  antex& operator=(antex&& a) 
     noexcept(std::is_nothrow_move_assignable<std::ifstream>::value) = default;
   
   /// Read the instance header, and assign (most of) the fields.
   void read_header();
 
   /// Find a specific antenna in the instance.
-  int find_antenna(const Antenna&/*bool, consider_serial_nr = false*/);
+  int find_antenna(const antenna&/*bool, consider_serial_nr = false*/);
   
   /// Read antenna calibration pattern.
-  AntennaPattern read_pattern();
+  // AntennaPattern read_pattern();
 
 private:
   std::string            _filename; ///< The name of the antex file.
@@ -143,10 +150,10 @@ private:
   ngpt::SATELLITE_SYSTEM _satsys;   ///< Satellite System.
   ATX_VERSION            _version;  ///< Atx version (1.4).
   PCV_TYPE               _type;     ///< Pcv type (absolute or relative).
-  ngpt::Antenna          _refant;   ///< Reference antenna (only relative pcv).
+  ngpt::antenna          _refant;   ///< Reference antenna (only relative pcv).
   pos_type               _end_of_head; ///< Mark the 'END OF HEADER' field.
 
-}; // end Antex
+}; // end antex
 
 } // end ngpt
 

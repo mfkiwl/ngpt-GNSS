@@ -4,9 +4,15 @@
 
 using namespace ngpt;
 
-int main ()
+int main(int argc, char* argv[])
 {
-  Antex atx ("igs08.atx");
+  // must pass the atx file to inspect as cmd
+  if ( argc != 2 ) {
+    std::cout << "\nUsage: testAntex <atxfile>\n";
+    return 1;
+  }
+
+  antex atx (argv[1]);
   //Antex atx ("I08.ATX");
   int status;
   
@@ -14,7 +20,7 @@ int main ()
   atx.read_header();
   
   // try to find a valid antenna in the atx file.
-  Antenna ant ("TRM14177.00     NONE");
+  antenna ant ("TRM14177.00     NONE");
   status = atx.find_antenna(ant);
   if (status>0) {
     std::cout << "\nAntenna not found!";

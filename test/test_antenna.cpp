@@ -10,26 +10,26 @@ int main ()
     // constructors.
     std::string srec { "JAV_GRANT-G3T+G     " };
     char buf[] = {"LEICA ATX1230+GNSS                   FOO             BAR"};
-    Antenna r1 { "NOV703GGG.R2   DOME" };      
-    Antenna r2 { "JAVAD TR_G4 ALPHA" };
-    Antenna r3 { buf };
-    Antenna r4 { srec };
-    Antenna r5 { std::string("TOPCON TT4000SSI    CONE tooooolongstring..") };
+    antenna r1 { "NOV703GGG.R2   DOME" };      
+    antenna r2 { "JAVAD TR_G4 ALPHA" };
+    antenna r3 { buf };
+    antenna r4 { srec };
+    antenna r5 { std::string("TOPCON TT4000SSI    CONE tooooolongstring..") };
 
 
     // using the assignment operator
-    Antenna r6, r7;
+    antenna r6, r7;
     r6 = "   TRIMBLE 4000SSI-SS                   FOO             BAR";
     r7 = std::string("TRIMBLE R7 GNSS");
     
     // Print the Antenna names
-    std::cout<<"Antenna r1 type: ["<< r1.toString() << "]";
-    std::cout<<"\nAntenna r2 type: ["<< r2.toString() << "]";
-    std::cout<<"\nAntenna r3 type: ["<< r3.toString() << "]";
-    std::cout<<"\nAntenna r4 type: ["<< r4.toString() << "]";
-    std::cout<<"\nAntenna r5 type: ["<< r5.toString() << "]";
-    std::cout<<"\nAntenna r6 type: ["<< r6.toString() << "]";
-    std::cout<<"\nAntenna r7 type: ["<< r7.toString() << "]";
+    std::cout<<"Antenna r1 type: ["<< r1.to_string() << "]";
+    std::cout<<"\nAntenna r2 type: ["<< r2.to_string() << "]";
+    std::cout<<"\nAntenna r3 type: ["<< r3.to_string() << "]";
+    std::cout<<"\nAntenna r4 type: ["<< r4.to_string() << "]";
+    std::cout<<"\nAntenna r5 type: ["<< r5.to_string() << "]";
+    std::cout<<"\nAntenna r6 type: ["<< r6.to_string() << "]";
+    std::cout<<"\nAntenna r7 type: ["<< r7.to_string() << "]";
     
     // Check wether some Antennas are the same
     std::cout<<"\nAre r1 and r2 the same ? " << ( (r1==r2)?"yes":"no" );

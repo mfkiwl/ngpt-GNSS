@@ -6,6 +6,16 @@
 
 namespace ngpt
 {
+class frequency_pcv
+{
+public:
+
+private:
+  ngpt::ObservationType    type_;
+  float                    eccentricity_vector_[3];
+  float*                   no_azi_pcv_values_;
+  float*                   azi_pcv_values_;
+};
 
 /// Antenna eccentricity vector.
 /// - Receiver antenna:
@@ -39,6 +49,19 @@ public:
 private:
   std::vector<std::vector<float>>    pcv_values_;
   std::vector<ngpt::ObservationType> obs_types_;
+};
+
+/// 
+class azi_pcv
+: public ngpt::GridSkeleton<float, false, ngpt::Grid_Dimension::TwoDim>
+{
+public:
+  explicit noazi_pcv(float zen1, float zen2, float dzen, 
+      float azi1, float azi2, float dazi, int freqs) noexcept
+    : ngpt::GridSkeleton<float, false, ngpt::Grid_Dimension::TwoDim>
+    (float zen1, float zen2, float dzen, float azi1, float azi2, float dazi),
+    pcv_values_.reserve(freqs)
+    {}
 };
 
 } // end namespace

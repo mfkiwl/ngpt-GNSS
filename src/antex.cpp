@@ -9,6 +9,8 @@
   #include <iostream>
 #endif
 
+using ngpt::antex;
+
 /// No header line can have more than 80 chars. However, there are cases when
 /// they  exceed this limit, just a bit ...
 constexpr int MAX_HEADER_CHARS { 85 };
@@ -35,10 +37,20 @@ constexpr std::size_t MAX_GRID_CHARS { 258 };
 ///
 /// \todo    Is this a noexcept function?
 ///
-ngpt::Antex::Antex(const char *filename)
+antex::antex(const char *filename)
 : _filename{filename},
-_istream{filename, std::ios_base::in}
-{}
+_istream{filename, std::ios_base::in},
+_satsys{ngpt::SATELLITE_SYSTEM::MIXED},
+_version{ngpt::antex::ATX_VERSION::v14},
+_type{ngpt::antex::PCV_TYPE::Absolute},
+_refant{},
+_end_of_head{0}
+{
+  if ( !_istream.is_open() ) {
+    throw std::runtime_error{
+      "Cannot open antex file: "+std::string(filename)};
+  }
+}
 
 /// \details Read an Antex (instance) header. The format of the header should
 ///          closely follow the antex format specification (version 1.4).
@@ -63,7 +75,7 @@ _istream{filename, std::ios_base::in}
 ///
 /// \reference https://igscb.jpl.nasa.gov/igscb/station/general/antex14.txt
 ///
-void ngpt::Antex::read_header()
+void antex::read_header()
 {
   char line[MAX_HEADER_CHARS];
 
@@ -83,33 +95,33 @@ void ngpt::Antex::read_header()
   float fvers = std::strtod(line,nullptr);
   if (std::abs(fvers - 1.4) > .001 ) {
     throw std::runtime_error
-    ("ngpt::Antex::read_header -> Invalid Antex version.");
+    ("antex::read_header -> Invalid Antex version.");
   } else {
-    this->_version = ngpt::Antex::ATX_VERSION::v14;
+    this->_version = antex::ATX_VERSION::v14;
   }
   // Resolve the satellite system.
   try {
     this->_satsys = ngpt::charToSatSys(line[20]);
   } catch (std::runtime_error& e) {
     throw std::runtime_error
-    ("ngpt::Antex::read_header -> Invalid Satellite System.");
+    ("antex::read_header -> Invalid Satellite System.");
   }
 
   // Read the second line. Get PCV TYPE / REFANT.
   // ----------------------------------------------------
   _istream.getline(line, MAX_HEADER_CHARS);
   if (*line == 'A') {
-    this->_type = ngpt::Antex::PCV_TYPE::Absolute;
+    this->_type = antex::PCV_TYPE::Absolute;
   } else if (*line == 'R') {
-    this->_type = ngpt::Antex::PCV_TYPE::Relative;
+    this->_type = antex::PCV_TYPE::Relative;
   } else {
     throw std::runtime_error
-    ("ngpt::Antex::read_header -> Invalid PCV type.");
+    ("antex::read_header -> Invalid PCV type.");
   }
   // In case of a relative antenna, we also have the
   // REFANT field.
-  if (this->_type == ngpt::Antex::PCV_TYPE::Relative) {
-    this->_refant.set_antenna(line+20);
+  if (this->_type == antex::PCV_TYPE::Relative) {
+    this->_refant = (line+20);
   }
 
   // Keep on readling lines until 'END OF HEADER'.
@@ -123,7 +135,7 @@ void ngpt::Antex::read_header()
   }
   if (dummy_it >= MAX_HEADER_LINES) {
     throw std::runtime_error
-    ("ngpt::Antex::read_header -> Could not find 'END OF HEADER'.");
+    ("antex::read_header -> Could not find 'END OF HEADER'.");
   }
 
   this->_end_of_head = _istream.tellg();
@@ -141,6 +153,7 @@ void ngpt::Antex::read_header()
 /// \return  Everything other than 0 denots a failure.
 ///
 /// \todo    Need to also read 'FREQ RMS'
+/*
 ngpt::AntennaPattern ngpt::Antex::read_pattern()
 {
   char line[MAX_HEADER_CHARS];
@@ -186,6 +199,7 @@ ngpt::AntennaPattern ngpt::Antex::read_pattern()
   // Construct an AntennaPattern
   ngpt::AntennaPattern antpat ();
 }
+*/
 
 /// \details This is only a utility function. After it is handed an input
 ///          file stream (i.e. that of an Antex instance), positioned at the
@@ -297,12 +311,14 @@ int __skip_rest_of_antenna__(std::ifstream& fin)
 ///
 /// \warning 
 /// \todo consider serial numbers.
-int ngpt::Antex::find_antenna(const Antenna& antenna/*, bool consider_sn*/)
+int antex::find_antenna(const antenna& ant/*, bool consider_sn*/)
 {
+  using ngpt::antenna;
+
   char line[MAX_HEADER_CHARS];
   constexpr std::size_t soa_size { std::strlen("START OF ANTENNA") };
   std::size_t antennas_read { 0 };
-  Antenna ant;
+  antenna t_ant;
   int status;
 
   // The stream should be open by now!
@@ -324,12 +340,12 @@ int ngpt::Antex::find_antenna(const Antenna& antenna/*, bool consider_sn*/)
     return -1;
   }
   // Set the antenna type of the current antenna.
-  ant.set_antenna(line);
+  t_ant = (line);
 
-  while (ant != antenna && _istream.good())
+  while (t_ant != ant && _istream.good())
   {
 #ifdef DEBUG
-    std::cerr << "\n\t[DEBUG] INFO Skipping antenna: ["<< line << "]";
+//    std::cerr << "\n\t[DEBUG] INFO Skipping antenna: ["<< line << "]";
 #endif
     // skip the antenna details ...
     if ( (status = __skip_rest_of_antenna__(_istream)) ) {
@@ -359,7 +375,7 @@ int ngpt::Antex::find_antenna(const Antenna& antenna/*, bool consider_sn*/)
       return -1;
     }
     // Set the antenna type.
-    ant.set_antenna(line);
+    t_ant = (line);
   }
 
   // .. we' ve stoped; either eof encountered ...

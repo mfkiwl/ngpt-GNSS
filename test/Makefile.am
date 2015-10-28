@@ -1,6 +1,7 @@
 bin_PROGRAMS = testReceiver \
 							 testAntenna \
-							 testGrid
+							 testGrid \
+							 testAntex
 
 testReceiver_SOURCES  = test_receiver.cpp
 testReceiver_CXXFLAGS = -std=c++14 -g -Wall -Wextra -pedantic -W -Wshadow \
@@ -18,3 +19,9 @@ testGrid_SOURCES      = test_grid.cpp
 testGrid_CXXFLAGS     = -std=c++14 -g -Wall -Wextra -pedantic -W -Wshadow \
 												-Winline -Wdisabled-optimization -DDEBUG \
 												-I$(top_srcdir)/src -L$(top_srcdir)/src
+
+testAntex_SOURCES  = test_antex.cpp
+testAntex_CXXFLAGS = -std=c++14 -g -Wall -Wextra -pedantic -W -Wshadow \
+												-Winline -Wdisabled-optimization -DDEBUG \
+												-I$(top_srcdir)/src -L$(top_srcdir)/src
+testAntex_LDADD    = $(top_srcdir)/src/libngpt.a

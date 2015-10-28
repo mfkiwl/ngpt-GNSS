@@ -60,7 +60,7 @@ namespace ngpt
     };
   }
 
-/** \class    Antenna
+/** \class    antenna
  *
  * \details  This class holds a GNSS Antenna either for a satellite or a 
  *           receiver. Every antenna is repreesnted by a specific Antenna model
@@ -94,7 +94,7 @@ namespace ngpt
  * \example  test_antenna.cpp
  *           An example to show how to use the Antenna class.
  */
-class Antenna
+class antenna
 {
 public:
 
@@ -106,40 +106,43 @@ public:
   };
 
   /// Default constructor.
-  Antenna() noexcept;
+  antenna() noexcept;
 
   /// Constructor from Antenna type plus Radome (if any).
-  explicit Antenna (const char*) noexcept;
+  explicit antenna (const char*) noexcept;
 
   /// Constructor from Antenna type plus Radome (if any).
-  explicit Antenna (const std::string&) noexcept;
+  explicit antenna (const std::string&) noexcept;
 
   /// Copy constructor.
-  Antenna(const Antenna&) noexcept;
+  antenna(const antenna&) noexcept;
 
   /// Move constructor.
-  Antenna(Antenna&&) noexcept = default;
+  antenna(antenna&&) noexcept = default;
 
   /// Assignment operator.
-  Antenna& operator=(const Antenna&) noexcept;
+  antenna& operator=(const antenna&) noexcept;
 
   /// Assignment operator from a c-string.
-  Antenna& operator=(const char*) noexcept;
+  antenna& operator=(const char*) noexcept;
 
   /// Assignment operator from an std::string.
-  Antenna& operator=(const std::string&) noexcept;
+  antenna& operator=(const std::string&) noexcept;
 
   /// Move assignment operator.
-  Antenna& operator=(Antenna&&) noexcept = default;
+  antenna& operator=(antenna&&) noexcept = default;
 
   /// Equality operator (checks both antenna type and radome).
-  bool operator==(const Antenna&) const noexcept;
+  bool operator==(const antenna&) const noexcept;
+  
+  /// In-Equality operator (checks both antenna type and radome).
+  bool operator!=(const antenna&) const noexcept;
   
   /// Equality operator (checks antenna type, radome and serial nr).
-  bool is_same(const Antenna&) const noexcept;
+  bool is_same(const antenna&) const noexcept;
 
   /// Destructor.
-  ~Antenna() noexcept {};
+  ~antenna() noexcept {};
 
   /// Antenna model name as string.
   std::string model_str() const noexcept;
@@ -148,7 +151,7 @@ public:
   std::string radome_str() const noexcept;
 
   /// Antenna model/radome to string.
-  std::string toString() const noexcept;
+  std::string to_string() const noexcept;
 
   /*
   /// Validae antenna model/radome
@@ -193,7 +196,7 @@ private:
   /// Combined antenna, radome and serian number.
   char name_[antenna_details::antenna_full_max_chars]; 
 
-}; // end Antenna
+}; // end antenna
 
 /* TODO: the methods validate_receiver_antenna and validate_satellite_antenna
  * do not compile
