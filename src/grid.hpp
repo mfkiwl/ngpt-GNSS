@@ -177,18 +177,18 @@ public:
   TickAxisImpl(const TickAxisImpl&) noexcept = default;
 
   TickAxisImpl& operator=(const TickAxisImpl&) noexcept = default;
-  
+
   TickAxisImpl(TickAxisImpl&&) noexcept = default;
-  
+
   TickAxisImpl& operator=(TickAxisImpl&&) noexcept = default;
-  
+
   /// Return the left-most tick.
   constexpr T 
     from() const noexcept
   { 
     return start_; 
   }
-  
+
   /// Return the right-most tick.
   constexpr T 
     to() const noexcept 

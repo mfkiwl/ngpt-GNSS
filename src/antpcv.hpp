@@ -19,7 +19,7 @@ public:
       no_azi_pcv_values_.reserve(no_azi_hint);
       azi_pcv_values_.reserve(azi_hint);
     }
-  
+
   ~frequency_pcv() noexcept {};
 
   friend void swap(frequency_pcv& lhs, frequency_pcv& rhs) noexcept
@@ -58,6 +58,25 @@ private:
   std::array<float,3>      eccentricity_vector_;
   std::vector<float>       no_azi_pcv_values_;
   std::vector<float>       azi_pcv_values_;
+};
+
+namespace antenna_pcv_details
+{
+  constexpr float azi1 {    .0e0 };
+  constexpr float azi2 { 360.0e0 };
+}
+
+class antenna_pcv
+{
+public:
+  explicit antenna_pcv()
+
+private:
+  GridSkeleton<float, false, Grid_Dimension::OneDim> no_azi_grid_;
+  GridSkeleton<float, false, Grid_Dimension::TwoDim> azi_grid_;
+  float dazi_;
+  float zen1_,  zen2_,  dzen_;
+  std::vector<frequency_pcv> freq_pcv;
 };
 
 } // end namespace
