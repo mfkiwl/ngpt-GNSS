@@ -213,7 +213,7 @@ public:
   /// Return the number of tick-points.
   constexpr std::size_t 
     size() const noexcept 
-  { 
+  {
     return npts_;
   }
 
@@ -361,38 +361,6 @@ public:
     };
 
 };
-
-/*
-class AntennaPattern
-{
-private:
-  typedef float  grid_t; /// Type of data describing the grid nodes.
-  typedef double data_t; /// Type of data describing the grid values.
-private:
-  NoAziGridImpl<grid_t, data_t> noazi_pcv_grid_; ///< NOAZI pattern; one for each observation type.
-  std::vector<ngpt::ObservationType> otypes_;   ///< The observations types for wich we have pcv grids.
-  std::vector<double> neu_;                     ///< North, east and up pc corrections.
-  char calibration_method_[20];                             ///< Calibration method.
-
-public:
-  explicit AntennaPattern(grid_t zen1, grid_t zen2, grid_t dzen,
-    grid_t dazi = 0, char* c = nullptr, int freqs = 2)
-  noexcept
- :noazi_pcv_grid_(zen1, zen2, dzen),otypes_{}, neu_{}
-  {
-    otypes_.reserve(freqs);
-    neu_.reserve(freqs);
-    std::memset(c, ' ', 20)
-    if (c) {
-      std::size_t sz { std::strlen(c) };
-      if (sz > 20) {
-        sz = 20;
-      }
-      std::memcpy(calibration_method_, c, sz);
-    }
-  }
-};
-*/
 
 } // end namespace
 

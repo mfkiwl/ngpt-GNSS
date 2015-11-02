@@ -16,7 +16,15 @@ using ngpt::antex;
 constexpr int MAX_HEADER_CHARS { 85 };
 
 /// Size of 'END OF HEADER' C-string.
-constexpr std::size_t eoh_size { std::strlen("END OF HEADER") };
+/// std::strlen is not 'constexr' so eoh_size can't be one either. Note however
+/// that gcc has a builtin constexpr strlen function (if we want to disable this
+/// we can do so with -fno-builtin).
+///
+#ifdef __clang__
+  const     std::size_t eoh_size { std::strlen("END OF HEADER") };
+#else
+  constexpr std::size_t eoh_size { std::strlen("END OF HEADER") };
+#endif
 
 /// Max header lines.
 constexpr int MAX_HEADER_LINES { 1000 };
@@ -316,7 +324,12 @@ int antex::find_antenna(const antenna& ant/*, bool consider_sn*/)
   using ngpt::antenna;
 
   char line[MAX_HEADER_CHARS];
+  /// See the definition of eoh_size for why the following is needed.
+#ifdef __clang__
+  const     std::size_t soa_size { std::strlen("START OF ANTENNA") };
+#else
   constexpr std::size_t soa_size { std::strlen("START OF ANTENNA") };
+#endif
   std::size_t antennas_read { 0 };
   antenna t_ant;
   int status;

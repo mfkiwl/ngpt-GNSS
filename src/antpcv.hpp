@@ -1,67 +1,63 @@
 #ifndef __ANTPCV_HPP__
 #define __ANTPCV_HPP__
 
+#include <array>
 #include "grid.hpp"
 #include "obstype.hpp"
 
 namespace ngpt
 {
+
 class frequency_pcv
 {
 public:
+  explicit frequency_pcv(ngpt::ObservationType type, 
+      std::size_t no_azi_hint = 1, std::size_t azi_hint = 1) noexcept
+  : type_(type),
+    eccentricity_vector_{.0e0, .0e0, .0e0}
+    {
+      no_azi_pcv_values_.reserve(no_azi_hint);
+      azi_pcv_values_.reserve(azi_hint);
+    }
+  
+  ~frequency_pcv() noexcept {};
+
+  friend void swap(frequency_pcv& lhs, frequency_pcv& rhs) noexcept
+  {
+    using std::swap;
+    std::swap(lhs.type_,                rhs.type_);
+    std::swap(lhs.eccentricity_vector_, rhs.eccentricity_vector_);
+    std::swap(lhs.no_azi_pcv_values_,   rhs.no_azi_pcv_values_);
+    std::swap(lhs.azi_pcv_values_,      rhs.azi_pcv_values_);
+  }
+
+  frequency_pcv(const frequency_pcv& rhs) noexcept = default;
+  /*: type_(rhs.type),
+    eccentricity_vector_(rhs.eccentricity_vector_),
+    no_azi_pcv_values_(rhs.no_azi_pcv_values_),
+    azi_pcv_values_(rhs.azi_pcv_values_)
+  {}*/
+
+  frequency_pcv(frequency_pcv&& rhs) noexcept = default;
+  /*: type_               { std::move(rhs.type) },
+    eccentricity_vector_{ std::move(rhs.eccentricity_vector_) },
+    no_azi_pcv_values_  { std::move(no_azi_pcv_values_) },
+    azi_pcv_values_     { std::move(azi_pcv_values_) }
+  {}*/
+
+  frequency_pcv& operator=(const frequency_pcv rhs) noexcept
+  {
+    swap(*this, rhs);
+    return *this;
+  }
+
+  frequency_pcv& operator=(frequency_pcv&& rhs) noexcept = default;
 
 private:
   ngpt::ObservationType    type_;
-  float                    eccentricity_vector_[3];
-  float*                   no_azi_pcv_values_;
-  float*                   azi_pcv_values_;
-};
-
-/// Antenna eccentricity vector.
-/// - Receiver antenna:
-///   Eccentricities of the mean antenna phase center relative to the antenna 
-///   reference point (ARP). North, east and up component (in millimeters).
-/// - Satellite antenna:
-///   Eccentricities of the mean antenna phase center relative to the center of
-///   mass of the satellite in X-, Y- and Z-direction (in millimeters).
-///
-struct antenna_eccentricity
-{
-  double north_, east_, up_;
-};
-
-/// Non-azimouth dependent pattern (that has to be specified in any case). 
-/// Phase pattern values in millimeters from 'ZEN1' to 'ZEN2' (with increment 
-/// 'DZEN').
-class noazi_pcv
-: public ngpt::GridSkeleton<float, false, ngpt::Grid_Dimension::OneDim>
-{
-public:
-  explicit noazi_pcv(float zen1, float zen2, float dzen, int freqs) noexcept
-    : ngpt::GridSkeleton<float, false, ngpt::Grid_Dimension::OneDim>
-    (zen1, zen2, dzen),
-    pcv_values_.reserve(freqs)
-    {
-      for (auto& i : pcv_values_) {
-        i.reserve( this->size() );
-      }
-    }
-private:
-  std::vector<std::vector<float>>    pcv_values_;
-  std::vector<ngpt::ObservationType> obs_types_;
-};
-
-/// 
-class azi_pcv
-: public ngpt::GridSkeleton<float, false, ngpt::Grid_Dimension::TwoDim>
-{
-public:
-  explicit noazi_pcv(float zen1, float zen2, float dzen, 
-      float azi1, float azi2, float dazi, int freqs) noexcept
-    : ngpt::GridSkeleton<float, false, ngpt::Grid_Dimension::TwoDim>
-    (float zen1, float zen2, float dzen, float azi1, float azi2, float dazi),
-    pcv_values_.reserve(freqs)
-    {}
+  std::array<float,3>      eccentricity_vector_;
+  std::vector<float>       no_azi_pcv_values_;
+  std::vector<float>       azi_pcv_values_;
 };
 
 } // end namespace

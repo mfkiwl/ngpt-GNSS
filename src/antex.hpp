@@ -129,7 +129,8 @@ public:
   antex& operator=(const antex&) = delete;
   
   /// Move Constructor.
-  antex(antex&& a) noexcept = default;
+  antex(antex&& a)
+    noexcept(std::is_nothrow_move_constructible<std::ifstream>::value) = default;
 
   /// Move assignment operator.
   antex& operator=(antex&& a) 
