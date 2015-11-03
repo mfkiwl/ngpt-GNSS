@@ -168,7 +168,9 @@ public:
     step_{d},
     npts_{static_cast<std::size_t>((e-s)/d)+1}
   {
-    assert( static_cast<int>((e-s)/d) + 1 > 0 );
+    if ( d == 0 ) {
+      npts_ = 0;
+    }
     assert( npts_ < std::numeric_limits<int>::max() );
   };
 
@@ -332,6 +334,13 @@ public:
   {}
   
   virtual ~GridSkeleton() {};
+
+  T x_axis_from() const noexcept { return xaxis_.from(); }
+  T x_axis_to()   const noexcept { return xaxis_.to(); }
+  T x_axis_step() const noexcept { return xaxis_.step(); }
+  T y_axis_from() const noexcept { return yaxis_.from(); }
+  T y_axis_to()   const noexcept { return yaxis_.to(); }
+  T y_axis_step() const noexcept { return yaxis_.step(); }
 
   auto
     nearest_neighbor(T x, T y) noexcept

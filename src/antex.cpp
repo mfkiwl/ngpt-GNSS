@@ -161,53 +161,65 @@ void antex::read_header()
 /// \return  Everything other than 0 denots a failure.
 ///
 /// \todo    Need to also read 'FREQ RMS'
-/*
-ngpt::AntennaPattern ngpt::Antex::read_pattern()
+ngpt::antenna_pcv ngpt::antex::__read_pattern()
 {
   char line[MAX_HEADER_CHARS];
-  char grid_line[MAX_GRID_CHARS];
+  // char grid_line[MAX_GRID_CHARS];
 
 
   // next field is 'METH / BY / # / DATE'
   char clbr[20];
-  if (fin.getline(line, MAX_HEADER_CHARS) &&
+  if (_istream.getline(line, MAX_HEADER_CHARS) &&
     !strncmp(line+60, "METH / BY / # / DATE", 20))
   {
     std::memcpy(clbr, line, 20);
   }
 
   // next field is 'DAZI'
-  double dazi;
-  if (fin.getline(line, MAX_HEADER_CHARS) &&
+  double dazi {-1000};
+  if (_istream.getline(line, MAX_HEADER_CHARS) &&
     !strncmp(line+60, "DAZI", 4)) 
   {
-    dazi = std::stoi(line+2, nullptr);
+    dazi = std::stof(line+2, nullptr);
   }
 
   // next field is 'ZEN1 / ZEN2 / DZEN'
-  double zen1,  sen2,  dzen;
-  if (fin.getline(line, MAX_HEADER_CHARS) &&
+  double zen1,  zen2,  dzen;
+  zen1 = zen2 = dzen = -1000;
+  if (_istream.getline(line, MAX_HEADER_CHARS) &&
     !strncmp(line+60, "ZEN1 / ZEN2 / DZEN", 18))
   {
-    zen1 = std::stoi(line+2, nullptr);
-    zen2 = std::stoi(line+8, nullptr);
-    dzen = std::stoi(line+14, nullptr);
+    zen1 = std::stof(line+2, nullptr);
+    zen2 = std::stof(line+8, nullptr);
+    dzen = std::stof(line+14, nullptr);
     // see the decleration of MAX_GRID_CHARS for why this is needed.
     assert( 8*(std::size_t)((zen2-zen1)/dzen) < MAX_GRID_CHARS-10  );
   }
 
   // next field is '# OF FREQUENCIES'
-  int num_of_freqs;
-  if (fin.getline(line, MAX_HEADER_CHARS) && 
+  int num_of_freqs {0};
+  if (_istream.getline(line, MAX_HEADER_CHARS) && 
     !strncmp(line+60, "# OF FREQUENCIES", 16))
   {
     num_of_freqs = std::stoi(line, nullptr);
   }
   
   // Construct an AntennaPattern
-  ngpt::AntennaPattern antpat ();
+  if (  dazi < -900
+     || zen1 < -900
+     || zen2 < -900
+     || dzen < -900 ) {
+    throw std::runtime_error 
+      ("antex::read_pattern() -> Failed to resolve antenna grid information.");
+  }
+  ngpt::antenna_pcv antpat(dazi, zen1, zen2, dzen, num_of_freqs);
+
+  // all done
+#ifdef DEBUG
+  std::cout << "\n[DEBUG] Anntenna Pattern read ok!";
+#endif
+  return antpat;
 }
-*/
 
 /// \details This is only a utility function. After it is handed an input
 ///          file stream (i.e. that of an Antex instance), positioned at the
@@ -319,7 +331,7 @@ int __skip_rest_of_antenna__(std::ifstream& fin)
 ///
 /// \warning 
 /// \todo consider serial numbers.
-int antex::find_antenna(const antenna& ant/*, bool consider_sn*/)
+int antex::__find_antenna(const antenna& ant/*, bool consider_sn*/)
 {
   using ngpt::antenna;
 

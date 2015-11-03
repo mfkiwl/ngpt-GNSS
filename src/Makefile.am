@@ -17,6 +17,7 @@ dist_include_HEADERS   = receiver.hpp \
 												 antenna.hpp \
 												 satsys.hpp \
 												 grid.hpp \
+												 antpcv.hpp \
 												 antex.hpp
 
 dist_libngpt_a_SOURCES = receiver.cpp \

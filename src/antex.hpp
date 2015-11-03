@@ -4,7 +4,7 @@
 #include <fstream>
 #include "satsys.hpp"
 #include "antenna.hpp"
-// #include "antpcv.hpp"
+#include "antpcv.hpp"
 
 /**
  * \file
@@ -119,7 +119,9 @@ public:
   /// TODO: closing the file is not mandatory, but nevertheless
   ~antex() noexcept 
   { 
-    if ( _istream.is_open() ) _istream.close();
+    if ( _istream.is_open() ) {
+      _istream.close();
+    }
   }
   
   /// Copy not allowed !
@@ -139,11 +141,21 @@ public:
   /// Read the instance header, and assign (most of) the fields.
   void read_header();
 
+  //
+  ngpt::antenna_pcv get_antenna_pattern(const antenna& ant)
+  {
+    int status = __find_antenna(ant);
+    if ( status ) {
+      return ngpt::antenna_pcv(0, 0, 0, 0, 0);
+    }
+    return __read_pattern();
+  }
+
   /// Find a specific antenna in the instance.
-  int find_antenna(const antenna&/*bool, consider_serial_nr = false*/);
+  int __find_antenna(const antenna&/*bool, consider_serial_nr = false*/);
   
   /// Read antenna calibration pattern.
-  // AntennaPattern read_pattern();
+  ngpt::antenna_pcv __read_pattern();
 
 private:
   std::string            _filename; ///< The name of the antex file.

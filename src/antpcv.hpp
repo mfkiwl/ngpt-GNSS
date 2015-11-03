@@ -45,7 +45,7 @@ public:
     azi_pcv_values_     { std::move(azi_pcv_values_) }
   {}*/
 
-  frequency_pcv& operator=(const frequency_pcv rhs) noexcept
+  frequency_pcv& operator=(frequency_pcv rhs) noexcept
   {
     swap(*this, rhs);
     return *this;
@@ -69,13 +69,65 @@ namespace antenna_pcv_details
 class antenna_pcv
 {
 public:
-  explicit antenna_pcv()
+  
+  explicit antenna_pcv(float zen1, float zen2, float dzen, 
+      int freqs, 
+      float dazi = 0)
+  /*noexcept*/
+  : no_azi_grid_(zen1, zen2, dzen),
+    azi_grid_(nullptr)
+  {
+    assert( dzen > .0e0 );
+    if ( dazi ) {
+      azi_grid_ = new GridSkeleton<float, false, Grid_Dimension::TwoDim>
+        (zen1, zen2, dzen, antenna_pcv_details::azi1, antenna_pcv_details::azi2, dazi);
+    }
+    freq_pcv.reserve(freqs);
+  }
+
+  friend void swap(antenna_pcv& p1, antenna_pcv& p2) noexcept
+  {
+    using std::swap;
+    swap(p1.no_azi_grid_, p2.no_azi_grid_);
+    swap(p1.azi_grid_,   p2.azi_grid_);
+    swap(p1.freq_pcv,     p2.freq_pcv);
+  }
+
+  antenna_pcv(const antenna_pcv& other)
+    : no_azi_grid_(other.no_azi_grid_),
+      azi_grid_( other.azi_grid_
+          ? new GridSkeleton<float, false, Grid_Dimension::TwoDim>
+            (other.zen1(), other.zen2(), other.dzen(), 
+            antenna_pcv_details::azi1, antenna_pcv_details::azi2, other.dazi())
+          : nullptr ),
+      freq_pcv(other.freq_pcv)
+  {
+  }
+
+  antenna_pcv(antenna_pcv&& other)
+    : no_azi_grid_(other.no_azi_grid_),
+      azi_grid_(other.azi_grid_),
+      freq_pcv(std::move(other.freq_pcv))
+  {
+    other.azi_grid_ = nullptr;
+  }
+
+  ~antenna_pcv() noexcept
+  {
+    delete azi_grid_;
+  }
+
+  float zen1() const noexcept { return no_azi_grid_.from(); }
+  float zen2() const noexcept { return no_azi_grid_.to(); }
+  float dzen() const noexcept { return no_azi_grid_.step(); }
+  bool  has_azi_pcv() const noexcept { return azi_grid_ != nullptr; }
+  float azi1() const noexcept { return azi_grid_->y_axis_from(); }
+  float azi2() const noexcept { return azi_grid_->y_axis_to(); }
+  float dazi() const noexcept { return azi_grid_->y_axis_step(); }
 
 private:
-  GridSkeleton<float, false, Grid_Dimension::OneDim> no_azi_grid_;
-  GridSkeleton<float, false, Grid_Dimension::TwoDim> azi_grid_;
-  float dazi_;
-  float zen1_,  zen2_,  dzen_;
+  GridSkeleton<float, false, Grid_Dimension::OneDim>  no_azi_grid_;
+  GridSkeleton<float, false, Grid_Dimension::TwoDim>* azi_grid_;
   std::vector<frequency_pcv> freq_pcv;
 };
 
