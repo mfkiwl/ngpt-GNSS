@@ -31,14 +31,35 @@ public:
     std::swap(lhs.azi_pcv_values_,      rhs.azi_pcv_values_);
   }
 
-  frequency_pcv(const frequency_pcv& rhs) noexcept = default;
+  frequency_pcv(const frequency_pcv& rhs) noexcept(
+         std::is_nothrow_copy_constructible<std::array<float,3>>::value
+      && std::is_nothrow_copy_constructible<std::vector<float>>::value 
+      ) = default;
+#ifdef DEBUG
+//  TODO:: Test#2 fails, i.e. std::vector<float> is not noexcept for the copy
+//         constructor.
+//
+//  static_assert( std::is_nothrow_copy_constructible<std::array<float,3>>::value,
+//      "std::array<float,3> -> throws for copy c'tor!" );
+//  static_assert( std::is_nothrow_copy_constructible<std::vector<float>>::value,
+//      "std::vector<float> -> throws for copy c'tor!" );
+#endif
   /*: type_(rhs.type),
     eccentricity_vector_(rhs.eccentricity_vector_),
     no_azi_pcv_values_(rhs.no_azi_pcv_values_),
     azi_pcv_values_(rhs.azi_pcv_values_)
   {}*/
 
-  frequency_pcv(frequency_pcv&& rhs) noexcept = default;
+  frequency_pcv(frequency_pcv&& rhs) noexcept(
+         std::is_nothrow_move_constructible<std::array<float,3>>::value
+      && std::is_nothrow_move_constructible<std::vector<float>>::value 
+      ) = default;
+#ifdef DEBUG
+  static_assert( std::is_nothrow_move_constructible<std::array<float,3>>::value,
+      "std::array<float,3> -> throws for copy c'tor!" );
+  static_assert( std::is_nothrow_move_constructible<std::vector<float>>::value,
+      "std::vector<float> -> throws for copy c'tor!" );
+#endif
   /*: type_               { std::move(rhs.type) },
     eccentricity_vector_{ std::move(rhs.eccentricity_vector_) },
     no_azi_pcv_values_  { std::move(no_azi_pcv_values_) },

@@ -307,7 +307,7 @@ class GridSkeleton
 
 template<typename T, bool RangeCheck>
 class GridSkeleton<T, RangeCheck, Grid_Dimension::OneDim>
-:TickAxisImpl<T, RangeCheck>
+: public TickAxisImpl<T, RangeCheck>
 {
 public:
   explicit constexpr
