@@ -152,6 +152,9 @@ private:
   COVec _cov; ///< Vector containing pairs of coeficients and _RawObs_.
 
 public:
+
+  ObservationType() noexcept
+  {};
   
   /// Constructor from a full set.
   explicit

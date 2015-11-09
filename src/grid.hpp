@@ -335,6 +335,7 @@ public:
   
   virtual ~GridSkeleton() {};
 
+  std::size_t size() const noexcept { return xaxis_.size() * yaxis_.size(); }
   T x_axis_from() const noexcept { return xaxis_.from(); }
   T x_axis_to()   const noexcept { return xaxis_.to(); }
   T x_axis_step() const noexcept { return xaxis_.step(); }

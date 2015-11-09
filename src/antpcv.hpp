@@ -20,6 +20,16 @@ public:
       azi_pcv_values_.reserve(azi_hint);
     }
 
+    explicit 
+      frequency_pcv(std::size_t no_azi_hint = 1, std::size_t azi_hint = 1) 
+      noexcept
+    : type_(),
+      eccentricity_vector_{.0e0, .0e0, .0e0}
+    {
+      no_azi_pcv_values_.reserve(no_azi_hint);
+      azi_pcv_values_.reserve(azi_hint);
+    }
+
   ~frequency_pcv() noexcept {};
 
   friend void swap(frequency_pcv& lhs, frequency_pcv& rhs) noexcept
@@ -103,7 +113,12 @@ public:
       azi_grid_ = new GridSkeleton<float, false, Grid_Dimension::TwoDim>
         (zen1, zen2, dzen, antenna_pcv_details::azi1, antenna_pcv_details::azi2, dazi);
     }
-    freq_pcv.reserve(freqs);
+    std::size_t no_azi_hint = no_azi_grid_.size();
+    std::size_t    azi_hint = ( azi_grid_ ) ? ( azi_grid_->size() ) : ( 0 );
+    //freq_pcv.reserve(freqs);
+    for (int i=0; i<freqs; ++i) {
+      freq_pcv.emplace_back(no_azi_hint, azi_hint);
+    }
   }
 
   friend void swap(antenna_pcv& p1, antenna_pcv& p2) noexcept

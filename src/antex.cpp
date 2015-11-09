@@ -39,6 +39,16 @@ constexpr int MAX_HEADER_LINES { 1000 };
 ///
 constexpr std::size_t MAX_GRID_CHARS { 258 };
 
+/// Reolve a frequency type as recorded in an antex file to a valid
+/// ObservatioType.
+ngpt::ObservationType antex2obstype(const char* s)
+{
+  ngpt::SATELLITE_SYSTEM ss { charToSatSys( *s ) };
+  int freq { std::stoi(s+1, nullptr) };
+  return ngpt::ObservationType(ss, ngpt::OBSERVATION_TYPE::CARRIER_PHASE,
+      freq, "?");
+}
+
 /// \details Antex Constructor, using an antex filename. The constructor will
 ///          only initialize (set) the _filename attribute and also (try to)
 ///          open the input stream (i.e. _istream).
@@ -209,9 +219,90 @@ ngpt::antenna_pcv ngpt::antex::__read_pattern()
      || zen1 < -900
      || zen2 < -900
      || dzen < -900 ) {
-    throw std::runtime_error 
+    throw std::runtime_error
       ("antex::read_pattern() -> Failed to resolve antenna grid information.");
   }
+
+  // From here up untill the block 'START OF FREQUENCY' there can be a number
+  // of optional fields.
+  while ( _istream.getline(line, MAX_HEADER_CHARS) &&
+      strncmp(line+60, "START OF FREQUENCY", 18) )
+  {
+#ifdef DEBUG
+    std::cout << "\n[DEBUG] Optional line skiped: " << line;
+#endif
+  }
+  // make sure we're not at EOF or anything funny happened ...
+  if ( !_istream.good() ) {
+    throw std::runtime_error
+    ("antex::read_header -> Could not find 'START OF FREQUENCY'.");
+  }
+
+  ngpt::ObservationType ot { antex2obstype(line+3) };
+
+  // next field is 'NORTH / EAST / UP'
+  float north, east, up;
+  if (_istream.getline(line, MAX_HEADER_CHARS) && 
+    !strncmp(line+60, "NORTH / EAST / UP", 17))
+  {
+    char tmp[11];
+    tmp[10] = '\0';
+    std::memcpy(tmp, line, 10);
+    north = std::stof(tmp, nullptr);
+    std::memcpy(tmp, line+10, 10);
+    east = std::stof(tmp, nullptr);
+    std::memcpy(tmp, line+20, 10);
+    up = std::stof(tmp, nullptr);
+  }
+
+  // read 'NOAZI' grid values
+  char g_line[MAX_GRID_CHARS];
+  std::size_t vals_to_read { (zen2 - zen1) / dzen + 1 };
+  float val;
+  if (_istream.getline(g_line, MAX_GRID_CHARS) &&
+      !strncmp(g_line, "   NOAZI", 8)) {
+    char* lptr = g_line + 8;
+    char ntc   = '\0';
+    for (std::size_t i=0; i<vals_to_read; ++i) {
+      // make sure we only transform 8 chars to float !
+      std::swap(lptr[8], ntc);
+      val = std::stof(lptr, nullptr);
+      std::swap(ntc, lptr[8]);
+      lptr += 8;
+    }
+  } else {
+    throw std::runtime_error
+    ("antex::read_header -> Could not find 'NOAZI' grid.");
+  }
+
+  // read azimouth-dependent grid values
+  if ( dazi != 0 ) {
+    int num_of_azi_lines { ( antenna_pcv_details::azi2 
+        - antenna_pcv_details::azi1 ) / dazi + 1 };
+    for (int i=0; i<num_of_azi_lines; ++i) {
+      if ( !_istream.getline(g_line, MAX_GRID_CHARS) ) {
+        throw std::runtime_error
+          ("antex::read_header -> Failed to read 'AZI' grid (1).");
+      }
+      float this_azi { std::stof(g_line, nullptr) };
+      if ( std::abs( this_azi - i*dazi + antenna_pcv_details::azi1 ) > .001 ) {
+        throw std::runtime_error
+          ("antex::read_header -> Failed to read 'AZI' grid (2).");
+      }
+      char* lptr = g_line + 8;
+      char ntc   = '\0';
+      for (std::size_t i=0; i<vals_to_read; ++i) {
+        // make sure we only transform 8 chars to float !
+        std::swap(lptr[8], ntc);
+        val = std::stof(lptr, nullptr);
+        std::swap(ntc, lptr[8]);
+        lptr += 8;
+      }
+    }
+  }
+
+  // should now see the 'END OF FREQUENCY' marker
+
   ngpt::antenna_pcv antpat(dazi, zen1, zen2, dzen, num_of_freqs);
 
   // all done
