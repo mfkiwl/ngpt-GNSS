@@ -16,7 +16,7 @@ constexpr char none_radome[] = "NONE";
 ///
 antenna::antenna() noexcept 
 {
-  this->nullify();
+    this->nullify();
 }
 
 /// Constructor from antenna type. If the size of the input string is smaller
@@ -31,7 +31,7 @@ antenna::antenna() noexcept
 ///
 antenna::antenna(const char* c) noexcept
 {
-  this->copy_from_cstr(c);
+    this->copy_from_cstr(c);
 }
 
 /// Constructor from antenna type. If the size of the input string is smaller
@@ -46,25 +46,25 @@ antenna::antenna(const char* c) noexcept
 ///
 antenna::antenna(const std::string& s) noexcept
 {
-  this->copy_from_str(s);
+    this->copy_from_str(s);
 }
 
 /// Copy constructor.
 ///
 antenna::antenna(const antenna& rhs) noexcept
 {
-  std::memcpy(name_, rhs.name_, antenna_full_max_chars * sizeof(char));
+    std::memcpy(name_, rhs.name_, antenna_full_max_chars * sizeof(char));
 }
 
 /// Assignment operator.
 ///
 antenna& antenna::operator=(const antenna& rhs) noexcept
 {
-  if (this!=&rhs)
-  {
-    std::memcpy(name_, rhs.name_, antenna_full_max_chars * sizeof(char));
-  }
-  return *this;
+    if (this!=&rhs)
+    {
+        std::memcpy(name_, rhs.name_, antenna_full_max_chars * sizeof(char));
+    }
+    return *this;
 }
 
 /// Assignment operator (from c-string).
@@ -77,8 +77,8 @@ antenna& antenna::operator=(const antenna& rhs) noexcept
 ///
 antenna& antenna::operator=(const char* c) noexcept
 {
-  this->copy_from_cstr(c);
-  return *this;
+    this->copy_from_cstr(c);
+    return *this;
 }
 
 /// Assignment operator (from std::string).
@@ -86,13 +86,14 @@ antenna& antenna::operator=(const char* c) noexcept
 /// \param[in] c  An std::string representing a valid antenna name, or an 
 ///               antenna name/radome pair.
 ///
-/// \note         If the size of the input std::string is less than antenna_model_max_chars
-///               the radome is automatically set to 'NONE'.
+/// \note         If the size of the input std::string is less than 
+///               antenna_model_max_chars the radome is automatically set to 
+///               'NONE'.
 ///
 antenna& antenna::operator=(const std::string& s) noexcept
 {
-  this->copy_from_str(s);
-  return *this;
+    this->copy_from_str(s);
+    return *this;
 }
 
 /// Equality operator.
@@ -101,7 +102,7 @@ antenna& antenna::operator=(const std::string& s) noexcept
 ///
 bool antenna::operator==(const antenna& rhs) const noexcept
 {
-  return ( !std::strncmp(name_ ,rhs.name_ , 
+    return ( !std::strncmp(name_ ,rhs.name_ , 
         antenna_model_max_chars+1+antenna_radome_max_chars+1) );
 }
 
@@ -111,7 +112,7 @@ bool antenna::operator==(const antenna& rhs) const noexcept
 ///
 bool antenna::operator!=(const antenna& rhs) const noexcept
 {
-  return ! (*this == rhs );
+    return ! (*this == rhs );
 }
 
 /// This function compares two Antenna instances and return true if and only
@@ -120,34 +121,36 @@ bool antenna::operator!=(const antenna& rhs) const noexcept
 ///
 bool antenna::is_same(const antenna& rhs) const noexcept
 {
-  return ( !std::strncmp(name_ ,rhs.name_ , antenna_full_max_chars) );
+    return ( !std::strncmp(name_ ,rhs.name_ , antenna_full_max_chars) );
 }
 
 /// Antenna model name as string.
 ///
 std::string antenna::model_str() const noexcept
 {
-  return std::string(name_, antenna_model_max_chars);
+    return std::string(name_, antenna_model_max_chars);
 }
 
 /// Antenna radome name as string.
 ///
 std::string antenna::radome_str() const noexcept
 {
-  return std::string(name_+antenna_model_max_chars+1, antenna_radome_max_chars);
+    return std::string(name_+antenna_model_max_chars+1,
+                       antenna_radome_max_chars);
 }
 
 /// Antenna model/radome pair as string.
 ///
 std::string antenna::to_string() const noexcept
 {
-  return std::string(name_, antenna_model_max_chars+1+antenna_radome_max_chars);
+    return std::string(name_, 
+                       antenna_model_max_chars+1+antenna_radome_max_chars);
 }
 /// Set all chars in \c name_ to \c '\0'. 
 inline 
 void antenna::nullify() noexcept
 {
-  std::memset( name_, '\0', antenna_full_max_chars * sizeof(char) );
+    std::memset( name_, '\0', antenna_full_max_chars * sizeof(char) );
 }
 
 /// Set all chars corresponding to the antenna name plus radome in \c name_,
@@ -156,9 +159,9 @@ void antenna::nullify() noexcept
 inline 
 void antenna::nullify_antenna() noexcept
 {
-  std::size_t chars { antenna_model_max_chars + 1 
-    + antenna_radome_max_chars + 1 };
-  std::memset( name_, '\0', chars * sizeof(char) );
+    std::size_t chars { antenna_model_max_chars + 1 
+                        + antenna_radome_max_chars + 1 };
+    std::memset( name_, '\0', chars * sizeof(char) );
 }
 
 /// Set all chars corresponding to the antenna name plus radome in \c name_,
@@ -168,17 +171,17 @@ void antenna::nullify_antenna() noexcept
 inline 
 void antenna::wspaceify_antenna() noexcept
 {
-  std::size_t chars { antenna_model_max_chars + 1 
-    + antenna_radome_max_chars + 1 };
-  std::memset( name_, ' ', chars * sizeof(char) );
+    std::size_t chars { antenna_model_max_chars + 1 
+                        + antenna_radome_max_chars + 1 };
+    std::memset( name_, ' ', chars * sizeof(char) );
 }
 
 /// Set radome to 'NONE'
 inline
 void antenna::set_none_radome() noexcept
 {
-  std::memcpy(name_+antenna_model_max_chars+1, none_radome, 
-      antenna_radome_max_chars * sizeof(char));
+    std::memcpy(name_+antenna_model_max_chars+1, none_radome, 
+                antenna_radome_max_chars * sizeof(char));
 }
 
 /// \details     Set an antenna/radome pair from an std::string. The input 
@@ -200,23 +203,23 @@ void antenna::set_none_radome() noexcept
 ///
 void antenna::copy_from_str(const std::string& s) noexcept
 {
-  // set antenna model+radome to ' '
-  this->wspaceify_antenna();
+    // set antenna model+radome to ' '
+    this->wspaceify_antenna();
   
-  // size of input string
-  std::size_t str_size { s.size() };
+    // size of input string
+    std::size_t str_size { s.size() };
 
-  // assuming we have a model/radome pair; copy to name_ at maximum
-  // (antenna_model_max_chars+1+antenna_radome_max_chars) characters
-  if ( str_size > antenna_model_max_chars ) {
-    std::size_t nrc { std::min(str_size, 
-        antenna_model_max_chars+1+antenna_radome_max_chars) };
-    std::copy(s.begin(), s.begin()+nrc, &name_[0]);
-  } else {
-  // assume we only have the model; copy it and set radome to 'NONE'
-    std::copy(s.begin(), s.end(), &name_[0]);
-    this->set_none_radome();
-  }
+    // assuming we have a model/radome pair; copy to name_ at maximum
+    // (antenna_model_max_chars+1+antenna_radome_max_chars) characters
+    if ( str_size > antenna_model_max_chars ) {
+        std::size_t nrc { std::min(str_size, 
+                        antenna_model_max_chars+1+antenna_radome_max_chars) };
+        std::copy(s.begin(), s.begin()+nrc, &name_[0]);
+    } else {
+    // assume we only have the model; copy it and set radome to 'NONE'
+        std::copy(s.begin(), s.end(), &name_[0]);
+        this->set_none_radome();
+    }
 }
 
 /// \details     Set an antenna/radome pair from a c-string. The input 
@@ -238,22 +241,22 @@ void antenna::copy_from_str(const std::string& s) noexcept
 ///
 void antenna::copy_from_cstr(const char* c) noexcept
 {
-  // set antenna model+radome to null.
-  this->wspaceify_antenna();
+    // set antenna model+radome to null.
+    this->wspaceify_antenna();
 
-  // get the size of the input string.
-  std::size_t ant_size { std::strlen(c) };
+    // get the size of the input string.
+    std::size_t ant_size { std::strlen(c) };
 
-  // if size of input string > antenna_model_max_chars, then assume we are
-  // copying model+radome,
-  if ( ant_size > antenna_model_max_chars ) {
-    std::memcpy(name_, c, sizeof(char) * std::min(ant_size, 
-        (antenna_model_max_chars + 1 + antenna_radome_max_chars) ));
-  } else {
-  // else assume we are only copying the antenna model
-    std::memcpy(name_, c, sizeof(char) * ant_size);
-    this->set_none_radome();
-  }
+    // if size of input string > antenna_model_max_chars, then assume we are
+    // copying model+radome,
+    if ( ant_size > antenna_model_max_chars ) {
+        std::memcpy(name_, c, sizeof(char) * std::min(ant_size, 
+                    (antenna_model_max_chars + 1 + antenna_radome_max_chars) ));
+    } else {
+    // else assume we are only copying the antenna model
+        std::memcpy(name_, c, sizeof(char) * ant_size);
+        this->set_none_radome();
+    }
 }
 
 /*
@@ -269,35 +272,35 @@ void antenna::copy_from_cstr(const char* c) noexcept
 ///
 bool antenna::validate_receiver_antenna() const
 {
-  // validate whitespace between model name and radome
-  if ( !(name_[antenna_model_max_chars] == ' ') ) {
-    return false;
-  }
+    // validate whitespace between model name and radome
+    if ( !(name_[antenna_model_max_chars] == ' ') ) {
+      return false;
+    }
   
-  // First three characters are manufacturer code;
-  // Allowed in manufacturer code: - and A-Z and 0-9
-  std::string man { name_, 3 };
-  std::regex  valid_man ( "[A-Z0-9-]+" );
-  if ( !std::regex_match(man, valid_man) ) {
-    return false;
-  }
+    // First three characters are manufacturer code;
+    // Allowed in manufacturer code: - and A-Z and 0-9
+    std::string man { name_, 3 };
+    std::regex  valid_man ( "[A-Z0-9-]+" );
+    if ( !std::regex_match(man, valid_man) ) {
+      return false;
+    }
 
-  // Allowed in model name: /-_.+ and A-Z and 0-9
-  // Model name must start with A-Z or 0-9
-  std::string mod { name_+2,  antenna_model_max_chars};
-  std::regex  valid_mod ( "[A-Z0-9][A-Z0-9-_/ \\.\\+]+" );
-  if ( !std::regex_match(mod, valid_mod) ) {
-    return false;
-  }
+    // Allowed in model name: /-_.+ and A-Z and 0-9
+    // Model name must start with A-Z or 0-9
+    std::string mod { name_+2,  antenna_model_max_chars};
+    std::regex  valid_mod ( "[A-Z0-9][A-Z0-9-_/ \\.\\+]+" );
+    if ( !std::regex_match(mod, valid_mod) ) {
+      return false;
+    }
 
-  // radome: 4 columns; A-Z and 0-9 allowed
-  std::string rad { name_+antenna_model_max_chars+1,  antenna_radome_max_chars};
-  std::regex  valid_rad ( "[A-Z0-9]+" );
-  if ( !std::regex_match(rad, valid_rad) ) {
-    return false;
-  }
+    // radome: 4 columns; A-Z and 0-9 allowed
+    std::string rad { name_+antenna_model_max_chars+1,  antenna_radome_max_chars};
+    std::regex  valid_rad ( "[A-Z0-9]+" );
+    if ( !std::regex_match(rad, valid_rad) ) {
+      return false;
+    }
   
-  return true;
+    return true;
 }
 
 /// \details Specialization for Satellite Antennas. Validate model/radome based
@@ -308,26 +311,26 @@ bool antenna::validate_receiver_antenna() const
 ///
 bool antenna::validate_satellite_antenna() const
 {
-  // validate whitespace between model name and radome
-  if ( !(name_[antenna_model_max_chars] == ' ') ) {
-    return false;
-  }
+    // validate whitespace between model name and radome
+    if ( !(name_[antenna_model_max_chars] == ' ') ) {
+      return false;
+    }
   
-  // Allowed in model name: /-_.+ and A-Z and 0-9
-  // Model name must start with A-Z or 0-9
-  std::string mod { name_,  antenna_model_max_chars};
-  std::regex valid_mod ( "[A-Z0-9][A-Z0-9-_/ \\.\\+]+" );
-  if ( !std::regex_match(mod, valid_mod) ) {
-    return false;
-  }
+    // Allowed in model name: /-_.+ and A-Z and 0-9
+    // Model name must start with A-Z or 0-9
+    std::string mod { name_,  antenna_model_max_chars};
+    std::regex valid_mod ( "[A-Z0-9][A-Z0-9-_/ \\.\\+]+" );
+    if ( !std::regex_match(mod, valid_mod) ) {
+      return false;
+    }
 
-  // radome: 4 columns; A-Z and 0-9 allowed
-  std::string rad { name_+antenna_model_max_chars+1,  antenna_radome_max_chars};
-  std::regex  valid_rad ( "[A-Z0-9]+" );
-  if ( !std::regex_match(rad, valid_rad) ) {
-    return false;
-  }
+    // radome: 4 columns; A-Z and 0-9 allowed
+    std::string rad { name_+antenna_model_max_chars+1,  antenna_radome_max_chars};
+    std::regex  valid_rad ( "[A-Z0-9]+" );
+    if ( !std::regex_match(rad, valid_rad) ) {
+      return false;
+    }
   
-  return true;
+    return true;
 }
 */

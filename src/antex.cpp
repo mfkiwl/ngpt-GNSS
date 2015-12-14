@@ -51,10 +51,10 @@ ngpt::ObservationType antex2obstype(const char* s)
 }
 
 /// \details Antex Constructor, using an antex filename. The constructor will
-///          only initialize (set) the _filename attribute and also (try to)
+///          initialize (set) the _filename attribute and also (try to)
 ///          open the input stream (i.e. _istream).
-///
-/// \todo    Is this a noexcept function?
+///          If the file is successefuly opened, the constructor will read
+///          the ANTEX header and assign info.
 ///
 antex::antex(const char *filename)
 : _filename{filename},
@@ -69,6 +69,23 @@ _end_of_head{0}
     throw std::runtime_error{
       "Cannot open antex file: "+std::string(filename)};
   }
+#ifdef DEBUG
+  try {
+      this->read_header();
+  } catch (std::exception& e) {
+        std::cerr << "\n[ERROR] Failed to read header for antex file: "
+                  << "\"" <<  filename << "\"";
+        std::cerr << e.what();
+        if ( _istream.is_open() ) {
+            _istream.close();
+        }
+  }
+#endif
+  if ( this->read_header() ) {
+      if ( _istream.is_open() ) {
+          _istream.close();
+      }
+  }
 }
 
 /// \details Read an Antex (instance) header. The format of the header should
@@ -82,19 +99,24 @@ _end_of_head{0}
 ///          The function will exit after reading a header line, ending with
 ///          the (sub)string 'END OF HEADER'.
 ///
-/// \throw   Will throw a std::runtime_error in case any one of the required 
-///          instance fields can not be resolved, or the 'END OF HEADER' cannot
-///          be found after MAX_HEADER_LINES are read.
+/// \throw   In DEBUG mode, will throw a std::runtime_error in case any one of 
+///          the required instance fields can not be resolved, or the 
+///          'END OF HEADER' cannot be found after MAX_HEADER_LINES are read.
+///          If not in DEBUG mode, no exception is thrown (by this function).
 ///
 /// \warning 
 ///          - The instance's input steam (i.e. _istream) should be open and 
 ///          valid.
 ///          - Note that the function expects that no header line contains more
 ///          than MAX_HEADER_CHARS chars.
+///          - If the header is not read correctly, then the (opened) file
+///          buffer will be closed.
+///
+/// \return  Anything other than '0' is an error.
 ///
 /// \reference https://igscb.jpl.nasa.gov/igscb/station/general/antex14.txt
 ///
-void antex::read_header()
+int antex::read_header()
 {
   char line[MAX_HEADER_CHARS];
 
@@ -113,8 +135,11 @@ void antex::read_header()
   *(line+15) = '\0';
   float fvers = std::strtod(line,nullptr);
   if (std::abs(fvers - 1.4) > .001 ) {
+#ifdef DEBUG
     throw std::runtime_error
     ("antex::read_header -> Invalid Antex version.");
+#endif
+    return 1;
   } else {
     this->_version = antex::ATX_VERSION::v14;
   }
@@ -122,8 +147,11 @@ void antex::read_header()
   try {
     this->_satsys = ngpt::charToSatSys(line[20]);
   } catch (std::runtime_error& e) {
+#ifdef DEBUG
     throw std::runtime_error
     ("antex::read_header -> Invalid Satellite System.");
+#endif
+    return 1;
   }
 
   // Read the second line. Get PCV TYPE / REFANT.
@@ -134,8 +162,11 @@ void antex::read_header()
   } else if (*line == 'R') {
     this->_type = antex::PCV_TYPE::Relative;
   } else {
+#ifdef DEBUG
     throw std::runtime_error
     ("antex::read_header -> Invalid PCV type.");
+#endif
+    return 1;
   }
   // In case of a relative antenna, we also have the
   // REFANT field.
@@ -153,14 +184,17 @@ void antex::read_header()
     dummy_it++;
   }
   if (dummy_it >= MAX_HEADER_LINES) {
+#ifdef DEBUG
     throw std::runtime_error
     ("antex::read_header -> Could not find 'END OF HEADER'.");
+#endif
+    return 1;
   }
 
   this->_end_of_head = _istream.tellg();
 
   // All done !
-  return;
+  return 0;
 }
 
 /// \details This function is used to read an antenna calibration info block out
@@ -426,6 +460,7 @@ int __skip_rest_of_antenna__(std::ifstream& fin)
 ///
 /// \warning 
 /// \todo consider serial numbers.
+///
 int antex::__find_antenna(const antenna& ant/*, bool consider_sn*/)
 {
   using ngpt::antenna;
@@ -464,15 +499,12 @@ int antex::__find_antenna(const antenna& ant/*, bool consider_sn*/)
 
   while (t_ant != ant && _istream.good())
   {
-#ifdef DEBUG
-//    std::cerr << "\n\t[DEBUG] INFO Skipping antenna: ["<< line << "]";
-#endif
     // skip the antenna details ...
     if ( (status = __skip_rest_of_antenna__(_istream)) ) {
 #ifdef DEBUG
-    std::cerr << "\n\t[DEBUG] ERROR in __skip_rest_of_antenna__; status="<<status;
+        std::cerr << "\n\t[DEBUG] ERROR in __skip_rest_of_antenna__; status="<<status;
 #endif
-      return -1;
+        return -1;
     }
     antennas_read++;
 

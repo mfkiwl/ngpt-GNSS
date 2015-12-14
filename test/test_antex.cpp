@@ -12,12 +12,9 @@ int main(int argc, char* argv[])
     return 1;
   }
 
+  // header is read during construction.
   antex atx (argv[1]);
-  //Antex atx ("I08.ATX");
   int status;
-  
-  // read the atx header.
-  atx.read_header();
   
   // try to find a valid antenna in the atx file.
   antenna ant ("TRM14177.00     NONE");

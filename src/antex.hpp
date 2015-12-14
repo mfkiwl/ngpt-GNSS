@@ -138,9 +138,6 @@ public:
   antex& operator=(antex&& a) 
     noexcept(std::is_nothrow_move_assignable<std::ifstream>::value) = default;
   
-  /// Read the instance header, and assign (most of) the fields.
-  void read_header();
-
   //
   ngpt::antenna_pcv get_antenna_pattern(const antenna& ant)
   {
@@ -158,6 +155,10 @@ public:
   ngpt::antenna_pcv __read_pattern();
 
 private:
+  
+  /// Read the instance header, and assign (most of) the fields.
+  int read_header();
+  
   std::string            _filename; ///< The name of the antex file.
   std::ifstream          _istream;  ///< The infput (file) stream.
   ngpt::SATELLITE_SYSTEM _satsys;   ///< Satellite System.
