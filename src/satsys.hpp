@@ -46,14 +46,14 @@ namespace ngpt
 /// This is extracted from \cite rnx303
 enum class SATELLITE_SYSTEM : char
 {
-  GPS,
-  GLONASS,
-  SBAS,
-  Galileo,
-  BeiDou,
-  QZSS,
-  IRNSS,
-  MIXED
+    GPS,
+    GLONASS,
+    SBAS,
+    Galileo,
+    BeiDou,
+    QZSS,
+    IRNSS,
+    MIXED
 };
 
 /// Traits for Satellite Systems
@@ -63,97 +63,97 @@ template<SATELLITE_SYSTEM S>
 
 /// Specialize traits for Satellite System Gps
 template<>
-  struct SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>
+struct SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>
 {
-  /// Identifier
-  static constexpr char identifier { 'G' };
+    /// Identifier
+    static constexpr char identifier { 'G' };
 
-  /// Dictionary holding pairs of <frequency band, freq. value>.
-  static const std::map<int,double> frequency_map;
+    /// Dictionary holding pairs of <frequency band, freq. value>.
+    static const std::map<int,double> frequency_map;
 };
 
 /// Specialize traits for Satellite System Glonass
 template<>
-  struct SatelliteSystemTraits<SATELLITE_SYSTEM::GLONASS>
+struct SatelliteSystemTraits<SATELLITE_SYSTEM::GLONASS>
 {
-  /// Identifier
-  static constexpr char identifier { 'R' };
+    /// Identifier
+    static constexpr char identifier { 'R' };
 
-  /// Dictionary holding pairs of <frequency band, freq. value>.
-  static const std::map<int,double> frequency_map;
+    /// Dictionary holding pairs of <frequency band, freq. value>.
+    static const std::map<int,double> frequency_map;
 };
 
 /// Specialize traits for Satellite System Galileo
 template<>
-  struct SatelliteSystemTraits<SATELLITE_SYSTEM::Galileo>
+struct SatelliteSystemTraits<SATELLITE_SYSTEM::Galileo>
 {
-  /// Identifier
-  static constexpr char identifier { 'E' };
+    /// Identifier
+    static constexpr char identifier { 'E' };
 
-  /// Dictionary holding pairs of <frequency band, freq. value>.
-  static const std::map<int,double> frequency_map;
+    /// Dictionary holding pairs of <frequency band, freq. value>.
+    static const std::map<int,double> frequency_map;
 };
 
 /// Specialize traits for Satellite System SBAS
 template<>
-  struct SatelliteSystemTraits<SATELLITE_SYSTEM::SBAS>
+struct SatelliteSystemTraits<SATELLITE_SYSTEM::SBAS>
 {
-  /// Identifier
-  static constexpr char identifier { 'S' };
+    /// Identifier
+    static constexpr char identifier { 'S' };
 
-  /// Dictionary holding pairs of <frequency band, freq. value>.
-  static const std::map<int, double> frequency_map;
+    /// Dictionary holding pairs of <frequency band, freq. value>.
+    static const std::map<int, double> frequency_map;
 };
 
 /// Specialize traits for Satellite System QZSS
 template<>
-  struct SatelliteSystemTraits<SATELLITE_SYSTEM::QZSS>
+struct SatelliteSystemTraits<SATELLITE_SYSTEM::QZSS>
 {
-  /// Identifier
-  static constexpr char identifier { 'J' };
+    /// Identifier
+    static constexpr char identifier { 'J' };
 
-  /// Dictionary holding pairs of <frequency band, freq. value>.
-  static const std::map<int, double> frequency_map;
+    /// Dictionary holding pairs of <frequency band, freq. value>.
+    static const std::map<int, double> frequency_map;
 };
 
 /// Specialize traits for Satellite System BDS
 template<>
-  struct SatelliteSystemTraits<SATELLITE_SYSTEM::BeiDou>
+struct SatelliteSystemTraits<SATELLITE_SYSTEM::BeiDou>
 {
-  /// Identifier
-  static constexpr char identifier { 'C' };
+    /// Identifier
+    static constexpr char identifier { 'C' };
 
-  /// Dictionary holding pairs of <frequency band, freq. value>.
-  static const std::map<int, double> frequency_map;
+    /// Dictionary holding pairs of <frequency band, freq. value>.
+    static const std::map<int, double> frequency_map;
 };
 
 /// Specialize traits for Satellite System IRNSS
 template<>
-  struct SatelliteSystemTraits<SATELLITE_SYSTEM::IRNSS>
+struct SatelliteSystemTraits<SATELLITE_SYSTEM::IRNSS>
 {
-  /// Identifier
-  static constexpr char identifier { 'I' };
+    /// Identifier
+    static constexpr char identifier { 'I' };
 
-  /// Dictionary holding pairs of <frequency band, freq. value>.
-  static const std::map<int, double> frequency_map;
+    /// Dictionary holding pairs of <frequency band, freq. value>.
+    static const std::map<int, double> frequency_map;
 };
 
 /// Specialize traits for Satellite System MIXED
 template<>
-  struct SatelliteSystemTraits<SATELLITE_SYSTEM::MIXED>
+struct SatelliteSystemTraits<SATELLITE_SYSTEM::MIXED>
 {
-  /// Identifier
-  static constexpr char identifier { 'M' };
-  
-  /// Number of frequency bands.
-  static const std::size_t num_of_bands { 0 };
+    /// Identifier
+    static constexpr char identifier { 'M' };
+
+    /// Number of frequency bands.
+    static const std::size_t num_of_bands { 0 };
 };
 
 /// Given a satellite system, return its identifier
-char SatSysIdentifier( SATELLITE_SYSTEM );
+char satsys_identifier( SATELLITE_SYSTEM );
 
 /// Given a char (i.e. identifier), return the corresponding satellite system.
-SATELLITE_SYSTEM charToSatSys( char );
+SATELLITE_SYSTEM char_to_satsys( char );
 
 /// Given a frequency band (index) and a satellite system, 
 /// return the nominal frequency value.

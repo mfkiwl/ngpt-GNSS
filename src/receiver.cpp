@@ -10,63 +10,63 @@ using ngpt::Receiver;
 ///
 Receiver::Receiver() noexcept 
 {
-  this->nullify();
+    this->nullify();
 }
 
 /// Constructor from receiver type.
 ///
 Receiver::Receiver(const char* c) noexcept
 {
-  this->copy_from_cstr(c);
+    this->copy_from_cstr(c);
 }
 
 /// Constructor from receiver type.
 ///
 Receiver::Receiver(const std::string& s) noexcept
 {
-  this->copy_from_str(s);
+    this->copy_from_str(s);
 }
 
 /// Copy constructor.
 ///
 Receiver::Receiver(const Receiver& rhs) noexcept
 {
-  std::memcpy(name_, rhs.name_, receiver_details::receiver_max_bytes);
+    std::memcpy(name_, rhs.name_, receiver_details::receiver_max_bytes);
 }
 
 /// Assignment operator.
 ///
 Receiver& Receiver::operator=(const Receiver& rhs) noexcept
 {
-  if (this!=&rhs)
-  {
-    std::memcpy(name_, rhs.name_, receiver_details::receiver_max_bytes);
-  }
-  return *this;
+    if (this!=&rhs)
+    {
+        std::memcpy(name_, rhs.name_, receiver_details::receiver_max_bytes);
+    }
+    return *this;
 }
 
 /// Assignment operator (from c-string).
 ///
 Receiver& Receiver::operator=(const char* c) noexcept
 {
-  this->copy_from_cstr(c);
-  return *this;
+    this->copy_from_cstr(c);
+    return *this;
 }
 
 /// Assignment operator (from std::string).
 ///
 Receiver& Receiver::operator=(const std::string& s) noexcept
 {
-  this->copy_from_str(s);
-  return *this;
+    this->copy_from_str(s);
+    return *this;
 }
 
 /// Equality operator.
 ///
 bool Receiver::operator==(const Receiver& rhs) noexcept
 {
-  return ( !std::strncmp(name_ ,rhs.name_ , 
-        receiver_details::receiver_max_chars) );
+    return ( !std::strncmp(name_ ,rhs.name_ , 
+             receiver_details::receiver_max_chars) );
 }
 
 /// Pointer to receiver name.
@@ -74,14 +74,14 @@ bool Receiver::operator==(const Receiver& rhs) noexcept
 inline 
 const char* Receiver::name() const noexcept
 {
-  return name_;
+    return name_;
 }
 
 /// Receiver name as string.
 ///
 std::string Receiver::toString() const noexcept
 {
-  return std::string(name_, receiver_details::receiver_max_chars+1);
+    return std::string(name_, receiver_details::receiver_max_chars+1);
 }
 
 /// Set all chars in \c name_ to '\0'.
@@ -89,8 +89,8 @@ std::string Receiver::toString() const noexcept
 inline 
 void Receiver::nullify() noexcept
 {
-  std::memset( name_, '\0', 
-      (receiver_details::receiver_max_chars+1) * sizeof(char) );
+    std::memset( name_, '\0', 
+               (receiver_details::receiver_max_chars+1) * sizeof(char) );
 }
 
 /// Copy from an std::string (to \c name_).
@@ -107,11 +107,11 @@ void Receiver::nullify() noexcept
 inline 
 void Receiver::copy_from_str(const std::string& s) noexcept
 {
-  this->nullify();
-  // std::basic_string::copy can only throw if max_chars <= 0, i.e. NEVER !
-  static_assert(receiver_details::receiver_max_chars > 0,
-      "receiver_details::receiver_max_chars <= 0");
-  s.copy(name_, receiver_details::receiver_max_chars, 0);
+    this->nullify();
+    // std::basic_string::copy can only throw if max_chars <= 0, i.e. NEVER !
+    static_assert(receiver_details::receiver_max_chars > 0,
+                 "receiver_details::receiver_max_chars <= 0");
+    s.copy(name_, receiver_details::receiver_max_chars, 0);
 }
 
 /// Copy from a c-string.
@@ -124,9 +124,9 @@ void Receiver::copy_from_str(const std::string& s) noexcept
 inline
 void Receiver::copy_from_cstr(const char* c) noexcept
 {
-  this->nullify();
-  std::memcpy(name_, c, std::min(std::strlen(c) * sizeof(char),
-        receiver_details::receiver_max_bytes) );
+    this->nullify();
+    std::memcpy(name_, c, std::min(std::strlen(c) * sizeof(char),
+                receiver_details::receiver_max_bytes) );
 }
 
 /// Validate the receiver model; a receiver model, according to the IGS
@@ -146,6 +146,6 @@ void Receiver::copy_from_cstr(const char* c) noexcept
 ///
 bool Receiver::validate() const
 {
-  std::regex valid ( "[A-Z -_\\+]+$" );
-  return std::regex_match(name_, valid);
+    std::regex valid ( "[A-Z -_\\+]+$" );
+    return std::regex_match(name_, valid);
 }

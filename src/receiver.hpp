@@ -36,24 +36,24 @@
 namespace ngpt
 {
 
-  /// Namespace to hide receiver specific details.
-  namespace receiver_details
-  {
-    /// Maximum number of characters describing a GNSS receiver.
-    /// \warning The character '\0' is not included.
-    ///
-    constexpr std::size_t receiver_max_chars { 20 };
+    /// Namespace to hide receiver specific details.
+    namespace receiver_details
+    {
+        /// Maximum number of characters describing a GNSS receiver.
+        /// \warning The character '\0' is not included.
+        ///
+        constexpr std::size_t receiver_max_chars { 20 };
 
-    /// Maximum size of a char array, holding any receiver (in bytes).
-    /// \warning The character '\0' is not included.
-    ///
-    constexpr std::size_t receiver_max_bytes
-    { receiver_max_chars * sizeof(char) };
+        /// Maximum size of a char array, holding any receiver (in bytes).
+        /// \warning The character '\0' is not included.
+        ///
+        constexpr std::size_t receiver_max_bytes
+        { receiver_max_chars * sizeof(char) };
 
-    /// Better be safe than sorry ...
-    static_assert(receiver_max_bytes >= receiver_max_chars, 
+        /// Better be safe than sorry ...
+        static_assert(receiver_max_bytes >= receiver_max_chars, 
                   "Receiver size in bytes < Receiver size ?!?");
-  }
+    }
 
 /** \class   Receiver
  *
@@ -98,61 +98,61 @@ class Receiver
 {
 public:
 
-  /// Default constructor.
-  Receiver() noexcept;
+    /// Default constructor.
+    Receiver() noexcept;
 
-  /// Constructor from receiver type.
-  explicit Receiver(const char*) noexcept;
+    /// Constructor from receiver type.
+    explicit Receiver(const char*) noexcept;
 
-  /// Constructor from receiver type.
-  explicit Receiver(const std::string&) noexcept;
+    /// Constructor from receiver type.
+    explicit Receiver(const std::string&) noexcept;
 
-  /// Copy constructor.
-  Receiver(const Receiver&) noexcept;
+    /// Copy constructor.
+    Receiver(const Receiver&) noexcept;
 
-  /// Move constructor.
-  Receiver(Receiver&&) noexcept = default;
+    /// Move constructor.
+    Receiver(Receiver&&) noexcept = default;
 
-  /// Assignment operator.
-  Receiver& operator=(const Receiver&) noexcept;
+    /// Assignment operator.
+    Receiver& operator=(const Receiver&) noexcept;
 
-  /// Assignment operator (from c-string).
-  Receiver& operator=(const char*) noexcept;
+    /// Assignment operator (from c-string).
+    Receiver& operator=(const char*) noexcept;
 
-  /// Assignment operator (from std::string).
-  Receiver& operator=(const std::string&) noexcept;
+    /// Assignment operator (from std::string).
+    Receiver& operator=(const std::string&) noexcept;
 
-  /// Move assignment operator.
-  Receiver& operator=(Receiver&&) noexcept = default;
+    /// Move assignment operator.
+    Receiver& operator=(Receiver&&) noexcept = default;
 
-  /// Equality operator.
-  bool operator==(const Receiver&) noexcept;
+    /// Equality operator.
+    bool operator==(const Receiver&) noexcept;
 
-  /// Destructor.
-  ~Receiver() noexcept = default;
+    /// Destructor.
+    ~Receiver() noexcept = default;
 
-  /// Pointer to receiver name.
-  inline const char* name() const noexcept;
+    /// Pointer to receiver name.
+    inline const char* name() const noexcept;
 
-  /// Receiver name as string.
-  std::string toString() const noexcept;
+    /// Receiver name as string.
+    std::string toString() const noexcept;
 
-  /// Validate the receiver model (according to IGS).
-  bool validate() const;
+    /// Validate the receiver model (according to IGS).
+    bool validate() const;
 
 private:
 
-  /// Set all chars to '\0'.
-  inline void nullify() noexcept;
+    /// Set all chars to '\0'.
+    inline void nullify() noexcept;
 
-  /// Copy from an std::string (to name).
-  inline void copy_from_str(const std::string&) noexcept;
+    /// Copy from an std::string (to name).
+    inline void copy_from_str(const std::string&) noexcept;
 
-  /// Copy from a c-string.
-  inline  void copy_from_cstr(const char*) noexcept;
+    /// Copy from a c-string.
+    inline  void copy_from_cstr(const char*) noexcept;
 
-  /// This array holds the receiver name; last char always '\0' !
-  char name_[receiver_details::receiver_max_chars + 1];
+    /// This array holds the receiver name; last char always '\0' !
+    char name_[receiver_details::receiver_max_chars + 1];
 
 }; // end Receiver
 
