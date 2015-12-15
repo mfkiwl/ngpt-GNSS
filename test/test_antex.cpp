@@ -23,6 +23,7 @@ int main(int argc, char* argv[])
     std::cout << "\nAntenna not found!";
   } else if (status < 0) {
     std::cout << "\nError while reading antex!";
+    return 1;
   } else {
     std::cout << "\nAntenna found!";
   }

@@ -146,14 +146,16 @@ int antex::read_header()
     // so that it only reads the valid chars (for version).
     *(line+15) = '\0';
     float fvers = std::strtod(line,nullptr);
-    if (std::abs(fvers - 1.4) > .001 ) {
+    if (std::abs(fvers - 1.4) < .001) {
+        this->_version = antex::ATX_VERSION::v14;
+    } else if (std::abs(fvers - 1.3) < .001) {
+        this->_version = antex::ATX_VERSION::v13;
+    } else {
 #ifdef DEBUG
         throw std::runtime_error
         ("antex::read_header -> Invalid Antex version.");
 #endif
         return 1;
-    } else {
-        this->_version = antex::ATX_VERSION::v14;
     }
     // Resolve the satellite system.
     try {
@@ -223,8 +225,6 @@ int antex::read_header()
 ngpt::antenna_pcv ngpt::antex::read_pattern()
 {
     char line[MAX_HEADER_CHARS];
-    // char grid_line[MAX_GRID_CHARS];
-
 
     // next field is 'METH / BY / # / DATE'
     char clbr[20];
@@ -271,6 +271,9 @@ ngpt::antenna_pcv ngpt::antex::read_pattern()
         throw std::runtime_error
         ("antex::read_pattern() -> Failed to resolve antenna grid information.");
     }
+    
+    // Nice, we have all we need to construct an antenna pcv pattern.
+    ngpt::antenna_pcv antpat {dazi, zen1, zen2, dzen, num_of_freqs};
 
     // From here up untill the block 'START OF FREQUENCY' there can be a number
     // of optional fields.
@@ -351,8 +354,6 @@ ngpt::antenna_pcv ngpt::antex::read_pattern()
     }
 
     // should now see the 'END OF FREQUENCY' marker
-
-    ngpt::antenna_pcv antpat(dazi, zen1, zen2, dzen, num_of_freqs);
 
     // all done
 #ifdef DEBUG
@@ -456,10 +457,51 @@ int __skip_rest_of_antenna__(std::ifstream& fin)
 
     } // end reading all frequencies.
 
+    // Fuck shit !! There could be pcv rms values hidding here ....
+    fin.getline(line, MAX_HEADER_CHARS);
+    while ( !strncmp(line+60, "START OF FREQ RMS", 17) ) {
+        // next field is 'NORTH / EAST / UP'
+        if (!fin.getline(line, MAX_HEADER_CHARS)
+            || strncmp(line+60, "NORTH / EAST / UP", 17)) 
+        {
+            return 56;
+        }
+
+        // reading the NOAZI values ...
+        if (!fin.getline(grid_line, MAX_GRID_CHARS)
+            || strncmp(grid_line+3, "NOAZI", 5)) 
+        {
+            return 57;
+        }
+
+        // reading azimuth-dependent values ...
+        float azi { .0 };
+        if (dazi > .0e0) {
+            while (azi <= 360.0 && fin.getline(grid_line, MAX_GRID_CHARS)) {
+                azi += dazi;
+            }
+        }
+
+        // next field is 'END OF FREQUENCY'
+        if (!fin.getline(line, MAX_HEADER_CHARS)
+            || strncmp(line+60, "END OF FREQ RMS", 15))
+        {
+            return 59;
+        }
+
+        // read next line
+        if ( !fin.getline(line, MAX_HEADER_CHARS) ) {
+            return 50;
+        }
+    }
+
     // all done! next field is 'END OF ANTENNA'
-    if (!fin.getline(line, MAX_HEADER_CHARS)
-        || strncmp(line+60, "END OF ANTENNA", 14))
+    if ( strncmp(line+60, "END OF ANTENNA", 14) )
     {
+#ifdef DEBUG
+        std::cerr << "\n(details) Expected \"END OF ANTENNA\", but found:\n"
+                  << line;
+#endif
         return 10;
     }
 
@@ -559,6 +601,8 @@ int antex::find_antenna(const antenna& ant)
 #ifdef DEBUG
             std::cerr << "\n\t[DEBUG] ERROR in __skip_rest_of_antenna__; "
                       << "status="<<status;
+            std::cerr << "\n\tError in line:\n"
+                      << line;
 #endif
             return -1;
         }
@@ -571,6 +615,8 @@ int antex::find_antenna(const antenna& ant)
 #ifdef DEBUG
             std::cerr << "\n[DEBUG] ERROR while reading antex file. "
                       << "'START OF ANTENNA' expected";
+            std::cerr << "\n\tError in line:\n"
+                      << line;
 #endif
             return -1;
         }
@@ -581,6 +627,8 @@ int antex::find_antenna(const antenna& ant)
 #ifdef DEBUG
             std::cerr << "\n[DEBUG] ERROR while reading antex file. "
                       << "'TYPE / SERIAL NO' expected";
+            std::cerr << "\n\tError in line:\n"
+                      << line;
 #endif
             return -1;
         }
@@ -613,6 +661,8 @@ int antex::find_antenna(const antenna& ant)
 #ifdef DEBUG
             std::cerr << "\n\t[DEBUG] ERROR in __skip_rest_of_antenna__; "
                       << "status="<<status;
+            std::cerr << "\n\tError in line:\n"
+                      << line;
 #endif
             return -1;
         }
@@ -625,6 +675,8 @@ int antex::find_antenna(const antenna& ant)
 #ifdef DEBUG
             std::cerr << "\n[DEBUG] ERROR while reading antex file. "
                       << "'START OF ANTENNA' expected";
+            std::cerr << "\n\tError in line:\n"
+                      << line;
 #endif
             return -1;
         }
@@ -635,6 +687,8 @@ int antex::find_antenna(const antenna& ant)
 #ifdef DEBUG
             std::cerr << "\n[DEBUG] ERROR while reading antex file. "
                       << "'TYPE / SERIAL NO' expected";
+            std::cerr << "\n\tError in line:\n"
+                      << line;
 #endif
             return -1;
         }

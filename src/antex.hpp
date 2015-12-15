@@ -101,7 +101,8 @@ class antex
   /// Valid atx versions.
   enum class ATX_VERSION : char
   {
-    v14
+    v14,
+    v13 ///< used by EUREF but i can't find the dox
   };
 
   /// Pcv Type (absolute or relative).

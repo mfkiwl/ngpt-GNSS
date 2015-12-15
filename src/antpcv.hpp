@@ -46,12 +46,12 @@ public:
       azi_pcv_values_.reserve(azi_hint);
     }
 
-  ~frequency_pcv() noexcept = default;
+    ~frequency_pcv() noexcept = default;
 
-  frequency_pcv(const frequency_pcv& rhs) noexcept(
-         std::is_nothrow_copy_constructible<fltarr>::value
-      && std::is_nothrow_copy_constructible<fltvec>::value 
-      ) = default;
+    frequency_pcv(const frequency_pcv& rhs) noexcept(
+        std::is_nothrow_copy_constructible<fltarr>::value
+     && std::is_nothrow_copy_constructible<fltvec>::value 
+        ) = default;
 #ifdef DEBUG
 //  TODO:: Test#2 fails, i.e. std::vector<float> is not noexcept for the copy
 //         constructor.
@@ -62,10 +62,10 @@ public:
 //      "std::vector<float> -> throws for copy c'tor!" );
 #endif
 
-  frequency_pcv(frequency_pcv&& rhs) noexcept(
-         std::is_nothrow_move_constructible<fltarr>::value
-      && std::is_nothrow_move_constructible<fltvec>::value 
-      ) = default;
+    frequency_pcv(frequency_pcv&& rhs) noexcept(
+        std::is_nothrow_move_constructible<fltarr>::value
+     && std::is_nothrow_move_constructible<fltvec>::value 
+        ) = default;
 #ifdef DEBUG
     static_assert( std::is_nothrow_move_constructible<fltarr>::value,
       "std::array<float,3> -> throws for copy c'tor!" );
@@ -73,19 +73,44 @@ public:
       "std::vector<float> -> throws for copy c'tor!" );
 #endif
 
-  frequency_pcv& operator=(const frequency_pcv& rhs) noexcept(
+    frequency_pcv& operator=(const frequency_pcv& rhs) noexcept(
          std::is_nothrow_copy_assignable<fltarr>::value
       && std::is_nothrow_copy_assignable<fltvec>::value 
-      ) = default;
+         ) = default;
 
-  frequency_pcv& operator=(frequency_pcv&& rhs) noexcept(
-         std::is_nothrow_move_assignable<fltarr>::value
+    frequency_pcv& operator=(frequency_pcv&& rhs) noexcept(
+        std::is_nothrow_move_assignable<fltarr>::value
       && std::is_nothrow_move_assignable<fltvec>::value 
-      ) = default;
+        ) = default;
+
+    double& north() noexcept
+    {
+        return eccentricity_vector_[0];
+    }
+    double& east() noexcept
+    {
+        return eccentricity_vector_[1];
+    }
+    double& up() noexcept
+    {
+        return eccentricity_vector_[2];
+    }
+    double north() const noexcept
+    {
+        return eccentricity_vector_[0];
+    }
+    double east() const noexcept
+    {
+        return eccentricity_vector_[1];
+    }
+    double up() const noexcept
+    {
+        return eccentricity_vector_[2];
+    }
 
 private:
     ngpt::ObservationType type_;                 ///< Observation type
-    fltarr                eccentricity_vector_;  ///< phase center offset
+    fltarr                eccentricity_vector_;  ///< phase center offset (NEU in mm)
     fltvec                no_azi_pcv_values_;    ///< 'NO_AZI' pcv
     fltvec                azi_pcv_values_;       ///< 'AZI' pcv
 };
@@ -158,6 +183,19 @@ public:
     ~antenna_pcv() noexcept
     {
         delete azi_grid_;
+    }
+
+    // Return/access a fequency_pcv based on its frequency
+    // TODO: No strict match in freq_pcv == type
+    frequency_pcv& 
+    freq_pcv_pattern( ngpt::ObservationType type )
+    {
+        for (auto& i : freq_pcv) {
+            if (freq_pcv == type) {
+                return i;
+            }
+        }
+        throw std::runtime_error("antenna_pcv::freq_pcv_pattern -> Invalid frequency");
     }
 
     float zen1() const noexcept { return no_azi_grid_.from(); }

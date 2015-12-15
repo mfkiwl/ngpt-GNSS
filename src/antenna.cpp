@@ -260,6 +260,9 @@ void antenna::copy_from_cstr(const char* c) noexcept
 }
 
 /// Set the antenna's serial number
+///
+/// \todo Should i strip trailing wahitespaces ??
+///
 void antenna::set_serial_nr(const char* c)
 noexcept
 {
