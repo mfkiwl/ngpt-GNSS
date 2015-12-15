@@ -132,27 +132,27 @@ public:
   
   /// Move Constructor.
   antex(antex&& a)
-    noexcept(std::is_nothrow_move_constructible<std::ifstream>::value) = default;
+  noexcept(std::is_nothrow_move_constructible<std::ifstream>::value) = default;
 
   /// Move assignment operator.
   antex& operator=(antex&& a) 
-    noexcept(std::is_nothrow_move_assignable<std::ifstream>::value) = default;
+  noexcept(std::is_nothrow_move_assignable<std::ifstream>::value) = default;
   
   //
   ngpt::antenna_pcv get_antenna_pattern(const antenna& ant)
   {
-    int status = __find_antenna(ant);
+    int status = find_antenna(ant);
     if ( status ) {
       return ngpt::antenna_pcv(0, 0, 0, 0, 0);
     }
-    return __read_pattern();
+    return read_pattern();
   }
 
   /// Find a specific antenna in the instance.
-  int __find_antenna(const antenna&/*bool, consider_serial_nr = false*/);
+  int find_antenna(const antenna&/*bool, consider_serial_nr = false*/);
   
   /// Read antenna calibration pattern.
-  ngpt::antenna_pcv __read_pattern();
+  ngpt::antenna_pcv read_pattern();
 
 private:
   

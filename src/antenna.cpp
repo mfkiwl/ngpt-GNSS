@@ -259,6 +259,36 @@ void antenna::copy_from_cstr(const char* c) noexcept
     }
 }
 
+/// Set the antenna's serial number
+void antenna::set_serial_nr(const char* c)
+noexcept
+{
+    constexpr std::size_t start_idx { antenna_model_max_chars  + 1 /* whitespace */
+                                    + antenna_radome_max_chars + 1 /* whitespace */
+                                    };
+
+    std::memset(name_ + start_idx, '\0', antenna_serial_max_chars);
+
+    std::size_t count { std::strlen(c) > antenna_serial_max_chars
+                        ? antenna_serial_max_chars
+                        : std::strlen(c)
+                      };
+
+    std::memcpy(name_ + start_idx, c, count*sizeof(char));
+
+    return;
+}
+
+/// Compare the antenna's serial number to the given c-string
+bool antenna::compare_serial(const char* c)
+const noexcept
+{
+    return ! std::strncmp(name_ + antenna_model_max_chars 
+                                + 1 + antenna_radome_max_chars + 1,
+                          c,
+                          antenna_serial_max_chars);
+}
+
 /*
  * TODO The following methods do not compile !!
 

@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
   
   // try to find a valid antenna in the atx file.
   antenna ant ("TRM14177.00     NONE");
-  status = atx.__find_antenna(ant);
+  status = atx.find_antenna(ant);
   if (status>0) {
     std::cout << "\nAntenna not found!";
   } else if (status < 0) {

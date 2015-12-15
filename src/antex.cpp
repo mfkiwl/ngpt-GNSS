@@ -12,15 +12,22 @@
 
 using ngpt::antex;
 
+/// According to the ANTEX definition, the antenna serial number is 20 chars.
+constexpr std::size_t ANTEX_SERIAL_CHARS { 20 };
+
+static_assert(ANTEX_SERIAL_CHARS == ngpt::antenna_details::antenna_serial_max_chars,
+            "Size of serial number  different in antex.cpp and antenna.hpp");
+
 /// No header line can have more than 80 chars. However, there are cases when
 /// they  exceed this limit, just a bit ...
 constexpr int MAX_HEADER_CHARS { 85 };
 
-/// Size of 'END OF HEADER' C-string.
-/// std::strlen is not 'constexr' so eoh_size can't be one either. Note however
-/// that gcc has a builtin constexpr strlen function (if we want to disable this
-/// we can do so with -fno-builtin).
-///
+/**
+ *  Size of 'END OF HEADER' C-string.
+ *  std::strlen is not 'constexr' so eoh_size can't be one either. Note however
+ *  that gcc has a builtin constexpr strlen function (if we want to disable this
+ *  we can do so with -fno-builtin).
+ */
 #ifdef __clang__
     const     std::size_t eoh_size { std::strlen("END OF HEADER") };
 #else
@@ -30,18 +37,21 @@ constexpr int MAX_HEADER_CHARS { 85 };
 /// Max header lines.
 constexpr int MAX_HEADER_LINES { 1000 };
 
-/// Max grid line chars; i.e. the maximum number of chars any pcv line can
-/// hold. Typical 'ZEN1 / ZEN2 / DZEN' = '0.0  90.0   5.0' and the format is
-/// mF8.2 which is 19*8 = 152 + (~8 starting chars) = 160.
-/// Let's make enough space for DZEN = 3 -> max chars = 31*8 + 10 = 258
-///
-/// \warning When using this constant always assert something like
-///          8*(std::size_t)((zen2-zen1)/dzen) < MAX_GRID_CHARS-10
-///
+/**
+ *  Max grid line chars; i.e. the maximum number of chars any pcv line can
+ *  hold. Typical 'ZEN1 / ZEN2 / DZEN' = '0.0  90.0   5.0' and the format is
+ *  mF8.2 which is 19*8 = 152 + (~8 starting chars) = 160.
+ *  Let's make enough space for DZEN = 3 -> max chars = 31*8 + 10 = 258
+ * 
+ *  \warning When using this constant always assert something like
+ *           8*(std::size_t)((zen2-zen1)/dzen) < MAX_GRID_CHARS-10
+ */
 constexpr std::size_t MAX_GRID_CHARS { 258 };
 
-/// Resolve a frequency type as recorded in an antex file to a valid
-/// ObservatioType.
+/**
+ *  Resolve a frequency type as recorded in an antex file to a valid
+ *  ObservatioType.
+ */
 ngpt::ObservationType antex2obstype(const char* s)
 {
     ngpt::SATELLITE_SYSTEM ss { ngpt::char_to_satsys( *s ) };
@@ -50,12 +60,13 @@ ngpt::ObservationType antex2obstype(const char* s)
                                  freq, '?');
 }
 
-/// \details Antex Constructor, using an antex filename. The constructor will
-///          initialize (set) the _filename attribute and also (try to)
-///          open the input stream (i.e. _istream).
-///          If the file is successefuly opened, the constructor will read
-///          the ANTEX header and assign info.
-///
+/**
+ *  \details Antex Constructor, using an antex filename. The constructor will
+ *           initialize (set) the _filename attribute and also (try to)
+ *           open the input stream (i.e. _istream).
+ *           If the file is successefuly opened, the constructor will read
+ *           the ANTEX header and assign info.
+ */
 antex::antex(const char *filename)
     : _filename   {filename},
       _istream    {filename, std::ios_base::in},
@@ -88,34 +99,35 @@ antex::antex(const char *filename)
     }
 }
 
-/// \details Read an Antex (instance) header. The format of the header should
-///          closely follow the antex format specification (version 1.4).
-///          This function will set the instance fields:
-///          - _version (should be 1.4),
-///          - _satsys,
-///          - _type,
-///          - _refant and
-///          - __end_of_head
-///          The function will exit after reading a header line, ending with
-///          the (sub)string 'END OF HEADER'.
-///
-/// \throw   In DEBUG mode, will throw a std::runtime_error in case any one of 
-///          the required instance fields can not be resolved, or the 
-///          'END OF HEADER' cannot be found after MAX_HEADER_LINES are read.
-///          If not in DEBUG mode, no exception is thrown (by this function).
-///
-/// \warning 
-///          - The instance's input steam (i.e. _istream) should be open and 
-///          valid.
-///          - Note that the function expects that no header line contains more
-///          than MAX_HEADER_CHARS chars.
-///          - If the header is not read correctly, then the (opened) file
-///          buffer will be closed.
-///
-/// \return  Anything other than '0' is an error.
-///
-/// \reference https://igscb.jpl.nasa.gov/igscb/station/general/antex14.txt
-///
+/**
+ *  \details Read an Antex (instance) header. The format of the header should
+ *           closely follow the antex format specification (version 1.4).
+ *           This function will set the instance fields:
+ *           - _version (should be 1.4),
+ *           - _satsys,
+ *           - _type,
+ *           - _refant and
+ *           - __end_of_head
+ *           The function will exit after reading a header line, ending with
+ *           the (sub)string 'END OF HEADER'.
+ * 
+ *  \throw   In DEBUG mode, will throw a std::runtime_error in case any one of 
+ *           the required instance fields can not be resolved, or the 
+ *           'END OF HEADER' cannot be found after MAX_HEADER_LINES are read.
+ *           If not in DEBUG mode, no exception is thrown (by this function).
+ * 
+ *  \warning 
+ *           - The instance's input steam (i.e. _istream) should be open and 
+ *           valid.
+ *           - Note that the function expects that no header line contains more
+ *           than MAX_HEADER_CHARS chars.
+ *           - If the header is not read correctly, then the (opened) file
+ *           buffer will be closed.
+ * 
+ *  \return  Anything other than '0' is an error.
+ * 
+ *  \reference https://igscb.jpl.nasa.gov/igscb/station/general/antex14.txt
+ */
 int antex::read_header()
 {
     char line[MAX_HEADER_CHARS];
@@ -197,16 +209,18 @@ int antex::read_header()
     return 0;
 }
 
-/// \details This function is used to read an antenna calibration info block out
-///          of an Antex instance. After it is handed an input
-///          file stream (i.e. that of an Antex instance), positioned at the
-///          begining of a 'METH / BY / # / DATE' field, it will continue
-///          reading the antenna block untill the 'END OF ANTENNA' field.
-///
-/// \return  Everything other than 0 denots a failure.
-///
-/// \todo    Need to also read 'FREQ RMS'
-ngpt::antenna_pcv ngpt::antex::__read_pattern()
+/**
+ *  \details This function is used to read an antenna calibration info block out
+ *           of an Antex instance. After it is handed an input
+ *           file stream (i.e. that of an Antex instance), positioned at the
+ *           begining of a 'METH / BY / # / DATE' field, it will continue
+ *           reading the antenna block untill the 'END OF ANTENNA' field.
+ * 
+ *  \return  Everything other than 0 denots a failure.
+ * 
+ *  \todo    Need to also read 'FREQ RMS'
+ */
+ngpt::antenna_pcv ngpt::antex::read_pattern()
 {
     char line[MAX_HEADER_CHARS];
     // char grid_line[MAX_GRID_CHARS];
@@ -348,15 +362,16 @@ ngpt::antenna_pcv ngpt::antex::__read_pattern()
     return antpat;
 }
 
-/// \details This is only a utility function. After it is handed an input
-///          file stream (i.e. that of an Antex instance), positioned at the
-///          begining of a 'METH / BY / # / DATE' field, it will continue
-///          reading the antenna block untill the 'END OF ANTENNA' field.
-///
-/// \return  Everything other than 0 denots a failure.
-///
-/// \todo    Need to also read 'FREQ RMS'
-///
+/**
+ *  \details This is only a utility function. After it is handed an input
+ *           file stream (i.e. that of an Antex instance), positioned at the
+ *           begining of a 'METH / BY / # / DATE' field, it will continue
+ *           reading the antenna block untill the 'END OF ANTENNA' field.
+ * 
+ *  \return  Everything other than 0 denots a failure.
+ * 
+ *  \todo    Need to also read 'FREQ RMS'
+ */ 
 int __skip_rest_of_antenna__(std::ifstream& fin)
 {
     static char line[MAX_HEADER_CHARS];
@@ -451,31 +466,60 @@ int __skip_rest_of_antenna__(std::ifstream& fin)
     return 0;
 }
 
-///
-/// \return An integer denoting the exit status.
-/// Integer | Status
-/// --------|----------------------------------------------
-///      -1 | ANTEX format error; something went wrong while reading.
-///       0 | Success; antenna found.
-///       1 | Antenna could not be found.
-///
-/// \warning 
-/// \todo consider serial numbers.
-///
-int antex::__find_antenna(const antenna& ant/*, bool consider_sn*/)
+/// Check if a given string is empty, i.e. only holds whitespaces
+inline
+bool __string_is_empty__(const char* c, std::size_t max_chars)
+{
+    for (std::size_t i=0; i<max_chars; i++)
+        if ( *(c+i) != ' ' )
+            return false;
+    return true;
+}
+
+/**
+ *  Search through the ANTEX file (i.e. this instance's buffer) to find
+ *  a specific antenna.
+ * 
+ *  \note  This function expects that the antenna patterns are sorted as
+ *         documented by IGS, i.e.
+ \verbatim
+
+RECEIVER ANTENNAS:
+--> sorted by antenna code
+    --> sorted by radome code (NONE -> other radome types)
+            --> sorted by 'SERIAL NO'
+
+ \endverbatim
+ *
+ *  \return An integer denoting the exit status.
+ *  Integer | Status
+ *  --------|----------------------------------------------
+ *       -1 | ANTEX format error; something went wrong while reading.
+ *        0 | Success; antenna found.
+ *        1 | Antenna could not be found.
+ * 
+ *  \warning 
+ *  \todo consider serial numbers.
+ *
+ */ 
+int antex::find_antenna(const antenna& ant)
 {
     using ngpt::antenna;
 
     char line[MAX_HEADER_CHARS];
+
     /// See the definition of eoh_size for why the following is needed.
 #ifdef __clang__
     const     std::size_t soa_size { std::strlen("START OF ANTENNA") };
 #else
     constexpr std::size_t soa_size { std::strlen("START OF ANTENNA") };
 #endif
+
     std::size_t antennas_read { 0 };
-    antenna t_ant;
-    int status;
+    antenna     t_ant;
+    int         status;
+    pos_type    best_match { 0 }; /* if more than one types match, this marks the
+                                     best match depending on serial nr */
 
     // The stream should be open by now!
     assert(this->_istream.is_open());
@@ -489,15 +533,18 @@ int antex::__find_antenna(const antenna& ant/*, bool consider_sn*/)
     {
         return -1;
     }
+
     // Read & check antenna type
     if (!_istream.getline(line, MAX_HEADER_CHARS)
         || strncmp(line+60, "TYPE / SERIAL NO    ", 20))
     {
         return -1;
     }
-    // Set the antenna type of the current antenna.
-    t_ant = (line);
 
+    // Set the antenna type of the current antenna.
+    t_ant     = (line);
+    
+    // note that antenna::operator= only compares type+radome !
     while (t_ant != ant && _istream.good())
     {
         // skip the antenna details ...
@@ -540,8 +587,63 @@ int antex::__find_antenna(const antenna& ant/*, bool consider_sn*/)
         return 1;
     }
 
-    // .. or we found the antenna !!
+    // .. or we found the antenna !! Cool, but we 're not done matherfucker.
+    // We need to see if there is a better match, base on the serial.
+    char* serial_ptr = line + 20;
+    while (t_ant == ant && _istream.good()) {
+        if ( ant.compare_serial(serial_ptr)  ) {
+            best_match = _istream.tellg();
+            break;
+        } else if (__string_is_empty__(serial_ptr, ANTEX_SERIAL_CHARS)) {
+            best_match = _istream.tellg();
+        }
+#ifdef DEBUG
+        std::cout << "\nSearching for a better match than:"
+                  << line;
+#endif
+        // skip the antenna details ...
+        if ( (status = __skip_rest_of_antenna__(_istream)) ) {
+#ifdef DEBUG
+            std::cerr << "\n\t[DEBUG] ERROR in __skip_rest_of_antenna__; "
+                      << "status="<<status;
+#endif
+            return -1;
+        }
+        antennas_read++;
+
+        // read new antenna ..
+        if (!_istream.getline(line, MAX_HEADER_CHARS)
+            || strncmp(line+60, "START OF ANTENNA", soa_size))
+        {
+#ifdef DEBUG
+            std::cerr << "\n[DEBUG] ERROR while reading antex file. "
+                      << "'START OF ANTENNA' expected";
+#endif
+            return -1;
+        }
+        // read & check antenna type
+        if (!_istream.getline(line, MAX_HEADER_CHARS)
+            || strncmp(line+60, "TYPE / SERIAL NO", 16))
+        {
+#ifdef DEBUG
+            std::cerr << "\n[DEBUG] ERROR while reading antex file. "
+                      << "'TYPE / SERIAL NO' expected";
+#endif
+            return -1;
+        }
+        // Set the antenna type.
+        t_ant = (line);
+        serial_ptr = line + 20;
+    }
+
+    // position the buffer at the best match
+    if ( !best_match ) {
+        return 1;
+    } else {
+        _istream.seekg( best_match );
+    }
+
+    
     printf ("\nANTENNA FOUND AFTER READING %zu ANTENNAS",antennas_read);
-    printf ("\n%s",line);
     return 0;
 }

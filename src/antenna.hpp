@@ -141,6 +141,12 @@ public:
     /// Equality operator (checks antenna type, radome and serial nr).
     bool is_same(const antenna&) const noexcept;
 
+    /// Compare antenna's serial number to a c-string
+    bool compare_serial(const char*) const noexcept;
+
+    /// Set antenna's serial number
+    void set_serial_nr(const char*) noexcept;
+
     /// Destructor.
     ~antenna() noexcept {};
 
