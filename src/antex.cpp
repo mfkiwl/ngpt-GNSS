@@ -478,7 +478,14 @@ bool __string_is_empty__(const char* c, std::size_t max_chars)
 
 /**
  *  Search through the ANTEX file (i.e. this instance's buffer) to find
- *  a specific antenna.
+ *  a specific antenna. If the antenna is indeed found, the file buffer is
+ *  set at the record line "TYPE / SERIAL NO" of the requested antenna.
+ *  Note that the function will try to match the antenna based on the model,
+ *  radome and serial number. The model+radome must be found exactly as
+ *  recorded in the antenna instance. For the serial (if not matched exactly),
+ *  the function will return a 'generic' antenna, i.e. with a serial of
+ *  20 whitespaces. The ANTEX format specifications state that a blank serial 
+ *  number match all representatives.
  * 
  *  \note  This function expects that the antenna patterns are sorted as
  *         documented by IGS, i.e.
@@ -642,7 +649,6 @@ int antex::find_antenna(const antenna& ant)
     } else {
         _istream.seekg( best_match );
     }
-
     
     printf ("\nANTENNA FOUND AFTER READING %zu ANTENNAS",antennas_read);
     return 0;
