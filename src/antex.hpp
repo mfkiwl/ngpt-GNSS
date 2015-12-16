@@ -166,7 +166,7 @@ private:
   
   std::string            _filename; ///< The name of the antex file.
   std::ifstream          _istream;  ///< The infput (file) stream.
-  ngpt::SATELLITE_SYSTEM _satsys;   ///< Satellite System.
+  ngpt::satellite_system _satsys;   ///< satellite system.
   ATX_VERSION            _version;  ///< Atx version (1.4).
   PCV_TYPE               _type;     ///< Pcv type (absolute or relative).
   ngpt::antenna          _refant;   ///< Reference antenna (only relative pcv).

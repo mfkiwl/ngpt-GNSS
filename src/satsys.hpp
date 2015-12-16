@@ -44,26 +44,26 @@ namespace ngpt
 
 /// Enumeration for known Satellite systems.
 /// This is extracted from \cite rnx303
-enum class SATELLITE_SYSTEM : char
+enum class satellite_system : char
 {
-    GPS,
-    GLONASS,
-    SBAS,
-    Galileo,
-    BeiDou,
-    QZSS,
-    IRNSS,
-    MIXED
+    gps,
+    glonass,
+    sbas,
+    galileo,
+    beidou,
+    qzss,
+    irnss,
+    mixed
 };
 
 /// Traits for Satellite Systems
-template<SATELLITE_SYSTEM S>
+template<satellite_system S>
   struct SatelliteSystemTraits
 { };
 
 /// Specialize traits for Satellite System Gps
 template<>
-struct SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>
+struct SatelliteSystemTraits<satellite_system::gps>
 {
     /// Identifier
     static constexpr char identifier { 'G' };
@@ -74,7 +74,7 @@ struct SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>
 
 /// Specialize traits for Satellite System Glonass
 template<>
-struct SatelliteSystemTraits<SATELLITE_SYSTEM::GLONASS>
+struct SatelliteSystemTraits<satellite_system::glonass>
 {
     /// Identifier
     static constexpr char identifier { 'R' };
@@ -85,7 +85,7 @@ struct SatelliteSystemTraits<SATELLITE_SYSTEM::GLONASS>
 
 /// Specialize traits for Satellite System Galileo
 template<>
-struct SatelliteSystemTraits<SATELLITE_SYSTEM::Galileo>
+struct SatelliteSystemTraits<satellite_system::galileo>
 {
     /// Identifier
     static constexpr char identifier { 'E' };
@@ -96,7 +96,7 @@ struct SatelliteSystemTraits<SATELLITE_SYSTEM::Galileo>
 
 /// Specialize traits for Satellite System SBAS
 template<>
-struct SatelliteSystemTraits<SATELLITE_SYSTEM::SBAS>
+struct SatelliteSystemTraits<satellite_system::sbas>
 {
     /// Identifier
     static constexpr char identifier { 'S' };
@@ -107,7 +107,7 @@ struct SatelliteSystemTraits<SATELLITE_SYSTEM::SBAS>
 
 /// Specialize traits for Satellite System QZSS
 template<>
-struct SatelliteSystemTraits<SATELLITE_SYSTEM::QZSS>
+struct SatelliteSystemTraits<satellite_system::qzss>
 {
     /// Identifier
     static constexpr char identifier { 'J' };
@@ -118,7 +118,7 @@ struct SatelliteSystemTraits<SATELLITE_SYSTEM::QZSS>
 
 /// Specialize traits for Satellite System BDS
 template<>
-struct SatelliteSystemTraits<SATELLITE_SYSTEM::BeiDou>
+struct SatelliteSystemTraits<satellite_system::beidou>
 {
     /// Identifier
     static constexpr char identifier { 'C' };
@@ -129,7 +129,7 @@ struct SatelliteSystemTraits<SATELLITE_SYSTEM::BeiDou>
 
 /// Specialize traits for Satellite System IRNSS
 template<>
-struct SatelliteSystemTraits<SATELLITE_SYSTEM::IRNSS>
+struct SatelliteSystemTraits<satellite_system::irnss>
 {
     /// Identifier
     static constexpr char identifier { 'I' };
@@ -140,7 +140,7 @@ struct SatelliteSystemTraits<SATELLITE_SYSTEM::IRNSS>
 
 /// Specialize traits for Satellite System MIXED
 template<>
-struct SatelliteSystemTraits<SATELLITE_SYSTEM::MIXED>
+struct SatelliteSystemTraits<satellite_system::mixed>
 {
     /// Identifier
     static constexpr char identifier { 'M' };
@@ -150,14 +150,14 @@ struct SatelliteSystemTraits<SATELLITE_SYSTEM::MIXED>
 };
 
 /// Given a satellite system, return its identifier
-char satsys_identifier( SATELLITE_SYSTEM );
+char satsys_identifier( satellite_system );
 
 /// Given a char (i.e. identifier), return the corresponding satellite system.
-SATELLITE_SYSTEM char_to_satsys( char );
+satellite_system char_to_satsys( char );
 
 /// Given a frequency band (index) and a satellite system, 
 /// return the nominal frequency value.
-double nominal_frequency(int band, SATELLITE_SYSTEM s);
+double nominal_frequency(int band, satellite_system s);
 
 } // end namespace
 

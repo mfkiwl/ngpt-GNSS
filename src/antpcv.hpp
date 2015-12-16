@@ -196,19 +196,19 @@ public:
     // Return/access a fequency_pcv based on its frequency. The matching
     // (between freq_pcv.obtype and type) must be performed based on Satellite
     // System and frequency number/band.
-    // TODO: No strict match in freq_pcv == type
-    /*
     frequency_pcv<T>& 
     freq_pcv_pattern( ngpt::ObservationType type )
     {
+        assert( type.raw_obs_num() == 1 );
+
         for (auto& i : freq_pcv) {
-            if (freq_pcv.type == type) {
+            if (   i.raw_obs(0).satsys() == type.raw_obs(0).satsys() 
+                && i.raw_obs(0).band()   == type.raw_obs(0).band() ) {
                 return i;
             }
         }
         throw std::runtime_error("antenna_pcv::freq_pcv_pattern -> Invalid frequency");
     }
-    */
 
     T     zen1() const noexcept { return no_azi_grid_.from(); }
     T     zen2() const noexcept { return no_azi_grid_.to();   }
@@ -219,7 +219,7 @@ public:
     /// \warning Watch yourself bitch! can cause UB if azi_grid_ is invalid.
     T     azi2() const noexcept { return azi_grid_->y_axis_to();   }
     /// \warning Watch yourself bitch! can cause UB if azi_grid_ is invalid.
-    T dazi() const noexcept { return azi_grid_->y_axis_step(); }
+    T     dazi() const noexcept { return azi_grid_->y_axis_step(); }
 
 private:
     dim1_grid  no_azi_grid_; ///< Non-azimouth dependent grid (skeleton)

@@ -54,9 +54,9 @@ constexpr std::size_t MAX_GRID_CHARS { 258 };
  */
 ngpt::ObservationType antex2obstype(const char* s)
 {
-    ngpt::SATELLITE_SYSTEM ss { ngpt::char_to_satsys( *s ) };
+    ngpt::satellite_system ss { ngpt::char_to_satsys( *s ) };
     int freq { std::stoi(s+1, nullptr) };
-    return ngpt::ObservationType(ss, ngpt::OBSERVATION_TYPE::CARRIER_PHASE,
+    return ngpt::ObservationType(ss, ngpt::observation_type::carrier_phase,
                                  freq, '?');
 }
 
@@ -70,7 +70,7 @@ ngpt::ObservationType antex2obstype(const char* s)
 antex::antex(const char *filename)
     : _filename   {filename},
       _istream    {filename, std::ios_base::in},
-      _satsys     {ngpt::SATELLITE_SYSTEM::MIXED},
+      _satsys     {ngpt::satellite_system::mixed},
       _version    {ngpt::antex::ATX_VERSION::v14},
       _type       {ngpt::antex::PCV_TYPE::Absolute},
       _refant     {},

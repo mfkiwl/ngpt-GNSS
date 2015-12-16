@@ -5,7 +5,7 @@ typedef std::map<int, double> idmap;
 
 /// Initialize the static frequency map for GPS.
 const idmap
-ngpt::SatelliteSystemTraits<ngpt::SATELLITE_SYSTEM::GPS>::frequency_map =
+ngpt::SatelliteSystemTraits<ngpt::satellite_system::gps>::frequency_map =
 {
     { 1, 1575.42e0 },
     { 2, 1227.60e0 },
@@ -14,7 +14,7 @@ ngpt::SatelliteSystemTraits<ngpt::SATELLITE_SYSTEM::GPS>::frequency_map =
 
 /// Initialize the static frequency map for GLONASS.
 const idmap
-ngpt::SatelliteSystemTraits<ngpt::SATELLITE_SYSTEM::GLONASS>::frequency_map =
+ngpt::SatelliteSystemTraits<ngpt::satellite_system::glonass>::frequency_map =
 {
     { 1, 1602.000e0 },
     { 2, 1246.000e0 },
@@ -23,7 +23,7 @@ ngpt::SatelliteSystemTraits<ngpt::SATELLITE_SYSTEM::GLONASS>::frequency_map =
 
 /// Initialize the static frequency map for GALILEO.
 const idmap
-ngpt::SatelliteSystemTraits<ngpt::SATELLITE_SYSTEM::Galileo>::frequency_map =
+ngpt::SatelliteSystemTraits<ngpt::satellite_system::galileo>::frequency_map =
 {
     { 1, 1575.420e0 }, /// E1
     { 5, 1176.450e0 }, /// E5a
@@ -34,7 +34,7 @@ ngpt::SatelliteSystemTraits<ngpt::SATELLITE_SYSTEM::Galileo>::frequency_map =
 
 /// Initialize the static frequency map for SBAS.
 const idmap
-ngpt::SatelliteSystemTraits<ngpt::SATELLITE_SYSTEM::SBAS>::frequency_map =
+ngpt::SatelliteSystemTraits<ngpt::satellite_system::sbas>::frequency_map =
 {
     { 1, 1575.42e0 },
     { 5, 1176.45e0 }
@@ -42,7 +42,7 @@ ngpt::SatelliteSystemTraits<ngpt::SATELLITE_SYSTEM::SBAS>::frequency_map =
 
 /// Initialize the static frequency map for QZSS.
 const idmap
-ngpt::SatelliteSystemTraits<ngpt::SATELLITE_SYSTEM::QZSS>::frequency_map =
+ngpt::SatelliteSystemTraits<ngpt::satellite_system::qzss>::frequency_map =
 {
     { 1, 1575.42e0 },
     { 2, 1227.60e0 },
@@ -52,7 +52,7 @@ ngpt::SatelliteSystemTraits<ngpt::SATELLITE_SYSTEM::QZSS>::frequency_map =
 
 /// Initialize the static frequency map for BDS.
 const idmap
-ngpt::SatelliteSystemTraits<ngpt::SATELLITE_SYSTEM::BeiDou>::frequency_map =
+ngpt::SatelliteSystemTraits<ngpt::satellite_system::beidou>::frequency_map =
 {
     { 1, 1561.098e0 },
     { 2, 1207.140e0 },
@@ -61,7 +61,7 @@ ngpt::SatelliteSystemTraits<ngpt::SATELLITE_SYSTEM::BeiDou>::frequency_map =
 
 /// Initialize the static frequency map for IRNSS.
 const idmap
-ngpt::SatelliteSystemTraits<ngpt::SATELLITE_SYSTEM::IRNSS>::frequency_map =
+ngpt::SatelliteSystemTraits<ngpt::satellite_system::irnss>::frequency_map =
 {
     { 5, 1176.450e0 },
     { 2, 2492.028e0 }, //TODO in \cite rnx303 this is denoted as 'S'
@@ -76,28 +76,28 @@ ngpt::SatelliteSystemTraits<ngpt::SATELLITE_SYSTEM::IRNSS>::frequency_map =
  *
  *  \throw       std::runtime_error if no matching satellite system is found.
  */
-char ngpt::satsys_identifier( ngpt::SATELLITE_SYSTEM s )
+char ngpt::satsys_identifier( ngpt::satellite_system s )
 {
-    using ngpt::SATELLITE_SYSTEM;
+    using ngpt::satellite_system;
 
     switch ( s )
     {
-        case SATELLITE_SYSTEM::GPS :
-            return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>::identifier;
-        case SATELLITE_SYSTEM::GLONASS :
-            return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::GLONASS>::identifier;
-        case SATELLITE_SYSTEM::SBAS :
-            return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::SBAS>::identifier;
-        case SATELLITE_SYSTEM::Galileo :
-            return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::Galileo>::identifier;
-        case SATELLITE_SYSTEM::BeiDou :
-            return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::BeiDou>::identifier;
-        case SATELLITE_SYSTEM::QZSS :
-            return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::QZSS>::identifier;
-        case SATELLITE_SYSTEM::IRNSS :
-            return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::IRNSS>::identifier;
-        case SATELLITE_SYSTEM::MIXED :
-            return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::MIXED>::identifier;
+        case satellite_system::gps :
+            return ngpt::SatelliteSystemTraits<satellite_system::gps>::identifier;
+        case satellite_system::glonass :
+            return ngpt::SatelliteSystemTraits<satellite_system::glonass>::identifier;
+        case satellite_system::sbas :
+            return ngpt::SatelliteSystemTraits<satellite_system::sbas>::identifier;
+        case satellite_system::galileo :
+            return ngpt::SatelliteSystemTraits<satellite_system::galileo>::identifier;
+        case satellite_system::beidou :
+            return ngpt::SatelliteSystemTraits<satellite_system::beidou>::identifier;
+        case satellite_system::qzss :
+            return ngpt::SatelliteSystemTraits<satellite_system::qzss>::identifier;
+        case satellite_system::irnss :
+            return ngpt::SatelliteSystemTraits<satellite_system::irnss>::identifier;
+        case satellite_system::mixed :
+            return ngpt::SatelliteSystemTraits<satellite_system::mixed>::identifier;
         default:
             throw std::runtime_error
                 ("ngpt::SatSysIdentifier -> Invalid Satellite System !!");
@@ -112,28 +112,28 @@ char ngpt::satsys_identifier( ngpt::SATELLITE_SYSTEM s )
  *
  *  \throw       std::runtime_error if no matching satellite system is found.
  */
-ngpt::SATELLITE_SYSTEM ngpt::char_to_satsys( char c )
+ngpt::satellite_system ngpt::char_to_satsys( char c )
 {
-    using ngpt::SATELLITE_SYSTEM;
+    using ngpt::satellite_system;
 
     switch ( c )
     {
-        case (ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>::identifier) :
-            return SATELLITE_SYSTEM::GPS;
-        case (ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::GLONASS>::identifier) :
-            return SATELLITE_SYSTEM::GLONASS;
-        case (ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::Galileo>::identifier) :
-            return SATELLITE_SYSTEM::Galileo;
-        case (ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::SBAS>::identifier) :
-            return SATELLITE_SYSTEM::SBAS;
-        case (ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::QZSS>::identifier) :
-            return SATELLITE_SYSTEM::QZSS;
-        case (ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::BeiDou>::identifier) :
-            return SATELLITE_SYSTEM::BeiDou;
-        case (ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::IRNSS>::identifier) :
-            return SATELLITE_SYSTEM::IRNSS;
-        case (ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::MIXED>::identifier) :
-            return SATELLITE_SYSTEM::MIXED;
+        case (ngpt::SatelliteSystemTraits<satellite_system::gps>::identifier) :
+            return satellite_system::gps;
+        case (ngpt::SatelliteSystemTraits<satellite_system::glonass>::identifier) :
+            return satellite_system::glonass;
+        case (ngpt::SatelliteSystemTraits<satellite_system::galileo>::identifier) :
+            return satellite_system::galileo;
+        case (ngpt::SatelliteSystemTraits<satellite_system::sbas>::identifier) :
+            return satellite_system::sbas;
+        case (ngpt::SatelliteSystemTraits<satellite_system::qzss>::identifier) :
+            return satellite_system::qzss;
+        case (ngpt::SatelliteSystemTraits<satellite_system::beidou>::identifier) :
+            return satellite_system::beidou;
+        case (ngpt::SatelliteSystemTraits<satellite_system::irnss>::identifier) :
+            return satellite_system::irnss;
+        case (ngpt::SatelliteSystemTraits<satellite_system::mixed>::identifier) :
+            return satellite_system::mixed;
         default :
             throw std::runtime_error
                 ("ngpt::charToSatSys -> Invalid Satellite System Identifier!!");
@@ -150,33 +150,33 @@ ngpt::SATELLITE_SYSTEM ngpt::char_to_satsys( char c )
  *  \throw       std::runtime_error if no matching satellite system or 
  *               satellite system / frequency band pair is not found.
  */
-double ngpt::nominal_frequency(int band, ngpt::SATELLITE_SYSTEM s)
+double ngpt::nominal_frequency(int band, ngpt::satellite_system s)
 {
-    using ngpt::SATELLITE_SYSTEM;
+    using ngpt::satellite_system;
 
     try { // std::map.at() might throw !
         switch ( s )
         {
-            case SATELLITE_SYSTEM::GPS :
-                return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>
+            case satellite_system::gps :
+                return ngpt::SatelliteSystemTraits<satellite_system::gps>
                     ::frequency_map.at(band);
-            case SATELLITE_SYSTEM::GLONASS :
-                return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::GLONASS>
+            case satellite_system::glonass :
+                return ngpt::SatelliteSystemTraits<satellite_system::glonass>
                     ::frequency_map.at(band);
-            case SATELLITE_SYSTEM::SBAS :
-                return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::SBAS>
+            case satellite_system::sbas :
+                return ngpt::SatelliteSystemTraits<satellite_system::sbas>
                     ::frequency_map.at(band);
-            case SATELLITE_SYSTEM::Galileo :
-                return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::Galileo>
+            case satellite_system::galileo :
+                return ngpt::SatelliteSystemTraits<satellite_system::galileo>
                     ::frequency_map.at(band);
-            case SATELLITE_SYSTEM::BeiDou :
-                return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::BeiDou>
+            case satellite_system::beidou :
+                return ngpt::SatelliteSystemTraits<satellite_system::beidou>
                     ::frequency_map.at(band);
-            case SATELLITE_SYSTEM::QZSS :
-                return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::QZSS>
+            case satellite_system::qzss :
+                return ngpt::SatelliteSystemTraits<satellite_system::qzss>
                     ::frequency_map.at(band);
-            case SATELLITE_SYSTEM::IRNSS :
-                return ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::IRNSS>
+            case satellite_system::irnss :
+                return ngpt::SatelliteSystemTraits<satellite_system::irnss>
                     ::frequency_map.at(band);
             default:
                 // std::map.at() will throw an std::out_of_range; let's do the
