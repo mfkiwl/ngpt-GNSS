@@ -19,11 +19,15 @@ namespace ngpt
 ///       Only vectors of pcv values are stored here, which actualy cannot be
 ///       correctly indexed.
 ///
+/// Template Parameter \c T should be either \c float or \c double depending
+/// on the precission we want for the PCV values.
+///
+template<typename T>
 class frequency_pcv
 {
 
-typedef std::vector<float>  fltvec;
-typedef std::array<float,3> fltarr;
+typedef std::vector<T>  fltvec;
+typedef std::array<T,3> fltarr;
 
 public:
     explicit frequency_pcv(ngpt::ObservationType type, 
@@ -83,27 +87,27 @@ public:
       && std::is_nothrow_move_assignable<fltvec>::value 
         ) = default;
 
-    double& north() noexcept
+    T& north() noexcept
     {
         return eccentricity_vector_[0];
     }
-    double& east() noexcept
+    T& east() noexcept
     {
         return eccentricity_vector_[1];
     }
-    double& up() noexcept
+    T& up() noexcept
     {
         return eccentricity_vector_[2];
     }
-    double north() const noexcept
+    T north() const noexcept
     {
         return eccentricity_vector_[0];
     }
-    double east() const noexcept
+    T east() const noexcept
     {
         return eccentricity_vector_[1];
     }
-    double up() const noexcept
+    T up() const noexcept
     {
         return eccentricity_vector_[2];
     }
@@ -133,18 +137,22 @@ namespace antenna_pcv_details
 ///  Apart from the grid(s), the class also hold a vector of frequency_pcv
 ///  instances, one per each frequency recorded in the ANTEX file.
 ///
+/// Template Parameter \c T should be either \c float or \c double depending
+/// on the precission we want for the PCV values.
+///
+template<typename T>
 class antenna_pcv
 {
 
-typedef GridSkeleton<float, false, Grid_Dimension::OneDim> dim1_grid;
-typedef GridSkeleton<float, false, Grid_Dimension::TwoDim> dim2_grid;
-typedef std::vector<frequency_pcv>                         fr_pcv_vec;
+typedef GridSkeleton<T, false, Grid_Dimension::OneDim> dim1_grid;
+typedef GridSkeleton<T, false, Grid_Dimension::TwoDim> dim2_grid;
+typedef std::vector<frequency_pcv<T>>                  fr_pcv_vec;
 
 public:
   
     /// Constructor. 
-    explicit antenna_pcv(float zen1, float zen2, float dzen,
-                         int freqs, float dazi = 0)
+    explicit antenna_pcv(T zen1, T zen2, T dzen,
+                         int freqs, T dazi = 0)
     /*noexcept*/
         : no_azi_grid_(zen1, zen2, dzen),
           azi_grid_(dazi
@@ -185,29 +193,33 @@ public:
         delete azi_grid_;
     }
 
-    // Return/access a fequency_pcv based on its frequency
+    // Return/access a fequency_pcv based on its frequency. The matching
+    // (between freq_pcv.obtype and type) must be performed based on Satellite
+    // System and frequency number/band.
     // TODO: No strict match in freq_pcv == type
-    frequency_pcv& 
+    /*
+    frequency_pcv<T>& 
     freq_pcv_pattern( ngpt::ObservationType type )
     {
         for (auto& i : freq_pcv) {
-            if (freq_pcv == type) {
+            if (freq_pcv.type == type) {
                 return i;
             }
         }
         throw std::runtime_error("antenna_pcv::freq_pcv_pattern -> Invalid frequency");
     }
+    */
 
-    float zen1() const noexcept { return no_azi_grid_.from(); }
-    float zen2() const noexcept { return no_azi_grid_.to();   }
-    float dzen() const noexcept { return no_azi_grid_.step(); }
+    T     zen1() const noexcept { return no_azi_grid_.from(); }
+    T     zen2() const noexcept { return no_azi_grid_.to();   }
+    T     dzen() const noexcept { return no_azi_grid_.step(); }
     bool  has_azi_pcv() const noexcept { return azi_grid_ != nullptr; }
     /// \warning Watch yourself bitch! can cause UB if azi_grid_ is invalid.
-    float azi1() const noexcept { return azi_grid_->y_axis_from(); }
+    T     azi1() const noexcept { return azi_grid_->y_axis_from(); }
     /// \warning Watch yourself bitch! can cause UB if azi_grid_ is invalid.
-    float azi2() const noexcept { return azi_grid_->y_axis_to();   }
+    T     azi2() const noexcept { return azi_grid_->y_axis_to();   }
     /// \warning Watch yourself bitch! can cause UB if azi_grid_ is invalid.
-    float dazi() const noexcept { return azi_grid_->y_axis_step(); }
+    T dazi() const noexcept { return azi_grid_->y_axis_step(); }
 
 private:
     dim1_grid  no_azi_grid_; ///< Non-azimouth dependent grid (skeleton)

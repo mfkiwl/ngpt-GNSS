@@ -222,8 +222,11 @@ int antex::read_header()
  * 
  *  \todo    Need to also read 'FREQ RMS'
  */
-ngpt::antenna_pcv ngpt::antex::read_pattern()
+ngpt::antenna_pcv<ngpt::pcv_type> 
+ngpt::antex::read_pattern()
 {
+    using ngpt::pcv_type;
+
     char line[MAX_HEADER_CHARS];
 
     // next field is 'METH / BY / # / DATE'
@@ -235,7 +238,7 @@ ngpt::antenna_pcv ngpt::antex::read_pattern()
     }
 
     // next field is 'DAZI'
-    double dazi {-1000};
+    pcv_type dazi {-1000};
     if (_istream.getline(line, MAX_HEADER_CHARS)
         && !strncmp(line+60, "DAZI", 4)) 
     {
@@ -243,7 +246,7 @@ ngpt::antenna_pcv ngpt::antex::read_pattern()
     }
 
     // next field is 'ZEN1 / ZEN2 / DZEN'
-    double zen1,  zen2,  dzen;
+    pcv_type zen1,  zen2,  dzen;
     zen1 = zen2 = dzen = -1000;
     if (_istream.getline(line, MAX_HEADER_CHARS)
         && !strncmp(line+60, "ZEN1 / ZEN2 / DZEN", 18))
@@ -273,7 +276,8 @@ ngpt::antenna_pcv ngpt::antex::read_pattern()
     }
     
     // Nice, we have all we need to construct an antenna pcv pattern.
-    ngpt::antenna_pcv antpat {dazi, zen1, zen2, dzen, num_of_freqs};
+    ngpt::antenna_pcv<ngpt::pcv_type> antpat 
+                                    {zen1, zen2, dzen, num_of_freqs, dazi};
 
     // From here up untill the block 'START OF FREQUENCY' there can be a number
     // of optional fields.
@@ -293,24 +297,24 @@ ngpt::antenna_pcv ngpt::antex::read_pattern()
     ngpt::ObservationType ot { antex2obstype(line+3) };
 
     // next field is 'NORTH / EAST / UP'
-    float north, east, up;
+    pcv_type north, east, up;
     if (_istream.getline(line, MAX_HEADER_CHARS) 
         && !strncmp(line+60, "NORTH / EAST / UP", 17))
     {
         char tmp[11];
         tmp[10] = '\0';
         std::memcpy(tmp, line, 10);
-        north   = std::stof(tmp, nullptr);
+        north   = std::stod(tmp, nullptr);
         std::memcpy(tmp, line+10, 10);
-        east    = std::stof(tmp, nullptr);
+        east    = std::stod(tmp, nullptr);
         std::memcpy(tmp, line+20, 10);
-        up      = std::stof(tmp, nullptr);
+        up      = std::stod(tmp, nullptr);
     }
 
     // read 'NOAZI' grid values
     char g_line[MAX_GRID_CHARS];
     std::size_t vals_to_read { static_cast<std::size_t>((zen2 - zen1) / dzen) + 1 };
-    float val;
+    pcv_type val;
     if (_istream.getline(g_line, MAX_GRID_CHARS)
         && !strncmp(g_line, "   NOAZI", 8)) {
         char* lptr = g_line + 8;
@@ -318,7 +322,7 @@ ngpt::antenna_pcv ngpt::antex::read_pattern()
         for (std::size_t i=0; i<vals_to_read; ++i) {
             // make sure we only transform 8 chars to float !
             std::swap(lptr[8], ntc);
-            val   = std::stof(lptr, nullptr);
+            val   = std::stod(lptr, nullptr);
             std::swap(ntc, lptr[8]);
             lptr += 8;
         }
@@ -336,7 +340,7 @@ ngpt::antenna_pcv ngpt::antex::read_pattern()
                 throw std::runtime_error
                 ("antex::read_header -> Failed to read 'AZI' grid (1).");
             }
-            float this_azi { std::stof(g_line, nullptr) };
+            pcv_type this_azi ( std::stod(g_line, nullptr) );
             if ( std::abs( this_azi - i*dazi + antenna_pcv_details::azi1 ) > .001 ) {
                 throw std::runtime_error
                 ("antex::read_header -> Failed to read 'AZI' grid (2).");
@@ -346,7 +350,7 @@ ngpt::antenna_pcv ngpt::antex::read_pattern()
             for (std::size_t j=0; j<vals_to_read; ++j) {
                 // make sure we only transform 8 chars to float !
                 std::swap(lptr[8], ntc);
-                val   = std::stof(lptr, nullptr);
+                val   = std::stod(lptr, nullptr);
                 std::swap(ntc, lptr[8]);
                 lptr += 8;
             }

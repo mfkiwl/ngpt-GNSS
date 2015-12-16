@@ -93,6 +93,10 @@
 namespace ngpt
 {
 
+/// This defines the template parameter in ngpt::antenna_pcv and 
+/// ngpt::frequency_pcv
+using pcv_type = float;
+
 class antex
 {
   /// Let's not write this more than once.
@@ -140,11 +144,11 @@ public:
   noexcept(std::is_nothrow_move_assignable<std::ifstream>::value) = default;
   
   //
-  ngpt::antenna_pcv get_antenna_pattern(const antenna& ant)
+  ngpt::antenna_pcv<pcv_type> get_antenna_pattern(const antenna& ant)
   {
     int status = find_antenna(ant);
     if ( status ) {
-      return ngpt::antenna_pcv(0, 0, 0, 0, 0);
+      return ngpt::antenna_pcv<pcv_type>(0, 0, 0, 0, 0);
     }
     return read_pattern();
   }
@@ -153,7 +157,7 @@ public:
   int find_antenna(const antenna&/*bool, consider_serial_nr = false*/);
   
   /// Read antenna calibration pattern.
-  ngpt::antenna_pcv read_pattern();
+  ngpt::antenna_pcv<pcv_type> read_pattern();
 
 private:
   
