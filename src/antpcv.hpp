@@ -5,6 +5,10 @@
 #include "grid.hpp"
 #include "obstype.hpp"
 
+#ifdef DEBUG
+    #include <iostream>
+#endif
+
 namespace ngpt
 {
 
@@ -112,6 +116,27 @@ public:
         return eccentricity_vector_[2];
     }
 
+    ngpt::ObservationType& type()       noexcept { return type_; }
+    
+    ngpt::ObservationType  type() const noexcept { return type_; }
+
+    fltvec&
+    no_azi_vector()
+    noexcept
+    {
+        return no_azi_pcv_values_;
+    }
+    
+    fltvec&
+    azi_vector()
+    noexcept
+    {
+        return azi_pcv_values_;
+    }
+
+    T& no_azi_vector(std::size_t i)       { return no_azi_pcv_values_[i]; }
+    T  no_azi_vector(std::size_t i) const { return no_azi_pcv_values_[i]; }
+
 private:
     ngpt::ObservationType type_;                 ///< Observation type
     fltarr                eccentricity_vector_;  ///< phase center offset (NEU in mm)
@@ -163,10 +188,16 @@ public:
 
         std::size_t no_azi_hint = no_azi_grid_.size();
         std::size_t    azi_hint = ( azi_grid_ ) ? ( azi_grid_->size() ) : ( 0 );
+        std::cout <<"\n----------------------------------------------------";
+        std::cout <<"\nSize of no azi grid = "<< no_azi_hint;
+        std::cout <<"\nSize of azi grid    = "<< azi_hint;
     
         for (int i=0; i<freqs; ++i) {
             freq_pcv.emplace_back( no_azi_hint, azi_hint );
+            std::cout <<"\nConstructing freq_pcv with sizes: "<<no_azi_hint << ", " << azi_hint;
         }
+        for (int i=0; i<freqs; ++i) std::cout <<"\nVector["<<i<<"] size = " << freq_pcv[i].no_azi_vector().size() << ", " << freq_pcv[i].azi_vector().size() << " / " << freq_pcv.size();
+        std::cout <<"\n----------------------------------------------------";
     }
 
     /// Copy constructor.
@@ -209,6 +240,13 @@ public:
         }
         throw std::runtime_error("antenna_pcv::freq_pcv_pattern -> Invalid frequency");
     }
+    
+    // Return/access a fequency_pcv based on its index.
+    frequency_pcv<T>&
+    freq_pcv_pattern( std::size_t i )
+    {
+        return freq_pcv[i];
+    }
 
     T     zen1() const noexcept { return no_azi_grid_.from(); }
     T     zen2() const noexcept { return no_azi_grid_.to();   }
@@ -220,6 +258,14 @@ public:
     T     azi2() const noexcept { return azi_grid_->y_axis_to();   }
     /// \warning Watch yourself bitch! can cause UB if azi_grid_ is invalid.
     T     dazi() const noexcept { return azi_grid_->y_axis_step(); }
+
+    std::size_t no_azi_grid_pts() const noexcept { return no_azi_grid_.size(); }
+    std::size_t azi_grid_pts()    const noexcept 
+    { 
+        return   azi_grid_ 
+               ? azi_grid_->size()
+               : 0;
+    }
 
 private:
     dim1_grid  no_azi_grid_; ///< Non-azimouth dependent grid (skeleton)

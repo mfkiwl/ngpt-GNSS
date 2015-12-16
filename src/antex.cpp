@@ -225,6 +225,7 @@ int antex::read_header()
 ngpt::antenna_pcv<ngpt::pcv_type> 
 ngpt::antex::read_pattern()
 {
+    std::cout << "\nREADING PCV";
     using ngpt::pcv_type;
 
     char line[MAX_HEADER_CHARS];
@@ -278,6 +279,9 @@ ngpt::antex::read_pattern()
     // Nice, we have all we need to construct an antenna pcv pattern.
     ngpt::antenna_pcv<ngpt::pcv_type> antpat 
                                     {zen1, zen2, dzen, num_of_freqs, dazi};
+    // We're gonna use a pointer to each frequency_pcv in the antpat to assign
+    // the values for each frequency
+    ngpt::frequency_pcv<ngpt::pcv_type>* freq_pcv_ptr;
 
     // From here up untill the block 'START OF FREQUENCY' there can be a number
     // of optional fields.
@@ -291,78 +295,123 @@ ngpt::antex::read_pattern()
     // make sure we're not at EOF or anything funny happened ...
     if ( !_istream.good() ) {
         throw std::runtime_error
-        ("antex::read_header -> Could not find 'START OF FREQUENCY'.");
+        ("antex::read_pattern -> Could not find 'START OF FREQUENCY'.");
     }
 
-    ngpt::ObservationType ot { antex2obstype(line+3) };
-
-    // next field is 'NORTH / EAST / UP'
-    pcv_type north, east, up;
-    if (_istream.getline(line, MAX_HEADER_CHARS) 
-        && !strncmp(line+60, "NORTH / EAST / UP", 17))
-    {
-        char tmp[11];
-        tmp[10] = '\0';
-        std::memcpy(tmp, line, 10);
-        north   = std::stod(tmp, nullptr);
-        std::memcpy(tmp, line+10, 10);
-        east    = std::stod(tmp, nullptr);
-        std::memcpy(tmp, line+20, 10);
-        up      = std::stod(tmp, nullptr);
-    }
-
-    // read 'NOAZI' grid values
+    // blah ... blah ... blah ... comments and shit read. now we should read
+    // the pattern for each frequency
+    char tmp[11];
     char g_line[MAX_GRID_CHARS];
     std::size_t vals_to_read { static_cast<std::size_t>((zen2 - zen1) / dzen) + 1 };
-    pcv_type val;
-    if (_istream.getline(g_line, MAX_GRID_CHARS)
-        && !strncmp(g_line, "   NOAZI", 8)) {
-        char* lptr = g_line + 8;
-        char ntc   = '\0';
-        for (std::size_t i=0; i<vals_to_read; ++i) {
-            // make sure we only transform 8 chars to float !
-            std::swap(lptr[8], ntc);
-            val   = std::stod(lptr, nullptr);
-            std::swap(ntc, lptr[8]);
-            lptr += 8;
-        }
-    } else {
-        throw std::runtime_error
-        ("antex::read_header -> Could not find 'NOAZI' grid.");
-    }
-
-    // read azimouth-dependent grid values
-    if ( dazi != 0 ) {
-        int num_of_azi_lines { static_cast<int>(( antenna_pcv_details::azi2 
+    int num_of_azi_lines     { static_cast<int>(( antenna_pcv_details::azi2 
                                - antenna_pcv_details::azi1 ) / dazi) + 1 };
-        for (int i=0; i<num_of_azi_lines; ++i) {
-            if ( !_istream.getline(g_line, MAX_GRID_CHARS) ) {
-                throw std::runtime_error
-                ("antex::read_header -> Failed to read 'AZI' grid (1).");
-            }
-            pcv_type this_azi ( std::stod(g_line, nullptr) );
-            if ( std::abs( this_azi - i*dazi + antenna_pcv_details::azi1 ) > .001 ) {
-                throw std::runtime_error
-                ("antex::read_header -> Failed to read 'AZI' grid (2).");
-            }
-            char* lptr = g_line + 8;
-            char ntc   = '\0';
+    std::cout << "\nREADING FREQUENCIES";
+    for (int i=0; i<num_of_freqs; i++) {
+        std::cout << "\nFREQ "<<i;
+
+        // make sure we are at the START OF FREQUENCY line
+        if ( strncmp(line+60, "START OF FREQUENCY", 18) ) {
+#ifdef DEBUG
+            std::cerr << "\n[ERROR] Expected 'START OF FREQUENCY' but found:"
+                      << line;
+#endif
+            throw  std::runtime_error
+            ("antex::read_pattern -> Error reading frequency pcv.");
+        }
+
+        freq_pcv_ptr = &antpat.freq_pcv_pattern( i );
+
+        // resolve and set the frquency/sat-sys
+        ngpt::ObservationType ot { antex2obstype(line+3) };
+        freq_pcv_ptr->type() = ot;
+
+        // next field is 'NORTH / EAST / UP'
+        if (_istream.getline(line, MAX_HEADER_CHARS) 
+            && !strncmp(line+60, "NORTH / EAST / UP", 17))
+        {
+            tmp[10] = '\0';
+            std::memcpy(tmp, line, 10);
+            freq_pcv_ptr->north() = std::stod(tmp, nullptr);
+            std::memcpy(tmp, line+10, 10);
+            freq_pcv_ptr->east()  = std::stod(tmp, nullptr);
+            std::memcpy(tmp, line+20, 10);
+            freq_pcv_ptr->up()    = std::stod(tmp, nullptr);
+        }
+
+        // read 'NOAZI' grid values
+        std::cout << "\nREADING NO-AZI GRID";
+        std::vector<ngpt::pcv_type>* nav = &freq_pcv_ptr->no_azi_vector();
+        if (_istream.getline(g_line, MAX_GRID_CHARS)
+            && !strncmp(g_line, "   NOAZI", 8)) {
+            char* lptr  = g_line + 8;
+            char ntc    = '\0';
+            //auto nav_it = nav->begin(); /* iterator to std::vector<ngpt::pcv_type> */
             for (std::size_t j=0; j<vals_to_read; ++j) {
+                std::cout <<"\ngrid value "<<j<<"/"<<nav->size()
+                          << " or " << freq_pcv_ptr->no_azi_vector().size();
                 // make sure we only transform 8 chars to float !
                 std::swap(lptr[8], ntc);
-                val   = std::stod(lptr, nullptr);
+                //*nav_it = std::stod(lptr, nullptr);
+                nav->emplace_back( std::stod(lptr, nullptr) );
                 std::swap(ntc, lptr[8]);
                 lptr += 8;
+                //++nav_it;
+            }
+        } else {
+            throw std::runtime_error
+            ("antex::read_pattern -> Could not find 'NOAZI' grid.");
+        }
+
+        // read azimouth-dependent grid values
+        std::vector<ngpt::pcv_type>* av = &freq_pcv_ptr->azi_vector();
+        // initialize all values in the az-pcv vector to 0
+        av->assign(antpat.azi_grid_pts(), .0);
+        if ( dazi != 0 ) {
+            std::cout << "\nREADING AZI GRID";
+            for (int j=0; j<num_of_azi_lines; ++j) {
+                if ( !_istream.getline(g_line, MAX_GRID_CHARS) ) {
+                    throw std::runtime_error
+                    ("antex::read_pattern -> Failed to read 'AZI' grid (1).");
+                }
+                pcv_type this_azi ( std::stod(g_line, nullptr) );
+                if ( std::abs( this_azi - j*dazi + antenna_pcv_details::azi1 ) > .001 ) {
+                    throw std::runtime_error
+                    ("antex::read_pattern -> Failed to read 'AZI' grid (2).");
+                }
+                // find the right index for this azimouth in the azi_grid
+                std::size_t index = antpat.azi_grid_pts() 
+                                  - ((this_azi - antenna_pcv_details::azi1)/dazi - 1 )
+                                  * vals_to_read;
+                auto av_it = av->begin() + index;
+                char* lptr = g_line + 8;
+                char ntc   = '\0';
+                std::cout << "\nassigning to index " <<index <<" azi="<<this_azi;
+                for (std::size_t k=0; k<vals_to_read; ++k) {
+                    // make sure we only transform 8 chars to float !
+                    std::swap(lptr[8], ntc);
+                    *av_it = std::stod(lptr, nullptr);
+                    std::swap(ntc, lptr[8]);
+                    lptr += 8;
+                    ++av_it;
+                    std::cout <<"\nreached index " << index+vals_to_read << " / " << av->size();
+                }
             }
         }
-    }
 
-    // should now see the 'END OF FREQUENCY' marker
+        // should now see the 'END OF FREQUENCY' marker
+        // since we're here, also read the next line ...
+        if (   !_istream.getline(line, MAX_HEADER_CHARS)
+            || strncmp(line+60, "END OF FREQUENCY", 16) 
+            || !_istream.getline(line, MAX_HEADER_CHARS) ) {
+            throw  std::runtime_error
+            ("antex::read_pattern -> Error reading frequency pcv.");
+        }
+    }
 
     // all done
 #ifdef DEBUG
     std::cout << "\n[DEBUG] Anntenna Pattern read ok!";
-    std::cout << "\n " << north << east << up << val;
+    //std::cout << "\n " << north << east << up << val;
 #endif
     return antpat;
 }
