@@ -124,9 +124,15 @@ private:
      \endverbatim
      *
      */ 
-    auto constexpr
+#if __cplusplus > 201103L
+    constexpr
+#endif
+    auto
     neighbor_nodes_impl(T x, std::true_type)
     const noexcept( !do_range_check::value )
+#if __cplusplus == 201103L
+    -> std::tuple<std::size_t, T, std::size_t, T>
+#endif
     {
         if ( this->out_of_range(x) ) {
             throw std::out_of_range (
@@ -150,9 +156,13 @@ private:
 
     /// Does exactly the same as neighbor_nodes_impl(T x, std::true_type) but
     /// with no range checks.
-    auto constexpr
+    constexpr
+    auto
     neighbor_nodes_impl(T x, std::false_type)
     const noexcept( !do_range_check::value )
+#if __cplusplus == 201103L
+    -> std::tuple<std::size_t, T, std::size_t, T>
+#endif
     {
         // find tick on the left.
         std::size_t l_idx { static_cast<std::size_t>((x - start_) / step_) };
@@ -168,7 +178,10 @@ private:
 public:
 
     /// Constructor.
-    explicit constexpr TickAxisImpl(T s,  T e, T d) noexcept
+#if __cplusplus > 201103L
+    constexpr
+#endif
+    explicit TickAxisImpl(T s,  T e, T d) noexcept
         : start_{s},
           stop_{e},
           step_{d},
@@ -256,7 +269,10 @@ public:
     ///                    0 | \p x is inside the axis limits.
     ///                    1 | \p x is right from the ending point (outside limits).
     ///
-    constexpr int
+#if __cplusplus > 201103L
+    constexpr
+#endif
+    int
     out_of_range(T x) const noexcept
     {
         if ( this->far_left(x) ) {
@@ -273,9 +289,13 @@ public:
     ///  Return the neighbor nodes of the given input value \c x.
     ///  \throw  Will throw an std::out_of_range only if the instance
     ///          is contructed with a true RangeCheck parameter.
-    auto constexpr
+    constexpr
+    auto
     neighbor_nodes(T x) 
     const noexcept( !RangeCheck )
+#if __cplusplus == 201103L
+    -> std::tuple<std::size_t, T, std::size_t, T>
+#endif
     {
         return neighbor_nodes_impl(x, do_range_check{});
     }
@@ -287,8 +307,14 @@ public:
     ///
     /// \return A tuple containing {nearet_tick_index, nearest_tick_value}
     ///
-    auto constexpr
+#if __cplusplus > 201103L
+    constexpr
+#endif
+    auto
     nearest_neighbor(T x) const noexcept
+#if __cplusplus == 201103L
+    -> std::tuple<std::size_t, T>
+#endif
     {
         if ( this->far_left(x) ) {
             return std::make_tuple((std::size_t)0, start_);
@@ -357,7 +383,10 @@ public:
 
     auto
     nearest_neighbor(T x, T y)
-    noexcept
+    noexcept 
+#if __cplusplus == 201103L
+    -> std::tuple<std::size_t, T, std::size_t, T>
+#endif
     {
         auto t1 { xaxis_.nearest_neighbor(x) };
         auto t2 { yaxis_.nearest_neighbor(y) };
@@ -376,6 +405,10 @@ public:
     auto
     neighbor_nodes(T x, T y)
     const noexcept( !RangeCheck )
+#if __cplusplus == 201103L
+    -> std::tuple<std::size_t, T, std::size_t, T, 
+                  std::size_t, T, std::size_t, T>
+#endif
     {
         auto t1 { xaxis_.neighbor_nodes(x) };
         auto t2 { yaxis_.neighbor_nodes(y) };
