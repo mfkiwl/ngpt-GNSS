@@ -156,7 +156,9 @@ private:
 
     /// Does exactly the same as neighbor_nodes_impl(T x, std::true_type) but
     /// with no range checks.
+#if __cplusplus > 201103L
     constexpr
+#endif
     auto
     neighbor_nodes_impl(T x, std::false_type)
     const noexcept( !do_range_check::value )
@@ -242,7 +244,8 @@ public:
     ///         if false is returned, the input \p x value lays outside the axis
     ///         limits on the left).
     ///
-    constexpr bool
+    constexpr
+    bool
     far_left(T x) const noexcept
     {
         return this->is_ascending() ? x < start_ : x > start_ ;
@@ -254,7 +257,8 @@ public:
     ///         if false is returned, the input \p x value lays outside the axis
     ///         limits on the right).
     ///
-    constexpr bool
+    constexpr
+    bool
     far_right(T x) const noexcept
     {
         return this->is_ascending() ? x > stop_ : x < stop_;
@@ -289,7 +293,9 @@ public:
     ///  Return the neighbor nodes of the given input value \c x.
     ///  \throw  Will throw an std::out_of_range only if the instance
     ///          is contructed with a true RangeCheck parameter.
+#if __cplusplus > 201103L
     constexpr
+#endif
     auto
     neighbor_nodes(T x) 
     const noexcept( !RangeCheck )
@@ -344,7 +350,10 @@ class GridSkeleton<T, RangeCheck, Grid_Dimension::OneDim>
     : public TickAxisImpl<T, RangeCheck>
 {
 public:
-    explicit constexpr
+#if __cplusplus > 201103L
+    constexpr
+#endif
+    explicit
     GridSkeleton(T x1, T x2, T dx) noexcept
         : TickAxisImpl<T, RangeCheck>(x1, x2, dx)
     {}
@@ -361,7 +370,10 @@ private:
 
 public:
     /// Default constructor.
-    explicit constexpr
+#if __cplusplus > 201103L
+    constexpr
+#endif
+    explicit
     GridSkeleton(T x1, T x2, T dx, T y1, T y2, T dy)
     noexcept
         : xaxis_(x1, x2, dx),

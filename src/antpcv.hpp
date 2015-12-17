@@ -44,7 +44,7 @@ public:
     explicit frequency_pcv(ngpt::ObservationType type, 
              std::size_t no_azi_hint = 1, std::size_t azi_hint = 1)
     noexcept
-        : type_(type),
+        : type_{type},
           eccentricity_vector_{.0e0, .0e0, .0e0}
     {
       no_azi_pcv_values_.reserve(no_azi_hint);
