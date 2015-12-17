@@ -143,8 +143,10 @@ public:
   antex& operator=(antex&& a) 
   noexcept(std::is_nothrow_move_assignable<std::ifstream>::value) = default;
   
-  //
-  ngpt::antenna_pcv<pcv_type> get_antenna_pattern(const antenna& ant)
+  //TODO This is a fucking bug! Cannot initialize ngpt::antenna_pcv<pcv_type>(0, 0, 0, 0, 0)
+  //     an asesertion will fail; check the constructor.
+  ngpt::antenna_pcv<pcv_type> 
+  get_antenna_pattern(const antenna& ant)
   {
     int status = find_antenna(ant);
     if ( status ) {
@@ -154,6 +156,9 @@ public:
   }
 
   /// Find a specific antenna in the instance.
+  //  TODO This should really be 'find_antenna(std::vector<antenna>)'
+  //       and return sth like a vector<pair<pos_type, antenna>> ie.
+  //       the position in the file where each input antenna is found
   int find_antenna(const antenna&/*bool, consider_serial_nr = false*/);
   
   /// Read antenna calibration pattern.

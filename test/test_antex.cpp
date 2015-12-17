@@ -4,6 +4,9 @@
 
 using namespace ngpt;
 
+// print a bunch of details for an antenna pcv pattern, nothing fancy
+void print_pcv_info(const antenna_pcv<pcv_type>&);
+
 int main(int argc, char* argv[])
 {
   // must pass the atx file to inspect as cmd
@@ -32,8 +35,31 @@ int main(int argc, char* argv[])
 
   // get the antenna pcv pattern
   pcv = atx.get_antenna_pattern( ant );
+
+  // let's see some info of the antenna pattern
+  print_pcv_info( pcv );
+
+  // cool! let's try again with a different antenna
+  ant = "TRMSPS985       NONE";
+  pcv = atx.get_antenna_pattern( ant );
+  print_pcv_info( pcv );
   
   // exit.
   std::cout <<"\nAll done!\n";
   return 0;
+}
+
+void print_pcv_info(const antenna_pcv<pcv_type>& pcv)
+{
+  // let's see some info of the antenna pattern
+  std::cout <<"\nAntenna Pattern: number of NOAZI values: " << pcv.no_azi_grid_pts();
+  std::cout <<"\nAntenna Pattern: number of AZI values  : " << pcv.azi_grid_pts();
+  std::cout <<"\nNOAZI grid: from zen=" << pcv.zen1() 
+                                        << " to zen=" << pcv.zen2() 
+                                        << " with step size=" << pcv.dzen();
+  if ( pcv.azi_grid_pts() ) {
+  std::cout <<"\nAZI grid: from   azi=" << pcv.azi1() 
+                                        << " to azi=" << pcv.azi2() 
+                                        << " with step size=" << pcv.dazi();
+  }
 }

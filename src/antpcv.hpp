@@ -210,7 +210,7 @@ public:
         std::size_t    azi_hint = ( azi_grid_ ) ? ( azi_grid_->size() ) : ( 0 );
     
         for (int i=0; i<freqs; ++i) {
-            freq_pcv.emplace_back( no_azi_hint, azi_hint );
+            freq_pcv_.emplace_back( no_azi_hint, azi_hint );
         }
     }
 
@@ -218,27 +218,37 @@ public:
     antenna_pcv(const antenna_pcv& other)
         : no_azi_grid_ {other.no_azi_grid_},
           azi_grid_    {other.azi_grid_
-            ? new dim2_grid(other.zen1(), other.zen2(), other.dzen(), antenna_pcv_details::azi1, antenna_pcv_details::azi2, other.dazi())
+            ? new dim2_grid( *(other.azi_grid_) )
             : nullptr },
-        freq_pcv       {other.freq_pcv}
-    {}
+          freq_pcv_    {other.freq_pcv_}
+    {
+#ifdef DEBUG
+        std::cout <<"\n[DEBUG] Fucking realy ?? you want to copy an antenna_pcv ?"
+                  <<"\n        this will re-intialize " << sizeof(other) <<" bytes";
+    }
+#endif
 
     /// Assignment op
     antenna_pcv& operator=(const antenna_pcv& rhs)
     {
-        no_azi_grid_ = rhs.no_azi_grid_;
-        azi_grid_    = rhs.azi_grid_
-                       ? new dim2_grid(rhs.zen1(), rhs.zen2(), rhs.dzen(), antenna_pcv_details::azi1, antenna_pcv_details::azi2, rhs.dazi())
-                       : nullptr;
-               
-
+#ifdef DEBUG
+        std::cout <<"\n[DEBUG] Fucking realy ?? you want to copy an antenna_pcv ?"
+                  <<"\n        this will re-intialize " << sizeof(rhs) <<" bytes"
+                  <<"\n        and delete "<< sizeof(*this) <<" bytes.";
+#endif
+        delete azi_grid_;
+        azi_grid_     = nullptr;
+        azi_grid_     = new dim2_grid( *(rhs.azi_grid_) );
+        no_azi_grid_  = rhs.no_azi_grid_;
+        freq_pcv_     = rhs.freq_pcv_;
+        return *this;
     }
 
     /// Move constructor.
     antenna_pcv(antenna_pcv&& other)
         : no_azi_grid_{ std::move(other.no_azi_grid_) },
           azi_grid_   { std::move(other.azi_grid_)    },
-          freq_pcv    { std::move(other.freq_pcv)     }
+          freq_pcv_   { std::move(other.freq_pcv_)    }
     {
         other.azi_grid_ = nullptr;
     }
@@ -257,7 +267,7 @@ public:
     {
         assert( type.raw_obs_num() == 1 );
 
-        for (auto& i : freq_pcv) {
+        for (auto& i : freq_pcv_) {
             if (   i.raw_obs(0).satsys() == type.raw_obs(0).satsys() 
                 && i.raw_obs(0).band()   == type.raw_obs(0).band() ) {
                 return i;
@@ -270,7 +280,7 @@ public:
     frequency_pcv<T>&
     freq_pcv_pattern( std::size_t i )
     {
-        return freq_pcv[i];
+        return freq_pcv_[i];
     }
 
     T     zen1() const noexcept { return no_azi_grid_.from(); }
@@ -295,7 +305,7 @@ public:
 private:
     dim1_grid  no_azi_grid_; ///< Non-azimouth dependent grid (skeleton)
     dim2_grid* azi_grid_;    ///< Azimouth dependent grid (skeleton)
-    fr_pcv_vec freq_pcv;     ///< A vector of frequency_pcv
+    fr_pcv_vec freq_pcv_;    ///< A vector of frequency_pcv
 };
 
 } // end namespace

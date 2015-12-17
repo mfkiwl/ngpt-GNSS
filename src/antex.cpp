@@ -608,7 +608,7 @@ RECEIVER ANTENNAS:
  *  \warning 
  *  \todo consider serial numbers.
  *
- */ 
+ */
 int antex::find_antenna(const antenna& ant)
 {
     using ngpt::antenna;
@@ -701,9 +701,9 @@ int antex::find_antenna(const antenna& ant)
     }
 
     // .. or we found the antenna !! Cool, but we 're not done matherfucker.
-    // We need to see if there is a better match, base on the serial.
+    // We need to see if there is a better match, based on the serial.
     char* serial_ptr = line + 20;
-    while (t_ant == ant && _istream.good()) {
+    while ( t_ant == ant && _istream ) {
         if ( ant.compare_serial(serial_ptr)  ) {
             best_match = _istream.tellg();
             break;
@@ -714,6 +714,111 @@ int antex::find_antenna(const antenna& ant)
         std::cout << "\nSearching for a better match than:"
                   << line;
 #endif
+        // skip the antenna details ...
+        if ( (status = __skip_rest_of_antenna__(_istream)) ) {
+#ifdef DEBUG
+            std::cerr << "\n\t[DEBUG] ERROR in __skip_rest_of_antenna__; "
+                      << "status="<<status;
+            std::cerr << "\n\tError in line:\n"
+                      << line;
+#endif
+            return -1;
+        }
+        antennas_read++;
+
+        // read new antenna ..
+        if (!_istream.getline(line, MAX_HEADER_CHARS)
+            || strncmp(line+60, "START OF ANTENNA", soa_size))
+        {
+            // Oh shit, wait a minute! we could have just read the last
+            // antenna (line) in the file, so the lat op ended in eof state.
+            if ( _istream.eof() ) {
+                _istream.clear();
+                break;
+            } else {
+#ifdef DEBUG
+                std::cerr << "\n[DEBUG] ERROR while reading antex file (searching for a perfect match)"
+                          << "'START OF ANTENNA' expected";
+                std::cerr << "\n\tError in line:\n"
+                          << line;
+#endif
+                return -1;
+            }
+        }
+        // read & check antenna type
+        if (!_istream.getline(line, MAX_HEADER_CHARS)
+            || strncmp(line+60, "TYPE / SERIAL NO", 16))
+        {
+#ifdef DEBUG
+            std::cerr << "\n[DEBUG] ERROR while reading antex file. "
+                      << "'TYPE / SERIAL NO' expected";
+            std::cerr << "\n\tError in line:\n"
+                      << line;
+#endif
+            return -1;
+        }
+        // Set the antenna type.
+        t_ant = ( line );
+        serial_ptr = line + 20;
+    }
+
+    // position the buffer at the best match
+    if ( !best_match ) {
+        return 1;
+    } else {
+        _istream.seekg( best_match );
+    }
+    
+    printf ("\nANTENNA FOUND AFTER READING %zu ANTENNAS",antennas_read);
+    return 0;
+}
+
+int antex::find_antenna(const std::vector<antenna>& ants)
+{
+    using ngpt::antenna;
+
+    char line[MAX_HEADER_CHARS];
+
+    /// See the definition of eoh_size for why the following is needed.
+#ifdef __clang__
+    const     std::size_t soa_size { std::strlen("START OF ANTENNA") };
+#else
+    constexpr std::size_t soa_size { std::strlen("START OF ANTENNA") };
+#endif
+
+    std::size_t antennas_read { 0 };
+    antenna     t_ant;
+    int         status;
+    pos_type    best_match { 0 }; /* if more than one types match, this marks the
+                                     best match depending on serial nr */
+    std::vector<std::pair<antenna, pos_type>> found_antennas;
+
+    // The stream should be open by now!
+    assert(this->_istream.is_open());
+
+    // Go to the end of header.
+    _istream.seekg(_end_of_head, std::ios_base::beg);
+
+    // First line after end of header, should be the start of a new antenna.
+    if (!_istream.getline(line, MAX_HEADER_CHARS)
+        || strncmp(line+60, "START OF ANTENNA", soa_size)) 
+    {
+        return -1;
+    }
+
+    // Read & check antenna type
+    if (!_istream.getline(line, MAX_HEADER_CHARS)
+        || strncmp(line+60, "TYPE / SERIAL NO    ", 20))
+    {
+        return -1;
+    }
+
+    // Set the antenna type of the current antenna.
+    t_ant     = (line);
+    
+    // note that antenna::operator= only compares type+radome !
+    while (t_ant != ant && _istream.good())
+    {
         // skip the antenna details ...
         if ( (status = __skip_rest_of_antenna__(_istream)) ) {
 #ifdef DEBUG
@@ -752,6 +857,73 @@ int antex::find_antenna(const antenna& ant)
         }
         // Set the antenna type.
         t_ant = (line);
+    }
+
+    // .. we' ve stoped; either eof encountered ...
+    if (_istream.eof()) {
+        _istream.clear();
+        return 1;
+    }
+
+    // .. or we found the antenna !! Cool, but we 're not done matherfucker.
+    // We need to see if there is a better match, based on the serial.
+    char* serial_ptr = line + 20;
+    while ( t_ant == ant && _istream ) {
+        if ( ant.compare_serial(serial_ptr)  ) {
+            best_match = _istream.tellg();
+            break;
+        } else if (__string_is_empty__(serial_ptr, ANTEX_SERIAL_CHARS)) {
+            best_match = _istream.tellg();
+        }
+#ifdef DEBUG
+        std::cout << "\nSearching for a better match than:"
+                  << line;
+#endif
+        // skip the antenna details ...
+        if ( (status = __skip_rest_of_antenna__(_istream)) ) {
+#ifdef DEBUG
+            std::cerr << "\n\t[DEBUG] ERROR in __skip_rest_of_antenna__; "
+                      << "status="<<status;
+            std::cerr << "\n\tError in line:\n"
+                      << line;
+#endif
+            return -1;
+        }
+        antennas_read++;
+
+        // read new antenna ..
+        if (!_istream.getline(line, MAX_HEADER_CHARS)
+            || strncmp(line+60, "START OF ANTENNA", soa_size))
+        {
+            // Oh shit, wait a minute! we could have just read the last
+            // antenna (line) in the file, so the lat op ended in eof state.
+            if ( _istream.eof() ) {
+                _istream.clear();
+                break;
+            } else {
+#ifdef DEBUG
+                std::cerr << "\n[DEBUG] ERROR while reading antex file (searching for a perfect match)"
+                          << "'START OF ANTENNA' expected";
+                std::cerr << "\n\tError in line:\n"
+                          << line;
+#endif
+                return -1;
+            }
+        }
+        // read & check antenna type
+        if (!_istream.getline(line, MAX_HEADER_CHARS)
+            || strncmp(line+60, "TYPE / SERIAL NO", 16))
+        {
+#ifdef DEBUG
+            std::cerr << "\n[DEBUG] ERROR while reading antex file. "
+                      << "'TYPE / SERIAL NO' expected";
+            std::cerr << "\n\tError in line:\n"
+                      << line;
+#endif
+            return -1;
+        }
+        // Set the antenna type.
+        t_ant = ( line );
         serial_ptr = line + 20;
     }
 
