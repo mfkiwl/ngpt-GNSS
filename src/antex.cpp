@@ -225,7 +225,6 @@ int antex::read_header()
 ngpt::antenna_pcv<ngpt::pcv_type> 
 ngpt::antex::read_pattern()
 {
-    std::cout << "\nREADING PCV";
     using ngpt::pcv_type;
 
     char line[MAX_HEADER_CHARS];
@@ -305,9 +304,8 @@ ngpt::antex::read_pattern()
     std::size_t vals_to_read { static_cast<std::size_t>((zen2 - zen1) / dzen) + 1 };
     int num_of_azi_lines     { static_cast<int>(( antenna_pcv_details::azi2 
                                - antenna_pcv_details::azi1 ) / dazi) + 1 };
-    std::cout << "\nREADING FREQUENCIES";
+    
     for (int i=0; i<num_of_freqs; i++) {
-        std::cout << "\nFREQ "<<i;
 
         // make sure we are at the START OF FREQUENCY line
         if ( strncmp(line+60, "START OF FREQUENCY", 18) ) {
@@ -339,7 +337,6 @@ ngpt::antex::read_pattern()
         }
 
         // read 'NOAZI' grid values
-        std::cout << "\nREADING NO-AZI GRID";
         std::vector<ngpt::pcv_type>* nav = &freq_pcv_ptr->no_azi_vector();
         if (_istream.getline(g_line, MAX_GRID_CHARS)
             && !strncmp(g_line, "   NOAZI", 8)) {
@@ -347,15 +344,11 @@ ngpt::antex::read_pattern()
             char ntc    = '\0';
             //auto nav_it = nav->begin(); /* iterator to std::vector<ngpt::pcv_type> */
             for (std::size_t j=0; j<vals_to_read; ++j) {
-                std::cout <<"\ngrid value "<<j<<"/"<<nav->size()
-                          << " or " << freq_pcv_ptr->no_azi_vector().size();
                 // make sure we only transform 8 chars to float !
                 std::swap(lptr[8], ntc);
-                //*nav_it = std::stod(lptr, nullptr);
                 nav->emplace_back( std::stod(lptr, nullptr) );
                 std::swap(ntc, lptr[8]);
                 lptr += 8;
-                //++nav_it;
             }
         } else {
             throw std::runtime_error
@@ -367,7 +360,6 @@ ngpt::antex::read_pattern()
         // initialize all values in the az-pcv vector to 0
         av->assign(antpat.azi_grid_pts(), .0);
         if ( dazi != 0 ) {
-            std::cout << "\nREADING AZI GRID";
             for (int j=0; j<num_of_azi_lines; ++j) {
                 if ( !_istream.getline(g_line, MAX_GRID_CHARS) ) {
                     throw std::runtime_error
@@ -380,12 +372,11 @@ ngpt::antex::read_pattern()
                 }
                 // find the right index for this azimouth in the azi_grid
                 std::size_t index = antpat.azi_grid_pts() 
-                                  - ((this_azi - antenna_pcv_details::azi1)/dazi - 1 )
-                                  * vals_to_read;
+                                  - ((this_azi - antenna_pcv_details::azi1)/dazi)
+                                  * vals_to_read - vals_to_read;
                 auto av_it = av->begin() + index;
                 char* lptr = g_line + 8;
                 char ntc   = '\0';
-                std::cout << "\nassigning to index " <<index <<" azi="<<this_azi;
                 for (std::size_t k=0; k<vals_to_read; ++k) {
                     // make sure we only transform 8 chars to float !
                     std::swap(lptr[8], ntc);
@@ -393,7 +384,12 @@ ngpt::antex::read_pattern()
                     std::swap(ntc, lptr[8]);
                     lptr += 8;
                     ++av_it;
-                    std::cout <<"\nreached index " << index+vals_to_read << " / " << av->size();
+#ifdef DEBUG
+                    if ( av_it >= antpat.azi_grid_pts() ) {
+                        throw std::runtime_error
+                        ("WTF? Reading more azi-grid values than expected.");
+                    }
+#endif
                 }
             }
         }

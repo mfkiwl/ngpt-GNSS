@@ -12,20 +12,27 @@
 namespace ngpt
 {
 
-///  Hold phase center variation pattern for a single frequency (i.e. 
-///  ObservationType). This class will hold:
-///  - the antenna phase center offset vector
-///  - 'NO-AZI' (i.e. non-azimouth dependent) phase center variation values
-///  - 'AZI' (i.e. azimouth dependent) phase center variation values
-///
-/// \note This class has absolutely no clue of the grid these values correspond
-///       to (i.e. starting/ending azimouth, starting/ending zenith angle).
-///       Only vectors of pcv values are stored here, which actualy cannot be
-///       correctly indexed.
-///
-/// Template Parameter \c T should be either \c float or \c double depending
-/// on the precission we want for the PCV values.
-///
+/**
+ *   Hold phase center variation pattern for a single frequency (i.e. 
+ *   ObservationType). This class will hold:
+ *   - the antenna phase center offset vector
+ *   - 'NO-AZI' (i.e. non-azimouth dependent) phase center variation values
+ *   - 'AZI' (i.e. azimouth dependent) phase center variation values
+ * 
+ *  \note This class has absolutely no clue of the grid these values correspond
+ *        to (i.e. starting/ending azimouth, starting/ending zenith angle).
+ *        Only vectors of pcv values are stored here, which actualy cannot be
+ *        correctly indexed.
+ * 
+ *  \warning Watch the fuck out! When intializing/constructing an instance of
+ *           this class, the (member) vectors have zero-size (despite the fact
+ *           that at least some memory is allocated). You need to 
+ *           push_back/emplace_back. I was stupid enough to spent a few hours
+ *           debuging.
+ * 
+ *  Template Parameter \c T should be either \c float or \c double depending
+ *  on the precission we want for the PCV values.
+ */ 
 template<typename T>
 class frequency_pcv
 {
@@ -154,17 +161,23 @@ namespace antenna_pcv_details
     constexpr float azi2 { 360.0e0 };
 }
 
-///  This class hold all information for a given antenna recorded in an ANTEX
-///  file. Since all frequency pcv patterns correspond to the same grid (i.e.
-///  the zen1, zen2, dzen, azi1, azi2 and dazi) are the same for all recorded
-///  frequencies, the class has a Grid for the 'NO-AZI' pcv's and one for the
-///  azimouth-dependent patterns (if and only if dazi != 0).
-///  Apart from the grid(s), the class also hold a vector of frequency_pcv
-///  instances, one per each frequency recorded in the ANTEX file.
-///
-/// Template Parameter \c T should be either \c float or \c double depending
-/// on the precission we want for the PCV values.
-///
+/**
+ *   This class hold all information for a given antenna recorded in an ANTEX
+ *   file. Since all frequency pcv patterns correspond to the same grid (i.e.
+ *   the zen1, zen2, dzen, azi1, azi2 and dazi) are the same for all recorded
+ *   frequencies, the class has a Grid for the 'NO-AZI' pcv's and one for the
+ *   azimouth-dependent patterns (if and only if dazi != 0).
+ *   Apart from the grid(s), the class also hold a vector of frequency_pcv
+ *   instances, one per each frequency recorded in the ANTEX file.
+ * 
+ *  \warning Watch the fuck out! When intializing/constructing an instance of
+ *           this class, the (member) vectors have zero-size (despite the fact
+ *           that at least some memory is allocated). You need to 
+ *           push_back/emplace_back. I was stupid enough to spent a few hours
+ * 
+ *  Template Parameter \c T should be either \c float or \c double depending
+ *  on the precission we want for the PCV values.
+ */ 
 template<typename T>
 class antenna_pcv
 {
@@ -188,16 +201,10 @@ public:
 
         std::size_t no_azi_hint = no_azi_grid_.size();
         std::size_t    azi_hint = ( azi_grid_ ) ? ( azi_grid_->size() ) : ( 0 );
-        std::cout <<"\n----------------------------------------------------";
-        std::cout <<"\nSize of no azi grid = "<< no_azi_hint;
-        std::cout <<"\nSize of azi grid    = "<< azi_hint;
     
         for (int i=0; i<freqs; ++i) {
             freq_pcv.emplace_back( no_azi_hint, azi_hint );
-            std::cout <<"\nConstructing freq_pcv with sizes: "<<no_azi_hint << ", " << azi_hint;
         }
-        for (int i=0; i<freqs; ++i) std::cout <<"\nVector["<<i<<"] size = " << freq_pcv[i].no_azi_vector().size() << ", " << freq_pcv[i].azi_vector().size() << " / " << freq_pcv.size();
-        std::cout <<"\n----------------------------------------------------";
     }
 
     /// Copy constructor.
