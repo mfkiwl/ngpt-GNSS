@@ -178,6 +178,7 @@ namespace antenna_pcv_details
  *  Template Parameter \c T should be either \c float or \c double depending
  *  on the precission we want for the PCV values.
  */ 
+//TODO: Copy c'tors are fucked up in here !!
 template<typename T>
 class antenna_pcv
 {
@@ -187,7 +188,13 @@ typedef GridSkeleton<T, false, Grid_Dimension::TwoDim> dim2_grid;
 typedef std::vector<frequency_pcv<T>>                  fr_pcv_vec;
 
 public:
-  
+
+    /// Default constructor
+    explicit antenna_pcv()
+        : no_azi_grid_(1, 1, 1),
+          azi_grid_   (nullptr)
+    {}
+
     /// Constructor. 
     explicit antenna_pcv(T zen1, T zen2, T dzen,
                          int freqs, T dazi = 0)
@@ -215,6 +222,17 @@ public:
             : nullptr },
         freq_pcv       {other.freq_pcv}
     {}
+
+    /// Assignment op
+    antenna_pcv& operator=(const antenna_pcv& rhs)
+    {
+        no_azi_grid_ = rhs.no_azi_grid_;
+        azi_grid_    = rhs.azi_grid_
+                       ? new dim2_grid(rhs.zen1(), rhs.zen2(), rhs.dzen(), antenna_pcv_details::azi1, antenna_pcv_details::azi2, rhs.dazi())
+                       : nullptr;
+               
+
+    }
 
     /// Move constructor.
     antenna_pcv(antenna_pcv&& other)

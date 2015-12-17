@@ -16,6 +16,8 @@ int main(int argc, char* argv[])
   antex atx (argv[1]);
   int status;
   
+  antenna_pcv<pcv_type> pcv;
+
   // try to find a valid antenna in the atx file.
   antenna ant ("TRM14177.00     NONE");
   status = atx.find_antenna(ant);
@@ -29,7 +31,7 @@ int main(int argc, char* argv[])
   }
 
   // get the antenna pcv pattern
-  atx.get_antenna_pattern( ant );
+  pcv = atx.get_antenna_pattern( ant );
   
   // exit.
   std::cout <<"\nAll done!\n";
