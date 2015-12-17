@@ -400,14 +400,9 @@ public:
     -> std::tuple<std::size_t, T, std::size_t, T>
 #endif
     {
-        auto t1 { xaxis_.nearest_neighbor(x) };
-        auto t2 { yaxis_.nearest_neighbor(y) };
-#if __cplusplus == 201103L
-        return std::make_tuple(std::get<0>(t1), std::get<1>(t1),
-                               std::get<0>(t2), std::get<1>(t2));
-#else
+        auto t1 ( xaxis_.nearest_neighbor(x) );
+        auto t2 ( yaxis_.nearest_neighbor(y) );
         return std::tuple_cat(t1, t2);
-#endif
     }
 
     ///   [1]    [2]
@@ -427,17 +422,10 @@ public:
                   std::size_t, T, std::size_t, T>
 #endif
     {
-        auto t1 { xaxis_.neighbor_nodes(x) };
-        auto t2 { yaxis_.neighbor_nodes(y) };
+        auto t1 ( xaxis_.neighbor_nodes(x) );
+        auto t2 ( yaxis_.neighbor_nodes(y) );
         // TODO: this is not right! place in right order
-#if __cplusplus == 201103L
-        return std::make_tuple(std::get<0>(t1), std::get<1>(t1),
-                               std::get<2>(t1), std::get<3>(t1),
-                               std::get<0>(t2), std::get<1>(t2),
-                               std::get<2>(t2), std::get<3>(t2));
-#else
         return std::tuple_cat(t1, t2);
-#endif
     };
 
 };
