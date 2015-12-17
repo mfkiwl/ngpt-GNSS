@@ -385,9 +385,18 @@ ngpt::antex::read_pattern()
                     lptr += 8;
                     ++av_it;
 #ifdef DEBUG
-                    if ( av_it >= antpat.azi_grid_pts() ) {
+                    // this check is only for debuging. Do not use in production
+                    // mode.
+                    if ( (std::size_t)std::distance(av->begin(), av_it) 
+                            > antpat.azi_grid_pts() ) {
+                        int num = std::distance(av->begin(), av_it);
+                        std::string msg ( "(reached" 
+                                          + std::to_string(num) 
+                                          + "/"
+                                          + std::to_string(antpat.azi_grid_pts())
+                                          + ")" );
                         throw std::runtime_error
-                        ("WTF? Reading more azi-grid values than expected.");
+                        ("WTF? Reading more azi-grid values than expected " + msg);
                     }
 #endif
                 }
