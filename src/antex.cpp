@@ -779,9 +779,9 @@ int antex::find_antenna(const antenna& ant)
 /// 1 means match generic type (i.e. type + radome)
 /// 2 means match type, radome and serial number
 ///
-std::vector<antenna>::const_iterator
-__match_antenna__(const std::vector<antenna>& ants, 
-                  const antenna& ref,
+std::vector<ngpt::antenna>::const_iterator
+__match_antenna__(const std::vector<ngpt::antenna>& ants, 
+                  const ngpt::antenna& ref,
                   int&  match_type)
 noexcept
 {
