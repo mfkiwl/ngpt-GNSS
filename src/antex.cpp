@@ -773,6 +773,36 @@ int antex::find_antenna(const antenna& ant)
     return 0;
 }
 
+/// Given a reference natenna \c ref and a vector of antennas (\c ants), search
+/// for the best match. The \c integer match_type holds the type of matching, i.e.
+/// 0 means no match,
+/// 1 means match generic type (i.e. type + radome)
+/// 2 means match type, radome and serial number
+///
+std::vector<antenna>::const_iterator
+__match_antenna__(const std::vector<antenna>& ants, 
+                  const antenna& ref,
+                  int&  match_type)
+noexcept
+{
+    match_type = 0;
+    auto it_end   = std::end( ants );
+    auto it_match = std::end( ants );
+
+    for ( auto it = std::begin(ants); it != it_end; ++it ) {
+        if ( it->is_same( ref ) ) {
+            match_type = 2;
+            return it;
+        }
+        if ( *it == ref ) {
+            match_type = 1;
+            it_match   = it;
+        }
+    }
+
+    return it_match;
+}
+/*
 int antex::find_antenna(const std::vector<antenna>& ants)
 {
     using ngpt::antenna;
@@ -789,9 +819,15 @@ int antex::find_antenna(const std::vector<antenna>& ants)
     std::size_t antennas_read { 0 };
     antenna     t_ant;
     int         status;
-    pos_type    best_match { 0 }; /* if more than one types match, this marks the
-                                     best match depending on serial nr */
-    std::vector<std::pair<antenna, pos_type>> found_antennas;
+    pos_type    best_match { 0 }; // if more than one types match, this marks the
+                                  //   best match depending on serial nr
+
+    // this vector will hold pairs of antenna/pos_type, i.e. for each antenna
+    // found, the **actual** name of the antenna matched and where it is found
+    // in the antex file.
+    typedef std::pair<antenna, pos_type> ant_pst;
+    typedef std::pair<antenna, ant_pst>  ant_match;
+    std::vector<ant_match>               found_antennas;
 
     // The stream should be open by now!
     assert(this->_istream.is_open());
@@ -816,53 +852,58 @@ int antex::find_antenna(const std::vector<antenna>& ants)
     // Set the antenna type of the current antenna.
     t_ant     = (line);
     
-    // note that antenna::operator= only compares type+radome !
-    while (t_ant != ant && _istream.good())
-    {
-        // skip the antenna details ...
-        if ( (status = __skip_rest_of_antenna__(_istream)) ) {
-#ifdef DEBUG
-            std::cerr << "\n\t[DEBUG] ERROR in __skip_rest_of_antenna__; "
-                      << "status="<<status;
-            std::cerr << "\n\tError in line:\n"
-                      << line;
-#endif
-            return -1;
-        }
-        antennas_read++;
+    auto        ant_vec_end = std::end( ants );
+    auto        it          = ant_vec_end;
+    int         match_type;
+    std::size_t ants_size   = ants.size();
+    std::size_t fnd_size    = found_antennas.size();
 
-        // read new antenna ..
-        if (!_istream.getline(line, MAX_HEADER_CHARS)
-            || strncmp(line+60, "START OF ANTENNA", soa_size))
-        {
-#ifdef DEBUG
-            std::cerr << "\n[DEBUG] ERROR while reading antex file. "
-                      << "'START OF ANTENNA' expected";
-            std::cerr << "\n\tError in line:\n"
-                      << line;
-#endif
-            return -1;
-        }
-        // read & check antenna type
-        if (!_istream.getline(line, MAX_HEADER_CHARS)
-            || strncmp(line+60, "TYPE / SERIAL NO", 16))
-        {
-#ifdef DEBUG
-            std::cerr << "\n[DEBUG] ERROR while reading antex file. "
-                      << "'TYPE / SERIAL NO' expected";
-            std::cerr << "\n\tError in line:\n"
-                      << line;
-#endif
-            return -1;
-        }
-        // Set the antenna type.
-        t_ant = (line);
-    }
+    // loop untill all antennas found, or the stream goes bad
+    while ( fnd_size < ants_size && _istream.good() ) {
 
-    // .. we' ve stoped; either eof encountered ...
-    if (_istream.eof()) {
-        _istream.clear();
-        return 1;
+        // check if the current antenna matches
+        it = __match_antenna__(ants, t_ant, match_type);
+        if ( it != ant_vec_end ) { // we have a match ! we should mark this place
+// TODO that is a pickle !
+        } else { // no match; skip the antenna
+            // skip the antenna details ...
+            if ( (status = __skip_rest_of_antenna__(_istream)) ) {
+#ifdef DEBUG
+                std::cerr << "\n\t[DEBUG] ERROR in __skip_rest_of_antenna__; "
+                          << "status="<<status;
+                std::cerr << "\n\tError in line:\n"
+                          << line;
+#endif
+                return -1;
+            }
+            antennas_read++;
+            // read new antenna ..
+            if (!_istream.getline(line, MAX_HEADER_CHARS)
+                || strncmp(line+60, "START OF ANTENNA", soa_size))
+            {
+#ifdef DEBUG
+                std::cerr << "\n[DEBUG] ERROR while reading antex file. "
+                          << "'START OF ANTENNA' expected";
+                std::cerr << "\n\tError in line:\n"
+                          << line;
+#endif
+                return -1;
+            }
+            // read & check antenna type
+            if (!_istream.getline(line, MAX_HEADER_CHARS)
+                || strncmp(line+60, "TYPE / SERIAL NO", 16))
+            {
+#ifdef DEBUG
+                std::cerr << "\n[DEBUG] ERROR while reading antex file. "
+                          << "'TYPE / SERIAL NO' expected";
+                std::cerr << "\n\tError in line:\n"
+                          << line;
+#endif
+                return -1;
+            }
+            // Set the antenna type.
+            t_ant = (line);
+        }
     }
 
     // .. or we found the antenna !! Cool, but we 're not done matherfucker.
@@ -937,3 +978,4 @@ int antex::find_antenna(const std::vector<antenna>& ants)
     printf ("\nANTENNA FOUND AFTER READING %zu ANTENNAS",antennas_read);
     return 0;
 }
+*/
