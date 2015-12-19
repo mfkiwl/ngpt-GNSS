@@ -136,8 +136,10 @@ public:
   antex& operator=(const antex&) = delete;
   
   /// Move Constructor.
+  /// TODO In gcc 4.8 this only compiles if the noexcept specification is
+  ///      commented out
   antex(antex&& a)
-  noexcept(std::is_nothrow_move_constructible<std::ifstream>::value) = default;
+  /*noexcept(std::is_nothrow_move_constructible<std::ifstream>::value)*/ = default;
 
   /// Move assignment operator.
   antex& operator=(antex&& a) 

@@ -93,10 +93,12 @@ public:
       && std::is_nothrow_copy_assignable<fltvec>::value 
          ) = default;
 
-    frequency_pcv& operator=(frequency_pcv&& rhs) noexcept(
+    // TODO If the noexcept part is not commented out, this does not compile
+    //      in gcc 4.8
+    frequency_pcv& operator=(frequency_pcv&& rhs) /*noexcept(
         std::is_nothrow_move_assignable<fltarr>::value
       && std::is_nothrow_move_assignable<fltvec>::value 
-        ) = default;
+        )*/ = default;
 
     T& north() noexcept
     {
