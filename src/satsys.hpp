@@ -42,8 +42,8 @@
 namespace ngpt
 {
 
-/// Enumeration for known Satellite systems.
-/// This is extracted from \cite rnx303
+/// Enumeration for known Satellite systems. This is extracted from 
+/// \cite rnx303
 enum class satellite_system : char
 {
     gps,
@@ -58,7 +58,7 @@ enum class satellite_system : char
 
 /// Traits for Satellite Systems
 template<satellite_system S>
-  struct SatelliteSystemTraits
+struct SatelliteSystemTraits
 { };
 
 /// Specialize traits for Satellite System Gps
