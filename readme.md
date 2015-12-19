@@ -1,4 +1,9 @@
 # Compilation
+-------------
+ 
+:bangbang:
+> Don't even try isntalling the project with a compiler not
+> supporting at least c++11.
 
 We are trying to keep the installation process compatible with
 the [GNU Build System](https://en.wikipedia.org/wiki/GNU_build_system)
@@ -72,4 +77,6 @@ This will create the doc pages under `doc/html`; start at `index.html`.
 |-------------|-----------|
 | gcc-g++     | 5.3       |
 
+# References
+-------------
 <a name="autoreconf">[[1]](https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.69/html_node/autoreconf-Invocation.html)</a>
