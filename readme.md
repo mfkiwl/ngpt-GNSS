@@ -52,6 +52,7 @@ You don't need to run `autoreconf` ever again! You need to run the
 ## Documentation
 
 To compile the documentation (including the API reference), you need to have
+
 1. [Doxygen](http://www.stack.nl/~dimitri/doxygen/)
 2. [bibtex](http://www.bibtex.org/)
 
