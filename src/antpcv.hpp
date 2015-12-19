@@ -230,8 +230,8 @@ public:
 #ifdef DEBUG
         std::cout <<"\n[DEBUG] Fucking realy ?? you want to copy an antenna_pcv ?"
                   <<"\n        this will re-intialize " << sizeof(other) <<" bytes";
-    }
 #endif
+    }
 
     /// Assignment op
     antenna_pcv& operator=(const antenna_pcv& rhs)
