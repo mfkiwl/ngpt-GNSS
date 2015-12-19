@@ -1,6 +1,15 @@
+# Introduction
+
+This repository is an effort to construct:
+
+* a (kind-of) elementary c++ gnss-related library, with focus on scientific applications
+* a collection of basic programs for analyzing gnss (and gnss related) data
+
+The development will be very-very slow ...
+
 # Compilation
  
-> :bangbang: Don't even try isntalling the project with a compiler not
+> :bangbang: Don't even try installing the project with a compiler not
 > supporting at least c++11.
 
 We are trying to keep the installation process compatible with
