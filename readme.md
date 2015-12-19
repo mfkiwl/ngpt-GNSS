@@ -25,7 +25,7 @@ $> git clone https://github.com/xanthospap/ngpt.git
 the current path).
 
 Go to the top directory of the project. The two files you will have
-to customize (if needed) are `src/Makefile.am` and `test/Makefile.am`
+to customize (if needed) are [src/Makefile.am](../src/Makefile.am) and `test/Makefile.am`
 But first, you have to run the `autoreconf` tool like (see [[1]](#autoreconf)):
 ```shell
 $> autoreconf -i
@@ -83,6 +83,11 @@ This will create the doc pages under `doc/html`; start at `index.html`.
 | Compiler    |  Version  |
 |-------------|-----------|
 | gcc-g++     | 5.3       |
+
+# What he haven't done but **should** do
+
+- [ ] provide a *prerequisities* list
+- [ ] try compiling with [libc++](http://libcxx.llvm.org/index.html)
 
 # References
 
