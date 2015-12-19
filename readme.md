@@ -25,7 +25,7 @@ $> git clone https://github.com/xanthospap/ngpt.git
 the current path).
 
 Go to the top directory of the project. The two files you will have
-to customize (if needed) are [src/Makefile.am](../src/Makefile.am) and `test/Makefile.am`
+to customize (if needed) are [src/Makefile.am](src/Makefile.am) and `test/Makefile.am`
 But first, you have to run the `autoreconf` tool like (see [[1]](#autoreconf)):
 ```shell
 $> autoreconf -i
