@@ -10,7 +10,9 @@ int main()
     observation_type gps_l1c (satellite_system::gps, 
                               observable_type::carrier_phase, 1, 'C' );
 
+#ifdef DEBUG
     std::cout << "\nThe GPS L1C observation type: " << gps_l1c;
+#endif
 
     // Let's make the GPS Ionosphere free LC
     // this is: 
@@ -43,11 +45,9 @@ int main()
                       2, 'C',        /* frequency band : 2 */
                       l2_coef
                     );
-
+#ifdef DEBUG
     std::cout << "\nThe GPS L3 observation type: " << gps_l3c;
-
-    // We can construct L3 lc at once:
-    // observable_type gps_l1c { satellite_system::gps,
+#endif
 
     std::cout << "\n";
     return 0;

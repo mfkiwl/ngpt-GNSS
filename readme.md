@@ -10,7 +10,7 @@ the current path).
 
 Go to the top directory of the project. The two files you will have
 to customize (if needed) are `src/Makefile.am` and `test/Makefile.am`
-But first, you have to run the `autoreconf` tool like:
+But first, you have to run the `autoreconf` tool like (see [1](#autoreconf)):
 ```shell
 $> autoreconf -i
 ```
@@ -19,8 +19,8 @@ If you do not need the development version (with a **lot** of
 debuging info and no optimizations) then replace the two `Makefile.am`
 files with their `Makefile.am.production` counterparts. That is:
 ```shell
-$> cat src/Makefile.a,.production > src/Makefile.am &&
-   cat test/Makefile.a,.production > test/Makefile.am
+$> cat src/Makefile.am.production > src/Makefile.am &&
+   cat test/Makefile.am.production > test/Makefile.am
 ```
 
 If your compiler/compiler version does not support **c++14**, then
@@ -45,8 +45,26 @@ to build the project.
 You don't need to run `autoreconf` ever again! You need to run the
 `configure` script though, if the `Makefile[.am]`'s change.
 
+## Documentation
+
+To compile the documentation (including the API reference), you need to have
+1. [Doxygen](http://www.stack.nl/~dimitri/doxygen/)
+2. [bibtex](http://www.bibtex.org/)
+
+If available [graphviz](www.graphviz.org/) will be used to generate the documentation
+graphs.
+
+Go to the `/doc` folder and type:
+```shell
+$> doxygen doxy.conf
+```
+
+This will create the doc pages under `doc/html`; start at `index.html`.
+
 ## Tested Compilers & OSs
 
 | Compiler    |  Version  |
 |-------------|-----------|
 | gcc-g++     | 5.3       |
+
+<a name="autoreconf">https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.69/html_node/autoreconf-Invocation.html</a>
