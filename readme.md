@@ -25,22 +25,23 @@ $> git clone https://github.com/xanthospap/ngpt.git
 the current path).
 
 Go to the top directory of the project. The two files you will have
-to customize (if needed) are [src/Makefile.am](src/Makefile.am) and `test/Makefile.am`
+to customize (if needed) are [src/Makefile.am](src/Makefile.am) and [test/Makefile.am](test/Makefile.am)
 But first, you have to run the `autoreconf` tool like (see [[1]](#autoreconf)):
 ```shell
 $> autoreconf -i
 ```
 
 If you do not need the development version (with a **lot** of
-debuging info and no optimizations) then replace the two `Makefile.am`
-files with their `Makefile.am.production` counterparts. That is:
+debuging info and no optimizations) then replace the two `Makefile.am`s
+files with their `Makefile.am.production` counterparts (see 
+[src/Makefile.am.production](src/Makefile.am.production) and [test/Makefile.am.production](test/Makefile.am.production)). That is:
 ```shell
 $> cat src/Makefile.am.production > src/Makefile.am &&
    cat test/Makefile.am.production > test/Makefile.am
 ```
 
 If your compiler/compiler version does not support **c++14**, then
-change that in the `Makefile.am` e.g.:
+change that in the `Makefile.am` to c++11, e.g.:
 ```shell
 $> sed -i 's/-std=c++14/-std=c++11/g' src/Makefile.am
 $> sed -i 's/-std=c++14/-std=c++11/g' test/Makefile.am
@@ -88,6 +89,7 @@ This will create the doc pages under `doc/html`; start at `index.html`.
 
 - [ ] provide a *prerequisities* list
 - [ ] try compiling with [libc++](http://libcxx.llvm.org/index.html)
+- [ ] write a decent documentation (not just doxygen comments ...); a docbook would be nice!
 
 # References
 
