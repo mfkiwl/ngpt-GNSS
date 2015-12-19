@@ -1,7 +1,7 @@
 #include <string>
 #include <cstring>
 #include <algorithm>
-#include <regex>
+/* #include <regex> */
 #include "receiver.hpp"
 
 using ngpt::Receiver;
@@ -144,8 +144,10 @@ void Receiver::copy_from_cstr(const char* c) noexcept
 ///
 /// \bug    This seems to also match the \c '/' character though it shouldn't !
 ///
+/*
 bool Receiver::validate() const
 {
     std::regex valid ( "[A-Z -_\\+]+$" );
     return std::regex_match(name_, valid);
 }
+*/

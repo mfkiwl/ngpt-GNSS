@@ -1,7 +1,7 @@
 #ifndef _GNSS_ANTENNA_
 #define _GNSS_ANTENNA_
 
-#include <regex>
+/* #include <regex> */
 
 /**
  * \file      antenna.hpp
@@ -192,13 +192,13 @@ private:
 
     /// Set an antenna/radome pair from a c-string. The input antenna/radome pair, 
     void copy_from_cstr(const char*) noexcept;
-
+/*
     /// Validate receiver antenna
     bool validate_receiver_antenna() const;
   
     /// Validate satellite antenna
     bool validate_satellite_antenna() const;
-
+*/
     /// Combined antenna, radome and serian number.
     char name_[antenna_details::antenna_full_max_chars]; 
 

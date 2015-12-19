@@ -52,11 +52,11 @@ constexpr std::size_t MAX_GRID_CHARS { 258 };
  *  Resolve a frequency type as recorded in an antex file to a valid
  *  ObservatioType.
  */
-ngpt::ObservationType antex2obstype(const char* s)
+ngpt::observation_type antex2obstype(const char* s)
 {
     ngpt::satellite_system ss { ngpt::char_to_satsys( *s ) };
     int freq { std::stoi(s+1, nullptr) };
-    return ngpt::ObservationType(ss, ngpt::observation_type::carrier_phase,
+    return ngpt::observation_type(ss, ngpt::observable_type::carrier_phase,
                                  freq, '?');
 }
 
@@ -320,7 +320,7 @@ ngpt::antex::read_pattern()
         freq_pcv_ptr = &antpat.freq_pcv_pattern( i );
 
         // resolve and set the frquency/sat-sys
-        ngpt::ObservationType ot { antex2obstype(line+3) };
+        ngpt::observation_type ot { antex2obstype(line+3) };
         freq_pcv_ptr->type() = ot;
 
         // next field is 'NORTH / EAST / UP'

@@ -138,7 +138,9 @@ public:
     std::string toString() const noexcept;
 
     /// Validate the receiver model (according to IGS).
+    /*
     bool validate() const;
+    */
 
 private:
 

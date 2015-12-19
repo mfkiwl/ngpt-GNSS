@@ -2,7 +2,7 @@ lib_LIBRARIES = libngpt.a
 
 ## Only use the following flags for debuging purposes
 libngpt_a_CXXFLAGS = \
-	-std=c++11 \
+	-std=c++14 \
 	-g \
 	-Wall \
 	-Wextra \
@@ -19,12 +19,14 @@ dist_include_HEADERS   = \
 	antenna.hpp \
 	datetime.hpp \
 	satsys.hpp \
+	obstype.hpp \
 	grid.hpp \
 	antpcv.hpp \
 	antex.hpp
 
 dist_libngpt_a_SOURCES = \
 	dtalg.cpp \
+	obstype.cpp \
 	receiver.cpp \
 	antenna.cpp \
 	satsys.cpp \

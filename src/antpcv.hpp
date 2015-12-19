@@ -14,7 +14,7 @@ namespace ngpt
 
 /**
  *   Hold phase center variation pattern for a single frequency (i.e. 
- *   ObservationType). This class will hold:
+ *   observation_type). This class will hold:
  *   - the antenna phase center offset vector
  *   - 'NO-AZI' (i.e. non-azimouth dependent) phase center variation values
  *   - 'AZI' (i.e. azimouth dependent) phase center variation values
@@ -41,7 +41,7 @@ typedef std::vector<T>  fltvec;
 typedef std::array<T,3> fltarr;
 
 public:
-    explicit frequency_pcv(ngpt::ObservationType type, 
+    explicit frequency_pcv(ngpt::observation_type type, 
              std::size_t no_azi_hint = 1, std::size_t azi_hint = 1)
     noexcept
         : type_{type},
@@ -55,7 +55,7 @@ public:
     frequency_pcv(std::size_t no_azi_hint = 1, std::size_t azi_hint = 1) 
     noexcept
         : type_(),
-          eccentricity_vector_{.0e0, .0e0, .0e0}
+          eccentricity_vector_( {.0e0, .0e0, .0e0} )
     {
       no_azi_pcv_values_.reserve(no_azi_hint);
       azi_pcv_values_.reserve(azi_hint);
@@ -125,9 +125,9 @@ public:
         return eccentricity_vector_[2];
     }
 
-    ngpt::ObservationType& type()       noexcept { return type_; }
+    ngpt::observation_type& type()       noexcept { return type_; }
     
-    ngpt::ObservationType  type() const noexcept { return type_; }
+    ngpt::observation_type  type() const noexcept { return type_; }
 
     fltvec&
     no_azi_vector()
@@ -147,7 +147,7 @@ public:
     T  no_azi_vector(std::size_t i) const { return no_azi_pcv_values_[i]; }
 
 private:
-    ngpt::ObservationType type_;                 ///< Observation type
+    ngpt::observation_type type_;                 ///< Observation type
     fltarr                eccentricity_vector_;  ///< phase center offset (NEU in mm)
     fltvec                no_azi_pcv_values_;    ///< 'NO_AZI' pcv
     fltvec                azi_pcv_values_;       ///< 'AZI' pcv
@@ -270,7 +270,7 @@ public:
     // (between freq_pcv.obtype and type) must be performed based on Satellite
     // System and frequency number/band.
     frequency_pcv<T>& 
-    freq_pcv_pattern( ngpt::ObservationType type )
+    freq_pcv_pattern( ngpt::observation_type type )
     {
         assert( type.raw_obs_num() == 1 );
 

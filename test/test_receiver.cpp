@@ -41,6 +41,7 @@ int main ()
       << " bytes or " << sizeof(r1)*CHAR_BIT << " bits";
 
     // validate receiver models.
+    /*
     std::cout<<"\nIs ["<< r1.toString() << "] a valid name ? " << ( (r1.validate())?"yes":"no" );
     std::cout<<"\nIs ["<< r2.toString() << "] a valid name ? " << ( (r2.validate())?"yes":"no" );
     std::cout<<"\nIs ["<< r3.toString() << "] a valid name ? " << ( (r3.validate())?"yes":"no" );
@@ -48,6 +49,7 @@ int main ()
     std::cout<<"\nIs ["<< r5.toString() << "] a valid name ? " << ( (r5.validate())?"yes":"no" );
     std::cout<<"\nIs ["<< r6.toString() << "] a valid name ? " << ( (r6.validate())?"yes":"no" );
     std::cout<<"\nIs ["<< r7.toString() << "] a valid name ? " << ( (r7.validate())?"yes":"no" );
+    */
  
     // The following should NOT compile! 
     /* std::cout << "\n" << receiver_max_chars << "\n"; */
