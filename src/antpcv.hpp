@@ -187,6 +187,11 @@ typedef GridSkeleton<T, false, Grid_Dimension::OneDim> dim1_grid;
 typedef GridSkeleton<T, false, Grid_Dimension::TwoDim> dim2_grid;
 typedef std::vector<frequency_pcv<T>>                  fr_pcv_vec;
 
+private:
+    dim1_grid  no_azi_grid_; ///< Non-azimouth dependent grid (skeleton)
+    dim2_grid* azi_grid_;    ///< Azimouth dependent grid (skeleton)
+    fr_pcv_vec freq_pcv_;    ///< A vector of frequency_pcv
+
 public:
 
     /// Default constructor
@@ -302,10 +307,6 @@ public:
                : 0;
     }
 
-private:
-    dim1_grid  no_azi_grid_; ///< Non-azimouth dependent grid (skeleton)
-    dim2_grid* azi_grid_;    ///< Azimouth dependent grid (skeleton)
-    fr_pcv_vec freq_pcv_;    ///< A vector of frequency_pcv
 };
 
 } // end namespace
