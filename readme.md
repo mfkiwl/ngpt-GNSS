@@ -1,5 +1,9 @@
 # Compilation
 
+We are trying to keep the installation process compatible with
+the [GNU Build System](https://en.wikipedia.org/wiki/GNU_build_system)
+but this may not always be the case.
+
 Clone the repository in a local folder:
 ```shell
 $> git clone https://github.com/xanthospap/ngpt.git
@@ -10,7 +14,7 @@ the current path).
 
 Go to the top directory of the project. The two files you will have
 to customize (if needed) are `src/Makefile.am` and `test/Makefile.am`
-But first, you have to run the `autoreconf` tool like (see [1](#autoreconf)):
+But first, you have to run the `autoreconf` tool like (see [[1]](#autoreconf)):
 ```shell
 $> autoreconf -i
 ```
@@ -67,4 +71,4 @@ This will create the doc pages under `doc/html`; start at `index.html`.
 |-------------|-----------|
 | gcc-g++     | 5.3       |
 
-<a name="autoreconf">https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.69/html_node/autoreconf-Invocation.html</a>
+<a name="autoreconf">[[1]](https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.69/html_node/autoreconf-Invocation.html)</a>
