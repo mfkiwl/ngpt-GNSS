@@ -160,7 +160,7 @@ inline
 void antenna::nullify_antenna() noexcept
 {
     std::size_t chars { antenna_model_max_chars + 1 
-                        + antenna_radome_max_chars + 1 };
+                      + antenna_radome_max_chars + 1 };
     std::memset( name_, '\0', chars * sizeof(char) );
 }
 

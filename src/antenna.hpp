@@ -11,12 +11,10 @@
  * \author    xanthos@mail.ntua.gr <br>
  *            danast@mail.ntua.gr
  *
- * \date      MAY 2015
+ * \date      Sun 20 Dec 2015 01:00:27 PM EET 
  *
  * \brief     GNSS Antenna (plus Radome) Class. Used both for stations and
  *            satellites.
- *
- * \note
  *
  * \copyright Copyright © 2015 Dionysos Satellite Observatory, <br>
  *            National Technical University of Athens. <br>
@@ -56,16 +54,16 @@ namespace ngpt
         constexpr std::size_t antenna_full_max_chars
         {  antenna_model_max_chars  + 1 /* whitespace */
          + antenna_radome_max_chars + 1 /* whitespace */
-         + antenna_serial_max_chars
+         + antenna_serial_max_chars + 1 /* null-reminating char */
         };
     }
 
 /** \class    antenna
  *
  * \details  This class holds a GNSS Antenna either for a satellite or a 
- *           receiver. Every antenna is repreesnted by a specific Antenna model
+ *           receiver. Every antenna is represented by a specific Antenna model
  *           name, a Radome model and a Serial Number. These are all concateneted
- *           is a char array (but not exactly a c-string). See the note below
+ *           in a char array (but not exactly a c-string). See the note below
  *           for how this character array is formed.
  *
  * References \cite rcvr_ant
@@ -87,7 +85,7 @@ namespace ngpt
                       ^                  ^                          ^
                       |                  |                          |
             whitespace character         |                          |
-                                       '\0'                         |
+                                        ' '                         |
                                                                    '\0'
   \endverbatim
  *

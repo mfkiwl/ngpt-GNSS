@@ -28,19 +28,30 @@ This is how an antenna instance is represented (memory map):
                                                                   '\0'
 ```
 
-From [[1]][rcvr_ant] the fundamental sizes are:
+From [[1]](#rcvr_ant) the fundamental sizes are:
 ```
-antenna_model_max_chars  = 15
-antenna_radome_max_chars = 4
-antenna_serial_max_chars = 20
+antenna_model_max_chars  = N = 15
+antenna_radome_max_chars = M = 4
+antenna_serial_max_chars = K = 20
 ```
 Summing up to a total string of
 ```
   antenna_model_max_chars  + 1  /* whitespace */
 + antenna_radome_max_chars + 1  /* whitespace */
-+ antenna_serial_max_chars = 41 /* characters */
++ antenna_serial_max_chars + 1  /* terminating char */
+                           = 42 /* characters */
 ```
 
+## API Reference
 
-## Reference
-[rcvr_ant]: https://igscb.jpl.nasa.gov/igscb/station/general/rcvr_ant.tab
+### Constructing antennas
+
+A user can construct antenna instance in the following ways:
+
+* using the default constructor : `antenna::antenna()`. This will set all
+  characters in the antenna tp `\0`.
+* copy from a [c-string](https://en.wikipedia.org/wiki/C_string_handling). This
+  will copy, **at max** 
+
+## References
+<a name="rcvr_ant">[[1]](https://igscb.jpl.nasa.gov/igscb/station/general/rcvr_ant.tab)
