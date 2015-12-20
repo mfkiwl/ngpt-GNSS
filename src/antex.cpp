@@ -774,40 +774,12 @@ int antex::find_antenna(const antenna& ant)
     return 0;
 }
 
-/// Given a reference natenna \c ref and a vector of antennas (\c ants), search
-/// for the best match. The \c integer match_type holds the type of matching, i.e.
-/// 0 means no match,
-/// 1 means match generic type (i.e. type + radome)
-/// 2 means match type, radome and serial number
-///
-std::vector<ngpt::antenna>::const_iterator
-__match_antenna__(const std::vector<ngpt::antenna>& ants, 
-                  const ngpt::antenna& ref,
-                  int&  match_type)
-noexcept
-{
-    match_type = 0;
-    auto it_end   = std::end( ants );
-    auto it_match = std::end( ants );
-
-    for ( auto it = std::begin(ants); it != it_end; ++it ) {
-        if ( it->is_same( ref ) ) {
-            match_type = 2;
-            return it;
-        }
-        if ( *it == ref ) {
-            match_type = 1;
-            it_match   = it;
-        }
-    }
-
-    return it_match;
-}
-
-int antex::find_antenna(const std::vector<antenna>& ants)
+/*
+int antex::find_antenna(std::vector<antenna> ants)
 {
     using ngpt::antenna;
 
+    // header lines are read in this buffer
     char line[MAX_HEADER_CHARS];
 
     /// See the definition of eoh_size for why the following is needed.
@@ -817,18 +789,21 @@ int antex::find_antenna(const std::vector<antenna>& ants)
     constexpr std::size_t soa_size { std::strlen("START OF ANTENNA") };
 #endif
 
+    // the ants vector needs to not have (strict) duplicates.
+    // TODO
+
     std::size_t antennas_read { 0 };
     antenna     t_ant;
-    int         status;
-    pos_type    best_match { 0 }; // if more than one types match, this marks the
-                                  //   best match depending on serial nr
 
-    // this vector will hold pairs of antenna/pos_type, i.e. for each antenna
+    // this vectors will hold pairs of antenna/pos_type, i.e. for each antenna
     // found, the **actual** name of the antenna matched and where it is found
     // in the antex file.
     typedef std::pair<antenna, pos_type> ant_pst;
     typedef std::pair<antenna, ant_pst>  ant_match;
-    std::vector<ant_match>               found_antennas;
+    std::vector<ant_match>               strict_match;
+    std::vector<ant_match>               loose_match;
+    strict_match.reserve( ants.size() );
+    loose_match.reserve ( ants.size() );
 
     // The stream should be open by now!
     assert(this->_istream.is_open());
@@ -979,3 +954,4 @@ int antex::find_antenna(const std::vector<antenna>& ants)
     printf ("\nANTENNA FOUND AFTER READING %zu ANTENNAS",antennas_read);
     return 0;
 }
+*/
