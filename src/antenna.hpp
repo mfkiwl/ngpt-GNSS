@@ -48,12 +48,12 @@ namespace ngpt
         /// Maximum number of characters describing a GNSS antenna serial number.
         constexpr std::size_t antenna_serial_max_chars { 20 };
 
-        /// Mximum size to represent all fields, including whitespace and null-
-        /// terminating chars.
-        /// \warning No null-terminating character.
+        /// Maximum size to represent all fields, including whitespaces and
+        /// the (last) null terminating character.
+        ///
         constexpr std::size_t antenna_full_max_chars
         {  antenna_model_max_chars  + 1 /* whitespace */
-         + antenna_radome_max_chars + 1 /* whitespace */
+         + antenna_radome_max_chars
          + antenna_serial_max_chars + 1 /* null-reminating char */
         };
     }
@@ -74,19 +74,18 @@ namespace ngpt
   M = antenna_radome_max_chars
   K = antenna_serial_max_chars
   [0,     N)       antenna model name
-  [N+1,   N+M+1)   antenna radome name
-  [N+M+2, N+M+K+2) antenna serial number
+  [N+1,   N+M)     antenna radome name
+  [N+M+1, N+M+K+1) antenna serial number
 
-  | model name      |   | radome      |     | serial number     |       |
-  v                 v   v             v     v                   v       v
-  +---+---+-...-+---+---+---+-...-+---+-----+-----+-...-+-------+-------+
-  | 0 | 1 |     |N-1| N |N+1|     |N+M|N+M+1|N+M+2|     |N+M+K+1|N+M+K+2|
-  +---+---+-...-+---+---+---+-...-+---+-----+-----+-...-+-------+-------+
-                      ^                  ^                          ^
-                      |                  |                          |
-            whitespace character         |                          |
-                                        ' '                         |
-                                                                   '\0'
+  | model name      |   | radome      | serial number     
+  v                 v   v             v    
+  +---+---+-...-+---+---+---+-...-+---+-----+-----+-...-+-------+
+  | 0 | 1 |     |N-1| N |N+1|     |N+M|N+M+1|N+M+2|     |N+M+K+1|
+  +---+---+-...-+---+---+---+-...-+---+-----+-----+-...-+-------+
+                      ^                                     ^       
+                      |                                     |      
+            whitespace character                           '\0'
+
   \endverbatim
  *
  * \example  test_antenna.cpp
@@ -135,6 +134,9 @@ public:
       
     /// In-Equality operator (checks both antenna type and radome).
     bool operator!=(const antenna&) const noexcept;
+    
+    /// Lexicographicaly compare two antennas
+    bool operator<(const antenna&) const noexcept;
       
     /// Equality operator (checks antenna type, radome and serial nr).
     bool is_same(const antenna&) const noexcept;
