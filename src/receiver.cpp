@@ -4,39 +4,45 @@
 /* #include <regex> */
 #include "receiver.hpp"
 
-using ngpt::Receiver;
+using ngpt::receiver;
 
 /// Empty (default) constructor; all characters in \c name_ are set to \c '\0'.
 ///
-Receiver::Receiver() noexcept 
+receiver::receiver()
+noexcept 
 {
     this->nullify();
 }
 
 /// Constructor from receiver type.
 ///
-Receiver::Receiver(const char* c) noexcept
+receiver::receiver(const char* c)
+noexcept
 {
     this->copy_from_cstr(c);
 }
 
 /// Constructor from receiver type.
 ///
-Receiver::Receiver(const std::string& s) noexcept
+receiver::receiver(const std::string& s)
+noexcept
 {
     this->copy_from_str(s);
 }
 
 /// Copy constructor.
 ///
-Receiver::Receiver(const Receiver& rhs) noexcept
+receiver::receiver(const receiver& rhs)
+noexcept
 {
     std::memcpy(name_, rhs.name_, receiver_details::receiver_max_bytes);
 }
 
 /// Assignment operator.
 ///
-Receiver& Receiver::operator=(const Receiver& rhs) noexcept
+receiver& 
+receiver::operator=(const receiver& rhs)
+noexcept
 {
     if (this!=&rhs)
     {
@@ -47,7 +53,9 @@ Receiver& Receiver::operator=(const Receiver& rhs) noexcept
 
 /// Assignment operator (from c-string).
 ///
-Receiver& Receiver::operator=(const char* c) noexcept
+receiver&
+receiver::operator=(const char* c)
+noexcept
 {
     this->copy_from_cstr(c);
     return *this;
@@ -55,7 +63,9 @@ Receiver& Receiver::operator=(const char* c) noexcept
 
 /// Assignment operator (from std::string).
 ///
-Receiver& Receiver::operator=(const std::string& s) noexcept
+receiver&
+receiver::operator=(const std::string& s)
+noexcept
 {
     this->copy_from_str(s);
     return *this;
@@ -63,7 +73,9 @@ Receiver& Receiver::operator=(const std::string& s) noexcept
 
 /// Equality operator.
 ///
-bool Receiver::operator==(const Receiver& rhs) noexcept
+bool
+receiver::operator==(const receiver& rhs)
+noexcept
 {
     return ( !std::strncmp(name_ ,rhs.name_ , 
              receiver_details::receiver_max_chars) );
@@ -72,22 +84,27 @@ bool Receiver::operator==(const Receiver& rhs) noexcept
 /// Pointer to receiver name.
 ///
 inline 
-const char* Receiver::name() const noexcept
+const char*
+receiver::name()
+const noexcept
 {
     return name_;
 }
 
-/// Receiver name as string.
+/// receiver name as string.
 ///
-std::string Receiver::toString() const noexcept
+std::string
+receiver::toString()
+const noexcept
 {
     return std::string(name_, receiver_details::receiver_max_chars+1);
 }
 
 /// Set all chars in \c name_ to '\0'.
 ///
-inline 
-void Receiver::nullify() noexcept
+inline void
+receiver::nullify()
+noexcept
 {
     std::memset( name_, '\0', 
                (receiver_details::receiver_max_chars+1) * sizeof(char) );
@@ -105,7 +122,9 @@ void Receiver::nullify() noexcept
 ///              \c nothrow specification is not valid.
 ///
 inline 
-void Receiver::copy_from_str(const std::string& s) noexcept
+void
+receiver::copy_from_str(const std::string& s)
+noexcept
 {
     this->nullify();
     // std::basic_string::copy can only throw if max_chars <= 0, i.e. NEVER !
@@ -122,7 +141,9 @@ void Receiver::copy_from_str(const std::string& s) noexcept
 ///              <tt>min( strlen(c), receiver_details::receiver_max_chars )</tt>.
 ///
 inline
-void Receiver::copy_from_cstr(const char* c) noexcept
+void
+receiver::copy_from_cstr(const char* c)
+noexcept
 {
     this->nullify();
     std::memcpy(name_, c, std::min(std::strlen(c) * sizeof(char),
@@ -145,7 +166,7 @@ void Receiver::copy_from_cstr(const char* c) noexcept
 /// \bug    This seems to also match the \c '/' character though it shouldn't !
 ///
 /*
-bool Receiver::validate() const
+bool receiver::validate() const
 {
     std::regex valid ( "[A-Z -_\\+]+$" );
     return std::regex_match(name_, valid);

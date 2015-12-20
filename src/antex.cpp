@@ -569,6 +569,7 @@ int __skip_rest_of_antenna__(std::ifstream& fin)
 /// Check if a given string is empty, i.e. only holds whitespaces
 inline
 bool __string_is_empty__(const char* c, std::size_t max_chars)
+noexcept
 {
     for (std::size_t i=0; i<max_chars; i++)
         if ( *(c+i) != ' ' )
@@ -802,7 +803,7 @@ noexcept
 
     return it_match;
 }
-/*
+
 int antex::find_antenna(const std::vector<antenna>& ants)
 {
     using ngpt::antenna;
@@ -858,7 +859,7 @@ int antex::find_antenna(const std::vector<antenna>& ants)
     std::size_t ants_size   = ants.size();
     std::size_t fnd_size    = found_antennas.size();
 
-    // loop untill all antennas found, or the stream goes bad
+    // loop until all antennas found, or the stream goes bad
     while ( fnd_size < ants_size && _istream.good() ) {
 
         // check if the current antenna matches
@@ -978,4 +979,3 @@ int antex::find_antenna(const std::vector<antenna>& ants)
     printf ("\nANTENNA FOUND AFTER READING %zu ANTENNAS",antennas_read);
     return 0;
 }
-*/

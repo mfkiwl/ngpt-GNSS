@@ -9,11 +9,11 @@
  * \author    xanthos@mail.ntua.gr <br>
  *            danast@mail.ntua.gr
  *
- * \date      MAY 2015
+ * \date      Sun 20 Dec 2015 01:49:52 AM EET 
  *
- * \brief     Receiver Class for GNSS.
+ * \brief     receiver Class for GNSS.
  *
- * \details   This file declarea a Receiver Class for GNSS. Reference is
+ * \details   This file declares a receiver Class for GNSS. Reference is
  *            the IGS rcvr_ant.tab (see \cite rcvr_ant ).
  *
  *
@@ -52,10 +52,10 @@ namespace ngpt
 
         /// Better be safe than sorry ...
         static_assert(receiver_max_bytes >= receiver_max_chars, 
-                  "Receiver size in bytes < Receiver size ?!?");
+                  "receiver size in bytes < receiver size ?!?");
     }
 
-/** \class   Receiver
+/** \class   receiver
  *
  * \details  This class holds a GNSS receiver. Any receiver is represented
  *           by an array of chars of maximum receiver_details::receiver_max_chars 
@@ -81,10 +81,10 @@ namespace ngpt
  * \todo     -# Sould the move constructors be enabled ?
  *
  * \bug      -# The function validate does not work as expected 
- *               \see Receiver::validate().
+ *               \see receiver::validate().
  *               For example the following: 
  *               \code{.cpp}
- *               Receiver rec {" GEODETIC III L1/L2   "};
+ *               receiver rec {" GEODETIC III L1/L2   "};
  *               bool ok = rec.validate();
  *               \endcode
  *               Will set \c ok to \c true , even though the character \c '/'
@@ -94,47 +94,47 @@ namespace ngpt
  *
  * \example   test_receiver.cpp
  */
-class Receiver
+class receiver
 {
 public:
 
     /// Default constructor.
-    Receiver() noexcept;
+    receiver() noexcept;
 
     /// Constructor from receiver type.
-    explicit Receiver(const char*) noexcept;
+    explicit receiver(const char*) noexcept;
 
     /// Constructor from receiver type.
-    explicit Receiver(const std::string&) noexcept;
+    explicit receiver(const std::string&) noexcept;
 
     /// Copy constructor.
-    Receiver(const Receiver&) noexcept;
+    receiver(const receiver&) noexcept;
 
     /// Move constructor.
-    Receiver(Receiver&&) noexcept = default;
+    receiver(receiver&&) noexcept = default;
 
     /// Assignment operator.
-    Receiver& operator=(const Receiver&) noexcept;
+    receiver& operator=(const receiver&) noexcept;
 
     /// Assignment operator (from c-string).
-    Receiver& operator=(const char*) noexcept;
+    receiver& operator=(const char*) noexcept;
 
     /// Assignment operator (from std::string).
-    Receiver& operator=(const std::string&) noexcept;
+    receiver& operator=(const std::string&) noexcept;
 
     /// Move assignment operator.
-    Receiver& operator=(Receiver&&) noexcept = default;
+    receiver& operator=(receiver&&) noexcept = default;
 
     /// Equality operator.
-    bool operator==(const Receiver&) noexcept;
+    bool operator==(const receiver&) noexcept;
 
     /// Destructor.
-    ~Receiver() noexcept = default;
+    ~receiver() noexcept = default;
 
     /// Pointer to receiver name.
     inline const char* name() const noexcept;
 
-    /// Receiver name as string.
+    /// receiver name as string.
     std::string toString() const noexcept;
 
     /// Validate the receiver model (according to IGS).
@@ -156,7 +156,7 @@ private:
     /// This array holds the receiver name; last char always '\0' !
     char name_[receiver_details::receiver_max_chars + 1];
 
-}; // end Receiver
+}; // end receiver
 
 } // end ngpt
 
