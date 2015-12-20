@@ -85,7 +85,7 @@ This will create the doc pages under `doc/html`; start at `index.html`.
 |-------------|-----------|
 | gcc-g++     | 5.3       |
 
-# What he haven't done but **should** do
+# What we haven't done but **should** do
 
 - [ ] provide a *prerequisities* list
 - [ ] try compiling with [libc++](http://libcxx.llvm.org/index.html)
