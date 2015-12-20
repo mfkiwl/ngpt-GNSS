@@ -129,13 +129,12 @@ std::string antenna::radome_str() const noexcept
                        antenna_radome_max_chars);
 }
 
-/// Antenna model/radome pair as string.
-/// TODO
-std::string antenna::to_string() const noexcept
-{
-    return std::string(name_, 
-                       antenna_model_max_chars+1+antenna_radome_max_chars);
-}
+/// Antenna model/radome and serial (if any!) as string.
+std::string
+antenna::to_string()
+const noexcept
+{ return std::string(name_, antenna_full_max_chars); }
+
 /// Set all chars in \c name_ to \c '\0'. 
 inline void
 antenna::nullify()

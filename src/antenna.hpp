@@ -151,12 +151,14 @@ public:
     ~antenna() noexcept {};
 
     /// Antenna model name as string.
+    /// TODO
     std::string model_str() const noexcept;
 
     /// Antenna radome name as string.
+    /// TODO
     std::string radome_str() const noexcept;
 
-    /// Antenna model/radome to string.
+    /// Antenna model/radome plus serial to string.
     std::string to_string() const noexcept;
 
     /*
