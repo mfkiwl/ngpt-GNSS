@@ -102,6 +102,10 @@ class antex
   /// Let's not write this more than once.
   typedef std::ifstream::pos_type pos_type;
 
+  /// a pair of type <antenna, pos_type> i.e. where the antenna is found
+  /// in the ANTEX
+  typedef std::pair<ngpt::antenna, pos_type> ant_pos_pair;
+
   /// Valid atx versions.
   enum class ATX_VERSION : char
   {
@@ -158,13 +162,15 @@ public:
   }
 
   /// Find a specific antenna in the instance.
-  //  TODO This should really be 'find_antenna(std::vector<antenna>)'
-  //       and return sth like a vector<pair<pos_type, antenna>> ie.
-  //       the position in the file where each input antenna is found
-  int find_antenna(const antenna&/*bool, consider_serial_nr = false*/);
+  int find_antenna(const antenna&);
+
+  /// Get a list of all antennas in the ANTEX and their respective positions
+  std::vector<ant_pos_pair>
+  get_antenna_list();
   
   /// Read antenna calibration pattern.
-  ngpt::antenna_pcv<pcv_type> read_pattern();
+  ngpt::antenna_pcv<pcv_type>
+  read_pattern();
 
 private:
   
