@@ -61,9 +61,12 @@ public:
       azi_pcv_values_.reserve(azi_hint);
     }
 
-    ~frequency_pcv() noexcept = default;
+    ~frequency_pcv()
+    noexcept
+    = default;
 
-    frequency_pcv(const frequency_pcv& rhs) noexcept(
+    frequency_pcv(const frequency_pcv& rhs)
+    noexcept(
         std::is_nothrow_copy_constructible<fltarr>::value
      && std::is_nothrow_copy_constructible<fltvec>::value 
         ) = default;
@@ -77,7 +80,8 @@ public:
 //      "std::vector<float> -> throws for copy c'tor!" );
 #endif
 
-    frequency_pcv(frequency_pcv&& rhs) noexcept(
+    frequency_pcv(frequency_pcv&& rhs)
+    noexcept(
         std::is_nothrow_move_constructible<fltarr>::value
      && std::is_nothrow_move_constructible<fltvec>::value 
         ) = default;
@@ -88,69 +92,85 @@ public:
       "std::vector<float> -> throws for copy c'tor!" );
 #endif
 
-    frequency_pcv& operator=(const frequency_pcv& rhs) noexcept(
+    frequency_pcv&
+    operator=(const frequency_pcv& rhs)
+    noexcept(
          std::is_nothrow_copy_assignable<fltarr>::value
       && std::is_nothrow_copy_assignable<fltvec>::value 
          ) = default;
 
     // TODO If the noexcept part is not commented out, this does not compile
     //      in gcc 4.8
-    frequency_pcv& operator=(frequency_pcv&& rhs) /*noexcept(
+    frequency_pcv&
+    operator=(frequency_pcv&& rhs) /*noexcept(
         std::is_nothrow_move_assignable<fltarr>::value
       && std::is_nothrow_move_assignable<fltvec>::value 
         )*/ = default;
 
-    T& north() noexcept
-    {
-        return eccentricity_vector_[0];
-    }
-    T& east() noexcept
-    {
-        return eccentricity_vector_[1];
-    }
-    T& up() noexcept
-    {
-        return eccentricity_vector_[2];
-    }
-    T north() const noexcept
-    {
-        return eccentricity_vector_[0];
-    }
-    T east() const noexcept
-    {
-        return eccentricity_vector_[1];
-    }
-    T up() const noexcept
-    {
-        return eccentricity_vector_[2];
-    }
+    T&
+    north()
+    noexcept
+    { return eccentricity_vector_[0]; }
 
-    ngpt::observation_type& type()       noexcept { return type_; }
+    T&
+    east()
+    noexcept
+    { return eccentricity_vector_[1]; }
+
+    T&
+    up()
+    noexcept
+    { return eccentricity_vector_[2]; }
     
-    ngpt::observation_type  type() const noexcept { return type_; }
+    T
+    north()
+    const noexcept
+    { return eccentricity_vector_[0]; }
+    
+    T
+    east()
+    const noexcept
+    { return eccentricity_vector_[1]; }
+
+    T
+    up()
+    const noexcept
+    { return eccentricity_vector_[2]; }
+
+    ngpt::observation_type&
+    type()
+    noexcept
+    { return type_; }
+    
+    ngpt::observation_type
+    type()
+    const noexcept
+    { return type_; }
 
     fltvec&
     no_azi_vector()
     noexcept
-    {
-        return no_azi_pcv_values_;
-    }
+    { return no_azi_pcv_values_; }
     
     fltvec&
     azi_vector()
     noexcept
-    {
-        return azi_pcv_values_;
-    }
+    { return azi_pcv_values_; }
 
-    T& no_azi_vector(std::size_t i)       { return no_azi_pcv_values_[i]; }
-    T  no_azi_vector(std::size_t i) const { return no_azi_pcv_values_[i]; }
+    T&
+    no_azi_vector(std::size_t i)
+    { return no_azi_pcv_values_[i]; }
+    
+    T
+    no_azi_vector(std::size_t i)
+    const
+    { return no_azi_pcv_values_[i]; }
 
 private:
     ngpt::observation_type type_;                 ///< Observation type
-    fltarr                eccentricity_vector_;  ///< phase center offset (NEU in mm)
-    fltvec                no_azi_pcv_values_;    ///< 'NO_AZI' pcv
-    fltvec                azi_pcv_values_;       ///< 'AZI' pcv
+    fltarr                 eccentricity_vector_;  ///< phase center offset (NEU in mm)
+    fltvec                 no_azi_pcv_values_;    ///< 'NO_AZI' pcv
+    fltvec                 azi_pcv_values_;       ///< 'AZI' pcv
 };
 
 namespace antenna_pcv_details
@@ -236,7 +256,8 @@ public:
     }
 
     /// Assignment op
-    antenna_pcv& operator=(const antenna_pcv& rhs)
+    antenna_pcv&
+    operator=(const antenna_pcv& rhs)
     {
 #ifdef DEBUG
         std::cout <<"\n[DEBUG] Fucking realy ?? you want to copy an antenna_pcv ?"
@@ -261,7 +282,8 @@ public:
     }
 
     /// Destructor
-    ~antenna_pcv() noexcept
+    ~antenna_pcv()
+    noexcept
     {
         delete azi_grid_;
     }
@@ -286,23 +308,52 @@ public:
     // Return/access a fequency_pcv based on its index.
     frequency_pcv<T>&
     freq_pcv_pattern( std::size_t i )
-    {
-        return freq_pcv_[i];
-    }
+    { return freq_pcv_[i]; }
 
-    T     zen1() const noexcept { return no_azi_grid_.from(); }
-    T     zen2() const noexcept { return no_azi_grid_.to();   }
-    T     dzen() const noexcept { return no_azi_grid_.step(); }
-    bool  has_azi_pcv() const noexcept { return azi_grid_ != nullptr; }
+    T
+    zen1()
+    const noexcept
+    { return no_azi_grid_.from(); }
+    
+    T
+    zen2()
+    const noexcept
+    { return no_azi_grid_.to();   }
+    
+    T
+    dzen()
+    const noexcept
+    { return no_azi_grid_.step(); }
+    
+    bool
+    has_azi_pcv()
+    const noexcept
+    { return azi_grid_ != nullptr; }
+    
     /// \warning Watch yourself bitch! can cause UB if azi_grid_ is invalid.
-    T     azi1() const noexcept { return azi_grid_->y_axis_from(); }
+    T azi1()
+    const noexcept
+    { return azi_grid_->y_axis_from(); }
+    
     /// \warning Watch yourself bitch! can cause UB if azi_grid_ is invalid.
-    T     azi2() const noexcept { return azi_grid_->y_axis_to();   }
+    T azi2()
+    const noexcept
+    { return azi_grid_->y_axis_to();   }
+    
     /// \warning Watch yourself bitch! can cause UB if azi_grid_ is invalid.
-    T     dazi() const noexcept { return azi_grid_->y_axis_step(); }
+    T
+    dazi()
+    const noexcept
+    { return azi_grid_->y_axis_step(); }
 
-    std::size_t no_azi_grid_pts() const noexcept { return no_azi_grid_.size(); }
-    std::size_t azi_grid_pts()    const noexcept 
+    std::size_t
+    no_azi_grid_pts()
+    const noexcept
+    { return no_azi_grid_.size(); }
+    
+    std::size_t
+    azi_grid_pts()
+    const noexcept 
     { 
         return   azi_grid_ 
                ? azi_grid_->size()

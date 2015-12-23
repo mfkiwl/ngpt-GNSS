@@ -124,11 +124,11 @@ public:
   /// Constructor from filename.
   antex(const char*);
 
-  /// Destructor
-  /// TODO: closing the file is not mandatory, but nevertheless
+  /// Destructor (closing the file is not mandatory, but nevertheless)
   ~antex() noexcept 
   { 
-    if ( _istream.is_open() ) {
+    if ( _istream.is_open() )
+    {
       _istream.close();
     }
   }

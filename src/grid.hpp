@@ -71,8 +71,8 @@ namespace ngpt
  *           - RangeCheck (bool): Enable/Disable range check
  *
  */ 
-template<typename T,     ///< type of axis e.g. float, double, ...
-        bool RangeCheck> ///< enable range-check
+template<typename T,          ///< type of axis e.g. float, double, ...
+         bool     RangeCheck> ///< enable range-check
 class TickAxisImpl
 {
 public:
@@ -193,50 +193,56 @@ public:
     }
 
     /// This is designed to be a base class.
-    virtual ~TickAxisImpl() {};
+    virtual ~TickAxisImpl()
+    {}
 
-    TickAxisImpl(const TickAxisImpl&) noexcept            = default;
+    TickAxisImpl(const TickAxisImpl&)
+    noexcept
+    = default;
 
-    TickAxisImpl& operator=(const TickAxisImpl&) noexcept = default;
+    TickAxisImpl&
+    operator=(const TickAxisImpl&)
+    noexcept
+    = default;
 
-    TickAxisImpl(TickAxisImpl&&) noexcept                 = default;
+    TickAxisImpl(TickAxisImpl&&)
+    noexcept
+    = default;
 
-    TickAxisImpl& operator=(TickAxisImpl&&) noexcept      = default;
+    TickAxisImpl&
+    operator=(TickAxisImpl&&)
+    noexcept
+    = default;
 
     /// Return the left-most tick.
     constexpr T
-    from() const noexcept
-    { 
-        return start_; 
-    }
+    from()
+    const noexcept
+    { return start_; }
 
     /// Return the right-most tick.
     constexpr T 
-    to() const noexcept 
-    { 
-        return stop_;
-    }
+    to()
+    const noexcept 
+    { return stop_; }
 
     /// Return the axis step size.
     constexpr T 
-    step() const noexcept 
-    { 
-        return step_;
-    }
+    step()
+    const noexcept 
+    { return step_; }
 
     /// Check if the axis is in ascending order.
     constexpr bool 
-    is_ascending() const noexcept 
-    { 
-        return stop_ - start_ > 0;
-    }
+    is_ascending()
+    const noexcept 
+    { return stop_ - start_ > 0; }
 
     /// Return the number of tick-points.
-    constexpr std::size_t 
-    size() const noexcept 
-    {
-        return npts_;
-    }
+    constexpr std::size_t
+    size()
+    const noexcept 
+    { return npts_; }
 
     /// Check if the given input value \p x is left from start_ (i.e. if it is
     /// between the given limits on the left side).
@@ -246,10 +252,9 @@ public:
     ///
     constexpr
     bool
-    far_left(T x) const noexcept
-    {
-        return this->is_ascending() ? x < start_ : x > start_ ;
-    }
+    far_left(T x)
+    const noexcept
+    { return this->is_ascending() ? x < start_ : x > start_ ; }
 
     /// Check if the given input value \p x is right from stop_ (i.e. if it is
     /// between the given limits on the right side).
@@ -259,10 +264,9 @@ public:
     ///
     constexpr
     bool
-    far_right(T x) const noexcept
-    {
-        return this->is_ascending() ? x > stop_ : x < stop_;
-    }
+    far_right(T x)
+    const noexcept
+    { return this->is_ascending() ? x > stop_ : x < stop_; }
 
     /// Check if the given input value \p x lays between the limits of the tick
     /// axis.
@@ -277,7 +281,8 @@ public:
     constexpr
 #endif
     int
-    out_of_range(T x) const noexcept
+    out_of_range(T x)
+    const noexcept
     {
         if ( this->far_left(x) ) {
             return -1;
@@ -298,13 +303,12 @@ public:
 #endif
     auto
     neighbor_nodes(T x) 
-    const noexcept( !RangeCheck )
+    const
+    noexcept( !RangeCheck )
 #if __cplusplus == 201103L
     -> std::tuple<std::size_t, T, std::size_t, T>
 #endif
-    {
-        return neighbor_nodes_impl(x, do_range_check{});
-    }
+    { return neighbor_nodes_impl(x, do_range_check{}); }
 
     /// Given a value \p x on the (tick) axis, compute and return the nearest
     /// tick (on the axis), i.e. either the left or the right one.
@@ -317,7 +321,8 @@ public:
     constexpr
 #endif
     auto
-    nearest_neighbor(T x) const noexcept
+    nearest_neighbor(T x)
+    const noexcept
 #if __cplusplus == 201103L
     -> std::tuple<std::size_t, T>
 #endif
@@ -341,12 +346,16 @@ enum class Grid_Dimension : char
 };
 
 /// A skeleton for a generic, two-dimensional grid.
-template<typename T, bool RangeCheck, Grid_Dimension Dim>
-class GridSkeleton
+template<typename       T,
+         bool           RangeCheck,
+         Grid_Dimension Dim>
+    class GridSkeleton
 {};
 
 template<typename T, bool RangeCheck>
-class GridSkeleton<T, RangeCheck, Grid_Dimension::OneDim>
+    class GridSkeleton<T,
+                       RangeCheck,
+                       Grid_Dimension::OneDim>
     : public TickAxisImpl<T, RangeCheck>
 {
 public:
@@ -362,7 +371,9 @@ public:
 };
 
 template<typename T, bool RangeCheck>
-class GridSkeleton<T, RangeCheck, Grid_Dimension::TwoDim>
+    class GridSkeleton<T,
+                       RangeCheck,
+                       Grid_Dimension::TwoDim>
 {
 private:
     TickAxisImpl<T, RangeCheck> xaxis_;
@@ -382,16 +393,40 @@ public:
   
     virtual ~GridSkeleton() {};
 
-    std::size_t size() const noexcept 
-    { 
-        return xaxis_.size() * yaxis_.size(); 
-    }
-    T x_axis_from() const noexcept { return xaxis_.from(); }
-    T x_axis_to()   const noexcept { return xaxis_.to(); }
-    T x_axis_step() const noexcept { return xaxis_.step(); }
-    T y_axis_from() const noexcept { return yaxis_.from(); }
-    T y_axis_to()   const noexcept { return yaxis_.to(); }
-    T y_axis_step() const noexcept { return yaxis_.step(); }
+    std::size_t
+    size()
+    const noexcept 
+    { return xaxis_.size() * yaxis_.size(); }
+
+    T
+    x_axis_from()
+    const noexcept
+    { return xaxis_.from(); }
+    
+    T
+    x_axis_to()
+    const noexcept
+    { return xaxis_.to(); }
+    
+    T
+    x_axis_step()
+    const noexcept
+    { return xaxis_.step(); }
+    
+    T
+    y_axis_from()
+    const noexcept
+    { return yaxis_.from(); }
+    
+    T
+    y_axis_to()
+    const noexcept
+    { return yaxis_.to(); }
+    
+    T
+    y_axis_step()
+    const noexcept
+    { return yaxis_.step(); }
 
     auto
     nearest_neighbor(T x, T y)
