@@ -52,7 +52,8 @@ constexpr std::size_t MAX_GRID_CHARS { 258 };
  *  Resolve a frequency type as recorded in an antex file to a valid
  *  ObservatioType.
  */
-ngpt::observation_type antex2obstype(const char* s)
+ngpt::observation_type
+antex2obstype(const char* s)
 {
     ngpt::satellite_system ss { ngpt::char_to_satsys( *s ) };
     int freq { std::stoi(s+1, nullptr) };
@@ -128,7 +129,8 @@ antex::antex(const char *filename)
  * 
  *  \reference https://igscb.jpl.nasa.gov/igscb/station/general/antex14.txt
  */
-int antex::read_header()
+int
+antex::read_header()
 {
     char line[MAX_HEADER_CHARS];
 
@@ -431,7 +433,8 @@ ngpt::antex::read_pattern()
  * 
  *  \todo    Need to also read 'FREQ RMS'
  */ 
-int __skip_rest_of_antenna__(std::ifstream& fin)
+int
+__skip_rest_of_antenna__(std::ifstream& fin)
 {
     static char line[MAX_HEADER_CHARS];
     static char grid_line[MAX_GRID_CHARS];
@@ -567,8 +570,8 @@ int __skip_rest_of_antenna__(std::ifstream& fin)
 }
 
 /// Check if a given string is empty, i.e. only holds whitespaces
-inline
-bool __string_is_empty__(const char* c, std::size_t max_chars)
+inline bool
+__string_is_empty__(const char* c, std::size_t max_chars)
 noexcept
 {
     for (std::size_t i=0; i<max_chars; i++)
@@ -610,7 +613,8 @@ RECEIVER ANTENNAS:
  *  \todo consider serial numbers.
  *
  */
-int antex::find_antenna(const antenna& ant)
+int
+antex::find_antenna(const antenna& ant)
 {
     using ngpt::antenna;
 

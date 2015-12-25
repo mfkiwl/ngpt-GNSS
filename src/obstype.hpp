@@ -61,14 +61,23 @@ enum class observable_type : char
 };
 
 /// Return the identifier of the input observable_type.
-char obstype_to_char(observable_type);
+char
+obstype_to_char(observable_type);
 
-/// Struct to hold observable attributes. See \cite rnx303
+/// Return the observable_type represented by the given char.
+observable_type
+char_to_obstype(char);
+
+/// Struct to hold observable attributes. See \cite rnx303 .
+///
+/// \note There is a special attribute with value '?', which describes an
+///       unknown attribute.
+///
 class obs_attribute
 {
 public:
     explicit 
-    obs_attribute(char c)
+    obs_attribute(char c = '?')
     noexcept 
     : c_(c) 
     {}
@@ -126,6 +135,15 @@ public:
       nfrequency_{ f }, 
       attribute_ ( obs_attribute{c} )
     {}
+
+    /// Constructor from a RINEX string
+    explicit
+    _rawobs_(const std::string& str, satellite_system* s = nullptr)
+    { this->set_from_str(str, s); }
+    
+    explicit
+    _rawobs_(const std::string& str, char* s = nullptr)
+    { this->set_from_str(str, s); }
     
     /// Get/Set the satellite system.
     satellite_system&
@@ -197,6 +215,15 @@ public:
     /// Default move assignment operator.
     _rawobs_& operator=(_rawobs_&&) noexcept = default;
 
+    /// Set from RINEX identifying string
+    void
+    set_from_str(const std::string&, ngpt::satellite_system* s = nullptr);
+    
+    /// Set from RINEX identifying string (providing a char as 
+    /// satsys identifier)
+    void
+    set_from_str(const std::string&, char*);
+
     /**
      *  \brief Return the nominal frequency for this instance.
      * 
@@ -258,6 +285,8 @@ private:
 
 public:
 
+    // TODO Provide a validate function using satellite_system_traits
+
     observation_type() 
     noexcept
     {}
@@ -284,6 +313,12 @@ public:
     noexcept
     : cov_( 1, std::make_pair
                 (coef, gnss_obs_details::_rawobs_(s, o, f, obs_attribute{c})) )
+    {}
+
+    /// Constructor from a list of RINEX strings
+    explicit
+    observation_type(const std::string& str, satellite_system* s = nullptr)
+    : cov_( 1, std::make_pair(1.0e0, gnss_obs_details::_rawobs_(str, s)) )
     {}
 
     /// Default copy constructor.
@@ -338,7 +373,9 @@ public:
     /// \note  This may throw in case the instance is not well formed (i.e. the
     ///        frequency band is not valid for this satellite system).
     ///
-    double frequency() const
+    double
+    frequency()
+    const
     {
         double freq { .0e0 };
         for (auto& i : cov_) {
