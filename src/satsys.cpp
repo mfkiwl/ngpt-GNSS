@@ -1,7 +1,8 @@
 #include <stdexcept>
 #include "satsys.hpp"
 
-typedef std::map<int, double> idmap;
+typedef std::map<int, double>      idmap;
+typedef std::map<int, std::string> vamap;
 
 /// Initialize the static frequency map for GPS.
 const idmap
@@ -12,6 +13,15 @@ ngpt::satellite_system_traits<ngpt::satellite_system::gps>::frequency_map =
     { 5, 1176.45e0 }
 };
 
+/// Initialize the static frequency map for GPS.
+const vamap
+ngpt::satellite_system_traits<ngpt::satellite_system::gps>::valid_atributes =
+{
+    { 1, std::string("CSLXPWYMN?" ) },
+    { 2, std::string("CDSLXPWYMN?") },
+    { 5, std::string("IQX?"       ) }
+};
+
 /// Initialize the static frequency map for GLONASS.
 const idmap
 ngpt::satellite_system_traits<ngpt::satellite_system::glonass>::frequency_map =
@@ -19,6 +29,14 @@ ngpt::satellite_system_traits<ngpt::satellite_system::glonass>::frequency_map =
     { 1, 1602.000e0 },
     { 2, 1246.000e0 },
     { 3, 1202.025e0 }
+};
+
+const vamap
+ngpt::satellite_system_traits<ngpt::satellite_system::glonass>::valid_atributes =
+{
+    { 1, std::string("CP?" ) },
+    { 2, std::string("CP?" ) },
+    { 3, std::string("IQX?") }
 };
 
 /// Initialize the static frequency map for GALILEO.
@@ -32,12 +50,29 @@ ngpt::satellite_system_traits<ngpt::satellite_system::galileo>::frequency_map =
     { 6, 1278.750e0 }  ///< E6
 };
 
+const vamap
+ngpt::satellite_system_traits<ngpt::satellite_system::galileo>::valid_atributes =
+{
+    { 1, std::string("ABCXZ?") },
+    { 5, std::string("IQX?"  ) },
+    { 7, std::string("IQX?"  ) },
+    { 8, std::string("IQX?"  ) },
+    { 6, std::string("ABCXZ?") }
+};
+
 /// Initialize the static frequency map for SBAS.
 const idmap
 ngpt::satellite_system_traits<ngpt::satellite_system::sbas>::frequency_map =
 {
     { 1, 1575.42e0 },
     { 5, 1176.45e0 }
+};
+
+const vamap
+ngpt::satellite_system_traits<ngpt::satellite_system::sbas>::valid_atributes =
+{
+    { 1, std::string("C?"  ) },
+    { 5, std::string("IQX?") }
 };
 
 /// Initialize the static frequency map for QZSS.
@@ -50,6 +85,15 @@ ngpt::satellite_system_traits<ngpt::satellite_system::qzss>::frequency_map =
     { 6, 1278.75e0 } ///< LEX
 };
 
+const vamap
+ngpt::satellite_system_traits<ngpt::satellite_system::qzss>::valid_atributes =
+{
+    { 1, std::string("CSLXZ?") },
+    { 2, std::string("SLX?"  ) },
+    { 5, std::string("IQX?"  ) },
+    { 6, std::string("SLX?"  ) }
+};
+
 /// Initialize the static frequency map for BDS.
 const idmap
 ngpt::satellite_system_traits<ngpt::satellite_system::beidou>::frequency_map =
@@ -59,13 +103,28 @@ ngpt::satellite_system_traits<ngpt::satellite_system::beidou>::frequency_map =
     { 3, 1268.520e0 }
 };
 
+const vamap
+ngpt::satellite_system_traits<ngpt::satellite_system::beidou>::valid_atributes =
+{
+    { 1, std::string("IQX?") },
+    { 2, std::string("IQX?") },
+    { 3, std::string("IQX?") }
+};
+
 /// Initialize the static frequency map for IRNSS.
 /// \todo in \cite rnx303 the 2nd frequency band is denoted as 'S'
 const idmap
 ngpt::satellite_system_traits<ngpt::satellite_system::irnss>::frequency_map =
 {
     { 5, 1176.450e0 },
-    { 2, 2492.028e0 }
+    { 9, 2492.028e0 }
+};
+
+const vamap
+ngpt::satellite_system_traits<ngpt::satellite_system::irnss>::valid_atributes =
+{
+    { 5, std::string("ABCX?") },
+    { 9, std::string("ABCX?") }
 };
 
 /** \details  Given a satellite system enumerator, this function will return

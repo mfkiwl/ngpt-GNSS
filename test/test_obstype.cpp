@@ -49,6 +49,13 @@ int main()
     std::cout << "\nThe GPS L3 observation type: " << gps_l3c;
 #endif
 
+    // Note that an observation type can also be set/constructed using
+    // a RINEX-type string, e.g.
+    observation_type gps_l1p { std::string("L1P") };
+#ifdef DEBUG
+    std::cout << "\nThe GPS \"L1P\" observation type: " << gps_l1c;
+#endif
+
     std::cout << "\n";
     return 0;
 }
