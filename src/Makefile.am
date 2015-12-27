@@ -22,7 +22,13 @@ dist_include_HEADERS   = \
 	obstype.hpp \
 	grid.hpp \
 	antpcv.hpp \
-	antex.hpp
+	antex.hpp \
+	geodesy.hpp \
+	geoconst.hpp \
+	car2ell.hpp \
+	car2top.hpp \
+	ell2car.hpp \
+	ellipsoid.hpp
 
 dist_libngpt_a_SOURCES = \
 	dtalg.cpp \
@@ -30,4 +36,5 @@ dist_libngpt_a_SOURCES = \
 	receiver.cpp \
 	antenna.cpp \
 	satsys.cpp \
-	antex.cpp
+	antex.cpp \
+	top2daz.cpp
