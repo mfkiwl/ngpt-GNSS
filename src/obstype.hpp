@@ -385,7 +385,7 @@ public:
         return freq;
     }
 
-    /// \bried Return the number of raw (fundamental) observables
+    /// \brief Return the number of raw (fundamental) observables
     std::size_t
     raw_obs_num()
     const noexcept

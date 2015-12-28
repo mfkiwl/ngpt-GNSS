@@ -127,7 +127,7 @@ antex::antex(const char *filename)
  * 
  *  \return  Anything other than '0' is an error.
  * 
- *  \reference https://igscb.jpl.nasa.gov/igscb/station/general/antex14.txt
+ *  Reference \cite atx14
  */
 int
 antex::read_header()

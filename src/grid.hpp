@@ -88,7 +88,7 @@ private:
     /** Given a point \p x lying on the TickAxis, compute the neighboring ticks
      *  (nodes), i.e. the left and right ticks inbetween of which lays point \p x.
      * 
-     *  \parameter[in] x  The point for which we want the neighboring nodes/ticks.
+     *  \param[in] x  The point for which we want the neighboring nodes/ticks.
      * 
      *  \return           A tuple containing 
      *  {left_tick_index, left_tick_value, right_tick_index, right_tick_value}

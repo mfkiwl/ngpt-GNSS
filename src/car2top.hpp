@@ -11,15 +11,15 @@ namespace ngpt {
  *            is a template function, depending on the ellipsoid parameter;
  *            see ellipsoid.hpp
  *
- *  \parameter[in]  xi     Cartesian, x-component of point i, meters.
- *  \parameter[in]  yi     Cartesian, y-component of point i, meters.
- *  \parameter[in]  zi     Cartesian, z-component of point i, meters.
- *  \parameter[in]  xj     Cartesian, x-component of point j, meters.
- *  \parameter[in]  yj     Cartesian, y-component of point j, meters.
- *  \parameter[in]  zj     Cartesian, z-component of point j, meters.
- *  \parameter[out] north  Vector north component, meters.
- *  \parameter[out] east   Vector east component, meters.
- *  \parameter[out] up     Vector up component, meters.
+ *  \param[in]  xi     Cartesian, x-component of point i, meters.
+ *  \param[in]  yi     Cartesian, y-component of point i, meters.
+ *  \param[in]  zi     Cartesian, z-component of point i, meters.
+ *  \param[in]  xj     Cartesian, x-component of point j, meters.
+ *  \param[in]  yj     Cartesian, y-component of point j, meters.
+ *  \param[in]  zj     Cartesian, z-component of point j, meters.
+ *  \param[out] north  Vector north component, meters.
+ *  \param[out] east   Vector east component, meters.
+ *  \param[out] up     Vector up component, meters.
  * 
  *  \throw    Does not throw.
  *

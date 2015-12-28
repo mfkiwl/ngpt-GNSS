@@ -11,12 +11,12 @@ namespace ngpt {
  *            latitude, longtitude, ellispoidal height). This is a template
  *            function, depending on the ellipsoid parameter; see ellipsoid.hpp
  *
- *  \parameter[in]  x      Cartesian, x-component, meters.
- *  \parameter[in]  y      Cartesian, y-component, meters.
- *  \parameter[in]  z      Cartesian, z-component, meters.
- *  \parameter[out] phi    Ellipsoidal latitude, radians.
- *  \parameter[out] lambda Ellipsoidal longtitude, radians.
- *  \parameter[out] h      Ellipsoidal height, meters.
+ *  \param[in]  x      Cartesian, x-component, meters.
+ *  \param[in]  y      Cartesian, y-component, meters.
+ *  \param[in]  z      Cartesian, z-component, meters.
+ *  \param[out] phi    Ellipsoidal latitude, radians.
+ *  \param[out] lambda Ellipsoidal longtitude, radians.
+ *  \param[out] h      Ellipsoidal height, meters.
  *
  *  \throw    Does not throw.
  *
