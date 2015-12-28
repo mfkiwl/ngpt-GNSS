@@ -380,6 +380,16 @@ public:
     const noexcept 
     { return xaxis_.size() * yaxis_.size(); }
 
+    std::size_t
+    x_axis_pts()
+    const noexcept
+    { return xaxis_.size(); }
+
+    std::size_t
+    y_axis_pts()
+    const noexcept
+    { return yaxis_.size(); }
+
     T
     x_axis_from()
     const noexcept

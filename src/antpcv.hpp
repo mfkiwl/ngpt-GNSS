@@ -458,6 +458,35 @@ public:
         T           y1     = freq_pcv_[i].no_azi_vector( x1_idx );
         return y0 + (y1-y0)*(zenith-x0)/(x1-x0);
     }
+    
+    //TODO
+    T
+    azi_pcv(T zenith, T azimouth, std::size_t i)
+    const
+    {
+        // TODO what if elevation == 90 ??
+        
+        // zenith values (per azimouth)
+        std::size_t azi_pts = azi_grid_->x_axis_pts();
+        
+        // get the sorounding grid
+        // std::tuple<std::size_t, T, std::size_t, T>
+        auto nodes ( azi_grid_.neighbor_nodes( zenith ) );
+
+        // resolve the tuple
+        std::size_t x0_idx = std::get<0>( nodes );
+        std::size_t x1_idx = std::get<2>( nodes );
+        std::size_t y0_idx = std::get<4>( nodes );
+        std::size_t y1_idx = std::get<6>( nodes );
+        T           x0     = std::get<1>( nodes );
+        T           x1     = std::get<3>( nodes );
+        T           y0     = std::get<5>( nodes );
+        T           y1     = std::get<7>( nodes );
+        T           f00    = freq_pcv_[i].azi_vector(y0_idx*azi_pts+x0_idx);
+        
+        // bilinear interpolation
+        return y0 + (y1-y0)*(zenith-x0)/(x1-x0);
+    }
 
 };
 
