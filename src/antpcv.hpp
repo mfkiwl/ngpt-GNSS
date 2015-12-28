@@ -19,10 +19,19 @@ namespace ngpt
  *   - 'NO-AZI' (i.e. non-azimouth dependent) phase center variation values
  *   - 'AZI' (i.e. azimouth dependent) phase center variation values
  * 
- *  \note This class has absolutely no clue of the grid these values correspond
+ *  \note 
+ *     -# This class has absolutely no clue of the grid these values correspond
  *        to (i.e. starting/ending azimouth, starting/ending zenith angle).
  *        Only vectors of pcv values are stored here, which actualy cannot be
  *        correctly indexed.
+ *     -# The eccentricity vector \c eccentricity_vector_ holds the values
+ *        as reported in the ANTEX file, that is (\cite atx14 ):
+ *        - Eccentricities of the mean antenna phase center relative to the 
+ *          antenna reference point (ARP). North, east and up component (in 
+ *          millimeters) for receiver antennas, and
+ *        - Eccentricities of the mean antenna phase center relative to the 
+ *          center of mass of the satellite in X-, Y- and Z-direction (in 
+ *          millimeters) for satellite antennas.
  * 
  *  \warning Watch the fuck out! When intializing/constructing an instance of
  *           this class, the (member) vectors have zero-size (despite the fact
@@ -41,6 +50,13 @@ typedef std::vector<T>  fltvec;
 typedef std::array<T,3> fltarr;
 
 public:
+
+    /*  Constructor using an observation_type and optionaly hints for the
+     *  sizes of the vectors.
+     * 
+     *  \note The vectors (i.e. no_azi_pcv_values_ and azi_pcv_values_ have
+     *        zero size (even if they do allocate memory).
+     */ 
     explicit frequency_pcv(ngpt::observation_type type, 
              std::size_t no_azi_hint = 1, std::size_t azi_hint = 1)
     noexcept
@@ -51,6 +67,11 @@ public:
       azi_pcv_values_.reserve(azi_hint);
     }
 
+    /*  Constructor using (optionaly) hints for the sizes of the vectors.
+     * 
+     *  \note The vectors (i.e. no_azi_pcv_values_ and azi_pcv_values_ have
+     *        zero size (even if they do allocate memory).
+     */ 
     explicit 
     frequency_pcv(std::size_t no_azi_hint = 1, std::size_t azi_hint = 1) 
     noexcept
@@ -61,10 +82,10 @@ public:
       azi_pcv_values_.reserve(azi_hint);
     }
 
-    ~frequency_pcv()
-    noexcept
-    = default;
+    /// Destructor.
+    ~frequency_pcv() noexcept = default;
 
+    /// Copy constructor.
     frequency_pcv(const frequency_pcv& rhs)
     noexcept(
         std::is_nothrow_copy_constructible<fltarr>::value
@@ -80,6 +101,7 @@ public:
 //      "std::vector<float> -> throws for copy c'tor!" );
 #endif
 
+    /// Move constructor.
     frequency_pcv(frequency_pcv&& rhs)
     noexcept(
         std::is_nothrow_move_constructible<fltarr>::value
@@ -92,6 +114,7 @@ public:
       "std::vector<float> -> throws for copy c'tor!" );
 #endif
 
+    /// Assignment operator.
     frequency_pcv&
     operator=(const frequency_pcv& rhs)
     noexcept(
@@ -107,64 +130,92 @@ public:
       && std::is_nothrow_move_assignable<fltvec>::value 
         )*/ = default;
 
+    /// Access the north/X eccentricity component.
     T&
     north()
     noexcept
     { return eccentricity_vector_[0]; }
 
+    /// Access the east/Y eccentricity component.
     T&
     east()
     noexcept
     { return eccentricity_vector_[1]; }
-
+    
+    /// Access the up/Z eccentricity component.
     T&
     up()
     noexcept
     { return eccentricity_vector_[2]; }
     
+    /// Get the north/X eccentricity component.
     T
     north()
     const noexcept
     { return eccentricity_vector_[0]; }
     
+    /// Get the east/Y eccentricity component.
     T
     east()
     const noexcept
     { return eccentricity_vector_[1]; }
 
+    /// Get the up/Z eccentricity component.
     T
     up()
     const noexcept
     { return eccentricity_vector_[2]; }
 
+    /// Access the observation_type this pattern belongs to.
     ngpt::observation_type&
     type()
     noexcept
     { return type_; }
     
+    /// Get the observation_type this pattern belongs to.
     ngpt::observation_type
     type()
     const noexcept
     { return type_; }
 
+    /// Return the vector of NOAZI pcv corrections for this instance.
     fltvec&
     no_azi_vector()
     noexcept
     { return no_azi_pcv_values_; }
     
+    /// Return the vector of azimouth-dependent pcv corrections for this
+    /// instance.
     fltvec&
     azi_vector()
     noexcept
     { return azi_pcv_values_; }
 
+    /// Access the NOAZI pcv value at index \c i (i.e. the element at index 
+    /// \c i of the NOAZI vector).
     T&
     no_azi_vector(std::size_t i)
     { return no_azi_pcv_values_[i]; }
     
+    /// Get the NOAZI pcv value at index \c i (i.e. the element at index 
+    /// \c i of the NOAZI vector).
     T
     no_azi_vector(std::size_t i)
     const
     { return no_azi_pcv_values_[i]; }
+
+    /// Return the number of pcv values in the NOAZI (correction) vector.
+    std::size_t
+    no_azi_size()
+    const noexcept
+    { return no_azi_pcv_values_.size(); }
+    
+    /// Return the number of pcv values in the azimouth-dependent 
+    /// (correction) vector.
+    std::size_t
+    azi_size()
+    const noexcept
+    { return azi_pcv_values_.size(); }
 
 private:
     ngpt::observation_type type_;                 ///< Observation type
@@ -200,7 +251,6 @@ namespace antenna_pcv_details
  *  Template Parameter \c T should be either \c float or \c double depending
  *  on the precission we want for the PCV values.
  */ 
-//TODO: Copy c'tors are fucked up in here !!
 template<typename T>
 class antenna_pcv
 {
@@ -310,47 +360,77 @@ public:
     freq_pcv_pattern( std::size_t i )
     { return freq_pcv_[i]; }
 
+    /// Get the ZEN1 value, i.e. the starting zenith angle for the correction
+    /// grid.
     T
     zen1()
     const noexcept
     { return no_azi_grid_.from(); }
     
+    /// Get the ZEN2 value, i.e. the ending zenith angle for the correction
+    /// grid.
     T
     zen2()
     const noexcept
     { return no_azi_grid_.to();   }
     
+    /// Get the DZEN value, i.e. the zenith angle step size for the correction
+    /// grid.
     T
     dzen()
     const noexcept
     { return no_azi_grid_.step(); }
     
+    /// Does this (correction) pattern have azimouth-dependent pcv values?
     bool
     has_azi_pcv()
     const noexcept
     { return azi_grid_ != nullptr; }
     
+    /// Get the AZI1 value, i.e. the starting azimouth angle for the correction
+    /// grid.
     /// \warning Watch yourself bitch! can cause UB if azi_grid_ is invalid.
     T azi1()
     const noexcept
     { return azi_grid_->y_axis_from(); }
-    
+
+    /// Get the AZI2 value, i.e. the ending azimouth angle for the correction
+    /// grid.
     /// \warning Watch yourself bitch! can cause UB if azi_grid_ is invalid.
     T azi2()
     const noexcept
     { return azi_grid_->y_axis_to();   }
     
+    /// Get the DAZI value, i.e. the azimouth angle step size for the correction
+    /// grid.
     /// \warning Watch yourself bitch! can cause UB if azi_grid_ is invalid.
     T
     dazi()
     const noexcept
     { return azi_grid_->y_axis_step(); }
 
+    /// Return the size (number of correction values) for the NOAZI pattern.
     std::size_t
     no_azi_grid_pts()
     const noexcept
-    { return no_azi_grid_.size(); }
+    { 
+#ifdef DEBUG
+        /// make sure the size computed from the Grid is the same as the size
+        /// of the vector holding the values.
+        std::size_t sz = freq_pcv_[0].no_azi_size();
+        for ( const auto& i : freq_pcv_ ) {
+            assert( sz == i.no_azi_size() );
+        }
+        assert( no_azi_grid_.size() == sz );
+#endif
+        return no_azi_grid_.size();
+    }
     
+    /// Return the size (number of correction values) for the azimouth-dependent
+    /// pattern.
+    /// \warning This will return the (possible) number of pcv values that can 
+    /// be held within the grid. The actual number of pcv values hold in the 
+    /// vector can be different.
     std::size_t
     azi_grid_pts()
     const noexcept 
@@ -358,6 +438,25 @@ public:
         return   azi_grid_ 
                ? azi_grid_->size()
                : 0;
+    }
+
+    //TODO
+    T
+    no_azi_pcv(T zenith, std::size_t i)
+    const
+    {
+        // TODO what if elevation == 90 ??
+        // get the left and right nodes
+        // std::tuple<std::size_t, T, std::size_t, T>
+        auto nodes ( no_azi_grid_.neighbor_nodes( zenith ) );
+        // simple, linear interpolation will do
+        std::size_t x0_idx = std::get<0>( nodes );
+        std::size_t x1_idx = std::get<2>( nodes );
+        T           x0     = std::get<1>( nodes );
+        T           x1     = std::get<3>( nodes );
+        T           y0     = freq_pcv_[i].no_azi_vector( x0_idx );
+        T           y1     = freq_pcv_[i].no_azi_vector( x1_idx );
+        return y0 + (y1-y0)*(zenith-x0)/(x1-x0);
     }
 
 };

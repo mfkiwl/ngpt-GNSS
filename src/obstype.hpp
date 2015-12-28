@@ -240,7 +240,8 @@ public:
 
 #ifdef DEBUG
     friend
-    std::ostream& operator<<(std::ostream& os, const _rawobs_& obs)
+    std::ostream&
+    operator<<(std::ostream& os, const _rawobs_& obs)
     {
         char str[5];
         *str     = ngpt::satsys_identifier( obs.satsys_ );
@@ -406,7 +407,8 @@ public:
     
 #ifdef DEBUG
     friend
-    std::ostream& operator<<(std::ostream& os, const observation_type& obs)
+    std::ostream&
+    operator<<(std::ostream& os, const observation_type& obs)
     {
         os << "[" ;
         for ( auto i : obs.cov_ ) {

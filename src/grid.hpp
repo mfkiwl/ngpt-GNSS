@@ -14,7 +14,7 @@
  * \author    xanthos@mail.ntua.gr <br>
  *            danast@mail.ntua.gr
  *
- * \date
+ * \date      Mon 28 Dec 2015 10:33:53 AM EET 
  *
  * \brief
  *
@@ -75,24 +75,6 @@ template<typename T,          ///< type of axis e.g. float, double, ...
          bool     RangeCheck> ///< enable range-check
 class TickAxisImpl
 {
-public:
-
-    /// A simple class to represent a tick point. Each instance has two
-    /// values; one (i.e. \p index_) represents the tick-point's index, the other
-    /// (i.e. value_) represents it's value.
-    /// For example, for a TickAxisImpl with start=0, stop=10, step=2.5, the
-    /// second tick point can be represented as axis_tick{1, start+step};
-    /*
-    struct axis_tick {
-        std::size_t index_;
-        T           value_;
-        explicit constexpr axis_tick(std::size_t i) noexcept 
-            : index_(i)
-            // value_(start_ + i*step_)
-        {}
-    };
-    */
-
 private:
 
     T           start_; ///< left-most tick point.

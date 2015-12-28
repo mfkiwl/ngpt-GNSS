@@ -361,6 +361,7 @@ ngpt::antex::read_pattern()
         std::vector<ngpt::pcv_type>* av = &freq_pcv_ptr->azi_vector();
         // initialize all values in the az-pcv vector to 0
         av->assign(antpat.azi_grid_pts(), .0);
+        std::size_t azi_grid_pts = antpat.azi_grid_pts();
         if ( dazi != 0 ) {
             for (int j=0; j<num_of_azi_lines; ++j) {
                 if ( !_istream.getline(g_line, MAX_GRID_CHARS) ) {
@@ -373,7 +374,7 @@ ngpt::antex::read_pattern()
                     ("antex::read_pattern -> Failed to read 'AZI' grid (2).");
                 }
                 // find the right index for this azimouth in the azi_grid
-                std::size_t index = antpat.azi_grid_pts() 
+                std::size_t index = /*antpat.azi_grid_pts() */ azi_grid_pts
                                   - ((this_azi - antenna_pcv_details::azi1)/dazi)
                                   * vals_to_read - vals_to_read;
                 auto av_it = av->begin() + index;
@@ -390,7 +391,7 @@ ngpt::antex::read_pattern()
                     // this check is only for debuging. Do not use in production
                     // mode.
                     if ( (std::size_t)std::distance(av->begin(), av_it) 
-                            > antpat.azi_grid_pts() ) {
+                            > azi_grid_pts ) {
                         int num = std::distance(av->begin(), av_it);
                         std::string msg ( "(reached" 
                                           + std::to_string(num) 
