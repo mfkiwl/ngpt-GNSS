@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 
     // header is read during construction.
     antex atx (argv[1]);
-    int status;
+    //int status;
 
     // an empty antenna pcv pattern
     antenna_pcv<pcv_type> pcv;
@@ -46,8 +46,11 @@ int main(int argc, char* argv[])
     pcv = atx.get_antenna_pattern( ant );
     //print_pcv_info( pcv );
     // let's print the NOAZI pcv
-    for ( float zen=0.1; zen < 90.0 ; zen += 1.0 ) {
+    for ( float zen = .1; zen < 90.0 ; zen += 1.0 ) {
         std::cout << "\n\tZenith = " << zen << " pcv = " << pcv.no_azi_pcv(zen, 0);
+        for ( float azi = .1; azi < 360.0 ; azi += 1.0 ) {
+            std::cout << "\n\t" << zen << " " << azi << " " << pcv.azi_pcv(zen, azi, 0); 
+        }
     }
 
     // exit.

@@ -4,6 +4,7 @@ lib_LIBRARIES = libngpt.a
 libngpt_a_CXXFLAGS = \
 	-std=c++14 \
 	-g \
+    -pg \
 	-Wall \
 	-Wextra \
 	-Werror \

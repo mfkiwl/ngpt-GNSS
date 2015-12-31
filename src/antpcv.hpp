@@ -22,7 +22,7 @@ namespace ngpt
  *  \note 
  *     -# This class has absolutely no clue of the grid these values correspond
  *        to (i.e. starting/ending azimouth, starting/ending zenith angle).
- *        Only vectors of pcv values are stored here, which actualy cannot be
+ *        Only vectors of pcv values are stored here, which actually cannot be
  *        correctly indexed.
  *     -# The eccentricity vector \c eccentricity_vector_ holds the values
  *        as reported in the ANTEX file, that is (\cite atx14 ):
@@ -37,7 +37,7 @@ namespace ngpt
  *           this class, the (member) vectors have zero-size (despite the fact
  *           that at least some memory is allocated). You need to 
  *           push_back/emplace_back. I was stupid enough to spent a few hours
- *           debuging.
+ *           debugging.
  * 
  *  Template Parameter \c T should be either \c float or \c double depending
  *  on the precission we want for the PCV values.
@@ -203,6 +203,19 @@ public:
     no_azi_vector(std::size_t i)
     const
     { return no_azi_pcv_values_[i]; }
+    
+    /// Access the AZI pcv value at index \c i (i.e. the element at index 
+    /// \c i of the AZI vector).
+    T&
+    azi_vector(std::size_t i)
+    { return azi_pcv_values_[i]; }
+    
+    /// Get the AZI pcv value at index \c i (i.e. the element at index 
+    /// \c i of the AZI vector).
+    T
+    azi_vector(std::size_t i)
+    const
+    { return azi_pcv_values_[i]; }
 
     /// Return the number of pcv values in the NOAZI (correction) vector.
     std::size_t
@@ -451,11 +464,16 @@ public:
         auto nodes ( no_azi_grid_.neighbor_nodes( zenith ) );
         // simple, linear interpolation will do
         std::size_t x0_idx = std::get<0>( nodes );
+#ifdef DEBUG
         std::size_t x1_idx = std::get<2>( nodes );
+        assert ( x1_idx == x0_idx+1 );
+#else
+        std::size_t x1_idx = x0_idx + 1;
+#endif
         T           x0     = std::get<1>( nodes );
         T           x1     = std::get<3>( nodes );
-        T           y0     = freq_pcv_[i].no_azi_vector( x0_idx );
-        T           y1     = freq_pcv_[i].no_azi_vector( x1_idx );
+        T           y0     = freq_pcv_[i].no_azi_vector( x0_idx   );
+        T           y1     = freq_pcv_[i].no_azi_vector( x0_idx+1 );
         return y0 + (y1-y0)*(zenith-x0)/(x1-x0);
     }
     
@@ -470,22 +488,39 @@ public:
         std::size_t azi_pts = azi_grid_->x_axis_pts();
         
         // get the sorounding grid
-        // std::tuple<std::size_t, T, std::size_t, T>
-        auto nodes ( azi_grid_.neighbor_nodes( zenith ) );
+        auto nodes ( azi_grid_->neighbor_nodes( zenith, azimouth ) );
 
         // resolve the tuple
         std::size_t x0_idx = std::get<0>( nodes );
-        std::size_t x1_idx = std::get<2>( nodes );
         std::size_t y0_idx = std::get<4>( nodes );
+#ifdef DEBUG
+        std::size_t x1_idx = std::get<2>( nodes );
         std::size_t y1_idx = std::get<6>( nodes );
+        assert( x1_idx == x0_idx + 1 );
+        assert( y1_idx == y0_idx + 1 );
+#else
+        std::size_t x1_idx = x0_idx + 1;
+        std::size_t y1_idx = y0_idx + 1;
+#endif
         T           x0     = std::get<1>( nodes );
         T           x1     = std::get<3>( nodes );
         T           y0     = std::get<5>( nodes );
         T           y1     = std::get<7>( nodes );
-        T           f00    = freq_pcv_[i].azi_vector(y0_idx*azi_pts+x0_idx);
+        std::size_t lowleft= y0_idx*azi_pts+x0_idx;
+        T           f00    = freq_pcv_[i].azi_vector( lowleft );
+        T           f01    = freq_pcv_[i].azi_vector( lowleft + azi_pts );
+        T           f10    = freq_pcv_[i].azi_vector( lowleft + 1);
+        T           f11    = freq_pcv_[i].azi_vector( lowleft + azi_pts + 1 );
         
-        // bilinear interpolation
-        return y0 + (y1-y0)*(zenith-x0)/(x1-x0);
+        // bilinear interpolation, see 
+        // https://en.wikipedia.org/wiki/Bilinear_interpolation
+        T x { zenith   };
+        T y { azimouth };
+        T denom { (x1-x0)*(y1-y0) };
+        return  ((x1-x)*(y1-y)/denom)*f00
+               +((x-x0)*(y1-y)/denom)*f10
+               +((x1-x)*(y-y0)/denom)*f01
+               +((x-x0)*(y-y0)/denom)*f11;
     }
 
 };
