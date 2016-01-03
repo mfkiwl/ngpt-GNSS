@@ -1,7 +1,7 @@
-lib_LIBRARIES = libngpt.a
+lib_LTLIBRARIES = libngpt.la
 
 ## Only use the following flags for debuging purposes
-libngpt_a_CXXFLAGS = \
+libngpt_la_CXXFLAGS = \
 	-std=c++14 \
 	-g \
 	-pg \
@@ -15,7 +15,7 @@ libngpt_a_CXXFLAGS = \
 	-Wdisabled-optimization \
 	-DDEBUG
 
-dist_include_HEADERS   = \
+dist_include_HEADERS = \
 	receiver.hpp \
 	antenna.hpp \
 	datetime.hpp \
@@ -31,7 +31,7 @@ dist_include_HEADERS   = \
 	ell2car.hpp \
 	ellipsoid.hpp
 
-dist_libngpt_a_SOURCES = \
+dist_libngpt_la_SOURCES = \
 	dtalg.cpp \
 	obstype.cpp \
 	receiver.cpp \
