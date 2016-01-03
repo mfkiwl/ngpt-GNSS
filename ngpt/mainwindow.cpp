@@ -25,8 +25,6 @@
 #include "settingseditor.hpp"
 #include "pixmaps.hpp"
 
-#include "antex.hpp"
-
 MainWindow::MainWindow(QWidget* parent)
 : QMainWindow( parent )
 {
@@ -101,6 +99,8 @@ MainWindow::MainWindow(QWidget* parent)
     connect( btnOpen,
              SIGNAL(clicked()),
              SLOT(set_antex_file()) );
+
+    //d_atx = NULL;
 }
 
 void
@@ -151,6 +151,11 @@ MainWindow::set_antex_file()
                             QCoreApplication::applicationDirPath(),
                             tr("Antex (*.atx *.ATX)")
                             );
-    //QMessageBox::information(this, tr("Filename"), atx_filename);
-    ngpt::antex atx ( atx_filename.toStdString().c_str() );
+    if ( d_atx )
+    {
+        delete d_atx;
+    }
+    d_atx = new ngpt::antex (atx_filename.toStdString().c_str());
+
+    //std::vector<ant_pos_pair> pairs = d_atx->get_antenna_list();
 }

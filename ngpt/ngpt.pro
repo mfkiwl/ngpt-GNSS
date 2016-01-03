@@ -22,5 +22,5 @@ INCLUDEPATH    += $(QWTPOLAR_INCLUDE)
 INCLUDEPATH    += ../src
 LIBS           += $(QWT_LIB) -lqwt
 LIBS           += $(QWTPOLAR_LIB) -lqwtpolar
-LIBS           += -L../src -lngpt
-QMAKE_CXXFLAGS += -std=c++11 -fPIC
+LIBS           += -L../usr/local/lib/ -lngpt
+QMAKE_CXXFLAGS += -std=c++11 
