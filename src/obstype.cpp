@@ -66,10 +66,17 @@ _rawobs_::set_from_str(const std::string& str,
 
     std::string obs_str;
 
+#if __cplusplus > 201103L
     std::copy_if(std::cbegin(str),
                  std::cend(str),
                  std::back_inserter(obs_str),
                  [](char c){ return c != ' '; });
+#else
+    std::copy_if(str.begin(),
+                 str.end(),
+                 std::back_inserter(obs_str),
+                 [](char c){ return c != ' '; });
+#endif
 
     if ( obs_str.size() < 2 ) {
         throw std::out_of_range
