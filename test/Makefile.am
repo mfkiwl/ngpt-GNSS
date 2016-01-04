@@ -1,4 +1,4 @@
-bin_PROGRAMS = testReceiver \
+noinst_PROGRAMS = testReceiver \
 		testAntenna \
 		testObstype \
 		testGrid \

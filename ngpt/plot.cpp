@@ -12,7 +12,7 @@
 
 #include "plot.hpp"
 
-const QwtInterval radialInterval( 0.0, 90.0 );
+const QwtInterval radialInterval ( 0.0,  90.0 );
 const QwtInterval azimuthInterval( 0.0, 360.0 );
 
 class Data: public QwtSeriesData<QwtPointPolar>
@@ -95,8 +95,8 @@ public:
     }
 };*/
 
-Plot::Plot( QWidget* parent )
-: QwtPolarPlot( QwtText( "Antenna Phase Center Variation Pattern" ), parent )
+Plot::Plot(QWidget* parent)
+: QwtPolarPlot(QwtText( "Antenna Phase Center Variation Pattern" ), parent)
 {
     setAutoReplot( false );
     setPlotBackground( Qt::darkBlue );
@@ -113,7 +113,6 @@ Plot::Plot( QWidget* parent )
         radialInterval.maxValue() );
 
     // grids, axes
-
     d_grid = new QwtPolarGrid();
     d_grid->setPen( QPen( Qt::white ) );
     for ( int scaleId = 0; scaleId < QwtPolar::ScaleCount; scaleId++ )
@@ -138,6 +137,8 @@ Plot::Plot( QWidget* parent )
     d_grid->showGrid( QwtPolar::Radius, true );
     d_grid->attach( this );
 
+    d_curve = NULL;
+
     // curves
     /*
     for ( int curveId = 0; curveId < PlotSettings::NumCurves; curveId++ )
@@ -147,6 +148,7 @@ Plot::Plot( QWidget* parent )
     }*/
 
     // markers
+    /*
     QwtPolarMarker *marker = new QwtPolarMarker();
     marker->setPosition( QwtPointPolar( 57.3, 4.72 ) );
     marker->setSymbol( new QwtSymbol( QwtSymbol::Ellipse,
@@ -164,9 +166,12 @@ Plot::Plot( QWidget* parent )
 
     QwtLegend *legend = new QwtLegend;
     insertLegend( legend,  QwtPolarPlot::BottomLegend );
+    */
 }
 
-PlotSettings Plot::settings() const
+PlotSettings
+Plot::settings()
+const
 {
     PlotSettings s;
     for ( int scaleId = 0; scaleId < QwtPolar::ScaleCount; scaleId++ )
@@ -203,7 +208,8 @@ PlotSettings Plot::settings() const
     return s;
 }
 
-void Plot::applySettings( const PlotSettings& s )
+void
+Plot::applySettings(const PlotSettings& s)
 {
     for ( int scaleId = 0; scaleId < QwtPolar::ScaleCount; scaleId++ )
     {
@@ -260,8 +266,62 @@ void Plot::applySettings( const PlotSettings& s )
     replot();
 }
 
+#include <iostream>
 QwtPolarCurve* 
-Plot::createCurve( int id )
+Plot::create_pcv_data(ngpt::antex* atx, const QString& ant)
+{
+    std::cout << "\n---PLOTTING ANTENNA---\n";
+
+    if ( !atx )
+    {
+        return;
+    }
+
+    QByteArray array = ant.toLocal8Bit();
+    ngpt::antenna antna ( array.data() );
+    ngpt::antenna_pcv<ngpt::pcv_type> pcvs ( atx->get_antenna_pattern( antna ) );
+
+    if ( d_curve && d_curve->size() )
+    {
+        delete d_curve;
+        d_curve = new QwtPolarCurve();
+    }
+
+    //TODO
+    for ( float zen = .1; zen < 90.0 ; zen += 1.0 )
+    {
+        for ( float azi = .1; azi < 360.0 ; azi += 1.0 )
+        {
+            // pcvs.azi_pcv(zen, azi, 0);
+            
+        }
+    }
+    
+    /*
+    QwtPolarMarker *marker = new QwtPolarMarker();
+    marker->setPosition( QwtPointPolar( 57.3, 4.72 ) );
+    marker->setSymbol( new QwtSymbol( QwtSymbol::Ellipse,
+        QBrush( Qt::white ), QPen( Qt::green ), QSize( 9, 9 ) ) );
+    marker->setLabelAlignment( Qt::AlignHCenter | Qt::AlignTop );
+
+    QwtText text( "Marker" );
+    text.setColor( Qt::black );
+    QColor bg( Qt::white );
+    bg.setAlpha( 200 );
+    text.setBackgroundBrush( QBrush( bg ) );
+
+    marker->setLabel( text );
+    marker->attach( this );
+
+    QwtLegend *legend = new QwtLegend;
+    insertLegend( legend,  QwtPolarPlot::BottomLegend );
+    */
+
+    replot();
+}
+
+QwtPolarCurve* 
+Plot::createCurve(int id)
 const
 {
     const int numPoints = 200;

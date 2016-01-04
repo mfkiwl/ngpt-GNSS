@@ -5,8 +5,8 @@
 #include <qregexp.h>
 #include <qtoolbar.h>
 #include <qtoolbutton.h>
-#include <qprinter.h>
-#include <qprintdialog.h>
+//#include <qprinter.h>
+//#include <qprintdialog.h>
 #include <qfiledialog.h>
 #include <qimagewriter.h>
 #include <qfileinfo.h>
@@ -42,9 +42,9 @@ MainWindow::MainWindow(QWidget* parent)
 
     d_settingsEditor->showSettings( d_plot->settings() );
     connect( d_settingsEditor,
-             SIGNAL( edited( const PlotSettings & ) ),
+             SIGNAL(edited(const PlotSettings&) ),
              d_plot,
-             SLOT( applySettings( const PlotSettings & ) ) );
+             SLOT(applySettings(const PlotSettings&) ) );
 
     QHBoxLayout* layout = new QHBoxLayout( w );
     layout->addWidget( d_settingsEditor, 0 );
@@ -68,8 +68,8 @@ MainWindow::MainWindow(QWidget* parent)
     btnZoom->setCheckable( true );
     toolBar->addWidget( btnZoom );
     connect( btnZoom,
-             SIGNAL( toggled( bool ) ),
-             SLOT( enableZoomMode( bool ) ) );
+             SIGNAL(toggled(bool)),
+             SLOT(enableZoomMode(bool)) );
 
     QToolButton* btnPrint = new QToolButton(toolBar);
     btnPrint->setText( "Print" );
@@ -93,19 +93,26 @@ MainWindow::MainWindow(QWidget* parent)
 #endif
 
     QPushButton* btnOpen = new QPushButton("Select Antex", toolBar);
-    //QFileDialog* fileDlg = new QFileDialog(toolBar, "Antex");
     toolBar->addWidget( btnOpen );
     addToolBar( toolBar );
     connect( btnOpen,
              SIGNAL(clicked()),
              SLOT(set_antex_file()) );
 
-    //d_atx = NULL;
+    d_cmbBox = new QComboBox(toolBar);
+    d_cmbBox->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+    toolBar->addWidget(d_cmbBox);
+    connect( d_cmbBox,
+             SIGNAL(currentTextChanged(const QString&)),
+             SLOT(plot_pcv_pattern(const QString&)) );
+
+    d_atx = NULL;
 }
 
 void
 MainWindow::printDocument()
 {
+    /*
     QPrinter printer( QPrinter::HighResolution );
 
     QString docName = d_plot->title().text();
@@ -124,6 +131,8 @@ MainWindow::printDocument()
         QwtPolarRenderer renderer;
         renderer.renderTo( d_plot, printer );
     }
+    */
+    return;
 }
 
 void
@@ -145,6 +154,8 @@ MainWindow::enableZoomMode(bool on)
 void
 MainWindow::set_antex_file()
 {
+    d_cmbBox->clear();
+
     QString atx_filename = QFileDialog::getOpenFileName(
                             this,
                             tr("Select Antex File"),
@@ -157,5 +168,17 @@ MainWindow::set_antex_file()
     }
     d_atx = new ngpt::antex (atx_filename.toStdString().c_str());
 
-    //std::vector<ant_pos_pair> pairs = d_atx->get_antenna_list();
+    std::vector<ant_pos_pair> pairs = d_atx->get_antenna_list();
+    
+    for ( auto i : pairs )
+    {
+        d_cmbBox->addItem( i.first.to_string().c_str() );
+    }
+
+}
+
+void
+MainWindow::plot_pcv_pattern(const QString& ant)
+{
+    d_plot->plot_pcv(d_atx, ant);
 }

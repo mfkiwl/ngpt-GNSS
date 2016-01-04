@@ -2,6 +2,7 @@
 #define _QWT_PLOT_H_
 
 #include <qwt_polar_plot.h>
+#include "antex.hpp"
 
 class QwtPolarGrid;
 class QwtPolarCurve;
@@ -43,8 +44,10 @@ public Q_SLOTS:
 
 private:
     QwtPolarCurve* createCurve(int id) const;
+    QwtPolarCurve* create_pcv_data(ngpt::antex*, const QString&);
 
     QwtPolarGrid*  d_grid;
+    QwtPolarCurve* d_curve;
     /*QwtPolarCurve* d_curve[PlotSettings::NumCurves];*/
 };
 

@@ -1,8 +1,9 @@
 #ifndef __MY_MAIN_QT_WINDOW__
 #define __MY_MAIN_QT_WINDOW__
 
-#include <qmainwindow.h>
+#include <QComboBox>
 
+#include <qmainwindow.h>
 #include "antenna.hpp"
 #include "antex.hpp"
 
@@ -27,6 +28,7 @@ private Q_SLOTS:
     void printDocument();
     void exportDocument();
     void set_antex_file();
+    void plot_pcv_pattern(const QString&);
 
 private:
     Plot*              d_plot;
@@ -34,9 +36,10 @@ private:
     QwtPolarMagnifier* d_zoomer;
     SettingsEditor*    d_settingsEditor;
 
+    QComboBox*         d_cmbBox;
+
     ngpt::antex*              d_atx;
     std::vector<ant_pos_pair> d_antpos;
-    std::vector<QString>      d_antennas;
 };
 
 #endif
