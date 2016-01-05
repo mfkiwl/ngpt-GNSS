@@ -38,13 +38,14 @@ class Plot
 public:
     Plot(QWidget* = NULL);
     PlotSettings settings() const;
+    void plot_pcv(ngpt::antex*, const QString&);
 
 public Q_SLOTS:
     void applySettings(const PlotSettings&);
 
 private:
-    QwtPolarCurve* createCurve(int id) const;
-    QwtPolarCurve* create_pcv_data(ngpt::antex*, const QString&);
+    QwtPolarCurve* createCurve() const;
+    QwtPolarCurve* create_pcv_plot(ngpt::antex*, const QString&);
 
     QwtPolarGrid*  d_grid;
     QwtPolarCurve* d_curve;

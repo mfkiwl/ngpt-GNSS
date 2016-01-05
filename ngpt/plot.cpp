@@ -11,6 +11,7 @@
 // #include "antenna.hpp"
 
 #include "plot.hpp"
+#include <iostream>
 
 const QwtInterval radialInterval ( 0.0,  90.0 );
 const QwtInterval azimuthInterval( 0.0, 360.0 );
@@ -37,7 +38,49 @@ protected:
     size_t d_size;
 };
 
-/*class SpiralData: public Data
+class PcvData
+: public QwtSeriesData<QwtPointPolar>
+{
+
+public:
+    PcvData(std::vector<QwtPointPolar> crd, std::vector<float> pcv)
+    : crd_(std::move(crd)),
+      pcv_(std::move(pcv))
+    {}
+
+    virtual std::size_t
+    size()
+    const
+    { return pcv_.size(); }
+
+    virtual QwtPointPolar
+    sample(std::size_t i)
+    const
+    {
+        if (i>=crd_.size())
+        {
+            std::cout <<"\nWTF????????? Out of range!";
+            return QwtPointPolar(0,0);
+        }
+        return crd_[i]; 
+    }
+
+    virtual QRectF
+    boundingRect()
+    const
+    {
+        if ( d_boundingRect.width() < 0.0 )
+            d_boundingRect = qwtBoundingRect( *this );
+
+        return d_boundingRect;
+    }
+
+protected:
+    std::vector<QwtPointPolar> crd_;
+    std::vector<float>         pcv_;
+};
+
+class SpiralData: public Data
 {
 public:
     SpiralData( const QwtInterval &radialInterval,
@@ -48,6 +91,7 @@ public:
 
     virtual QwtPointPolar sample( size_t i ) const
     {
+        std::cout << "\nCalling QwtPointPolar sample() with i = " << i;
         const double stepA = 4 * d_azimuthInterval.width() / d_size;
         const double a = d_azimuthInterval.minValue() + i * stepA;
 
@@ -64,7 +108,7 @@ public:
 
         return d_boundingRect;
     }
-};*/
+};
 
 /*class RoseData: public Data
 {
@@ -98,6 +142,9 @@ public:
 Plot::Plot(QWidget* parent)
 : QwtPolarPlot(QwtText( "Antenna Phase Center Variation Pattern" ), parent)
 {
+    d_curve = NULL;
+
+    std::cout << "\nCalling Plot Constructor, Plot::Plot()";
     setAutoReplot( false );
     setPlotBackground( Qt::darkBlue );
 
@@ -137,15 +184,19 @@ Plot::Plot(QWidget* parent)
     d_grid->showGrid( QwtPolar::Radius, true );
     d_grid->attach( this );
 
-    d_curve = NULL;
-
-    // curves
     /*
-    for ( int curveId = 0; curveId < PlotSettings::NumCurves; curveId++ )
-    {
-        d_curve[curveId] = createCurve( curveId );
-        d_curve[curveId]->attach( this );
-    }*/
+    // curves
+    //for ( int curveId = 0; curveId < PlotSettings::NumCurves; curveId++ )
+    //{
+    //    d_curve[curveId] = createCurve( curveId );
+    //    d_curve[curveId]->attach( this );
+    std::cout << "\n[Plot::Plot()] Calling d_curve = createCurve()";
+    d_curve = createCurve();
+    std::cout << "\n[Plot::Plot()] Done creating curve.";
+    d_curve->attach(this);
+    std::cout << "\n[Plot::Plot()] curve attached.";
+    //}
+    */
 
     // markers
     /*
@@ -167,12 +218,134 @@ Plot::Plot(QWidget* parent)
     QwtLegend *legend = new QwtLegend;
     insertLegend( legend,  QwtPolarPlot::BottomLegend );
     */
+    std::cout << "\nEnd of Construction, Plot::Plot()";
+}
+
+void
+Plot::plot_pcv(ngpt::antex* atx, const QString& ant)
+{
+    std::cout<<"\nPlot::plot_pcv()";
+    try{
+    if ( atx )
+    {
+        if ( d_curve != NULL )
+        {
+            //delete d_curve->data();
+            delete d_curve;
+        }
+
+        d_curve = NULL;
+        d_curve = create_pcv_plot(atx, ant);
+
+        if ( d_curve )
+        {
+            d_curve->attach( this );
+        }
+    }
+    } catch (...)
+    {
+        std::cerr<<"\nEXCEPTION in Plot::plot_pcv()";
+    }
+    std::cout<<"\n...Going to replot!";
+    replot();
+    std::cout<<"\nPlot::plot_pcv() exit";
+}
+
+QwtPolarCurve* 
+Plot::create_pcv_plot(ngpt::antex* atx, const QString& ant)
+{
+    std::cout <<"\nPlot::create_pcv_plot()";
+    QwtPolarCurve *curve = new QwtPolarCurve();
+    
+    try{
+
+    QByteArray array = ant.toLocal8Bit();
+    ngpt::antenna antna ( array.data() );
+    ngpt::antenna_pcv<ngpt::pcv_type> pcvs ( atx->get_antenna_pattern( antna ) );
+
+    curve->setStyle( QwtPolarCurve::NoCurve );
+    curve->setPen( QPen(Qt::yellow, 2) );
+    curve->setSymbol( new QwtSymbol(QwtSymbol::Rect,
+                                      QBrush(Qt::cyan),
+                                      QPen(Qt::white),
+                                      QSize(3, 3)) );
+    std::vector<QwtPointPolar> polar_crd;
+    std::vector<float>         pcv_vals;
+    for ( float zen = .1; zen < 90.0 ; zen += 2.0 )
+    {
+        for ( float azi = .1; azi < 360.0 ; azi += 5.0 )
+        {
+            pcv_vals.emplace_back ( pcvs.azi_pcv(zen, azi, 0) );
+            polar_crd.emplace_back( azi, zen );
+        }
+    }
+    curve->setData( new PcvData(polar_crd, pcv_vals) );
+    std::cout<<"\nNumber of points in curve: " << curve->data()->size();
+    }
+    catch(...)
+    {
+        std::cerr<<"\nEXCEPTION in Plot::create_pcv_plot()";
+    }
+    std::cout<<"\nPlot::create_pcv_plot() exit ("<<curve<<")";
+    
+    return curve;
+}
+
+QwtPolarCurve* 
+Plot::createCurve()
+const
+{
+    std::cout << "\nIn Plot::createCurve.";
+    const int numPoints = 200;
+
+    QwtPolarCurve *curve = new QwtPolarCurve();
+    curve->setStyle( QwtPolarCurve::Lines );
+    
+    curve->setTitle( "Spiral" );
+    curve->setPen( QPen( Qt::yellow, 2 ) );
+    curve->setSymbol( new QwtSymbol( QwtSymbol::Rect,
+        QBrush( Qt::cyan ), QPen( Qt::white ), QSize( 3, 3 ) ) );
+    std::cout << "\n[Plot::createCurve()] calling setData()";
+    curve->setData(
+        new SpiralData( radialInterval, azimuthInterval, numPoints ) );
+    std::cout << "\n[Plot::createCurve()] setData() done!";
+    
+    //curve->setLegendAttribute( QwtPolarCurve::LegendShowLine, true );
+    //curve->setLegendAttribute( QwtPolarCurve::LegendShowSymbol, true );
+    /*
+    switch( id )
+    {
+        case PlotSettings::Spiral:
+        {
+            curve->setTitle( "Spiral" );
+            curve->setPen( QPen( Qt::yellow, 2 ) );
+            curve->setSymbol( new QwtSymbol( QwtSymbol::Rect,
+                QBrush( Qt::cyan ), QPen( Qt::white ), QSize( 3, 3 ) ) );
+            curve->setData(
+                new SpiralData( radialInterval, azimuthInterval, numPoints ) );
+            break;
+        }
+        case PlotSettings::Rose:
+        {
+            curve->setTitle( "Rose" );
+            curve->setPen( QPen( Qt::red, 2 ) );
+            curve->setSymbol( new QwtSymbol( QwtSymbol::Rect,
+                QBrush( Qt::cyan ), QPen( Qt::white ), QSize( 3, 3 ) ) );
+            curve->setData(
+                new RoseData( radialInterval, azimuthInterval, numPoints ) );
+            break;
+        }
+    }
+    */
+    std::cout << "\n[Plot::createCurve()] returning the curve.";
+    return curve;
 }
 
 PlotSettings
 Plot::settings()
 const
 {
+    std::cout << "\nCalling Plot::settings().";
     PlotSettings s;
     for ( int scaleId = 0; scaleId < QwtPolar::ScaleCount; scaleId++ )
     {
@@ -205,12 +378,14 @@ const
             d_curve[curveId]->isVisible();
     }*/
 
+    std::cout << "\nPlot::settings() exit";
     return s;
 }
 
 void
 Plot::applySettings(const PlotSettings& s)
 {
+    std::cout << "\nCalling Plot::applySettings().";
     for ( int scaleId = 0; scaleId < QwtPolar::ScaleCount; scaleId++ )
     {
         d_grid->showGrid( scaleId,
@@ -262,98 +437,6 @@ Plot::applySettings(const PlotSettings& s)
             s.flags[PlotSettings::CurveBegin + curveId] );
     }
     */
-
+    std::cout << "\nPlot::applySettings() exit";
     replot();
-}
-
-#include <iostream>
-QwtPolarCurve* 
-Plot::create_pcv_data(ngpt::antex* atx, const QString& ant)
-{
-    std::cout << "\n---PLOTTING ANTENNA---\n";
-
-    if ( !atx )
-    {
-        return;
-    }
-
-    QByteArray array = ant.toLocal8Bit();
-    ngpt::antenna antna ( array.data() );
-    ngpt::antenna_pcv<ngpt::pcv_type> pcvs ( atx->get_antenna_pattern( antna ) );
-
-    if ( d_curve && d_curve->size() )
-    {
-        delete d_curve;
-        d_curve = new QwtPolarCurve();
-    }
-
-    //TODO
-    for ( float zen = .1; zen < 90.0 ; zen += 1.0 )
-    {
-        for ( float azi = .1; azi < 360.0 ; azi += 1.0 )
-        {
-            // pcvs.azi_pcv(zen, azi, 0);
-            
-        }
-    }
-    
-    /*
-    QwtPolarMarker *marker = new QwtPolarMarker();
-    marker->setPosition( QwtPointPolar( 57.3, 4.72 ) );
-    marker->setSymbol( new QwtSymbol( QwtSymbol::Ellipse,
-        QBrush( Qt::white ), QPen( Qt::green ), QSize( 9, 9 ) ) );
-    marker->setLabelAlignment( Qt::AlignHCenter | Qt::AlignTop );
-
-    QwtText text( "Marker" );
-    text.setColor( Qt::black );
-    QColor bg( Qt::white );
-    bg.setAlpha( 200 );
-    text.setBackgroundBrush( QBrush( bg ) );
-
-    marker->setLabel( text );
-    marker->attach( this );
-
-    QwtLegend *legend = new QwtLegend;
-    insertLegend( legend,  QwtPolarPlot::BottomLegend );
-    */
-
-    replot();
-}
-
-QwtPolarCurve* 
-Plot::createCurve(int id)
-const
-{
-    const int numPoints = 200;
-
-    QwtPolarCurve *curve = new QwtPolarCurve();
-    curve->setStyle( QwtPolarCurve::Lines );
-    //curve->setLegendAttribute( QwtPolarCurve::LegendShowLine, true );
-    //curve->setLegendAttribute( QwtPolarCurve::LegendShowSymbol, true );
-    /*
-    switch( id )
-    {
-        case PlotSettings::Spiral:
-        {
-            curve->setTitle( "Spiral" );
-            curve->setPen( QPen( Qt::yellow, 2 ) );
-            curve->setSymbol( new QwtSymbol( QwtSymbol::Rect,
-                QBrush( Qt::cyan ), QPen( Qt::white ), QSize( 3, 3 ) ) );
-            curve->setData(
-                new SpiralData( radialInterval, azimuthInterval, numPoints ) );
-            break;
-        }
-        case PlotSettings::Rose:
-        {
-            curve->setTitle( "Rose" );
-            curve->setPen( QPen( Qt::red, 2 ) );
-            curve->setSymbol( new QwtSymbol( QwtSymbol::Rect,
-                QBrush( Qt::cyan ), QPen( Qt::white ), QSize( 3, 3 ) ) );
-            curve->setData(
-                new RoseData( radialInterval, azimuthInterval, numPoints ) );
-            break;
-        }
-    }
-    */
-    return curve;
 }

@@ -28,7 +28,8 @@ private Q_SLOTS:
     void printDocument();
     void exportDocument();
     void set_antex_file();
-    void plot_pcv_pattern(const QString&);
+    void plot_pcv_pattern();
+    void set_current_antenna(const QString&);
 
 private:
     Plot*              d_plot;
@@ -40,6 +41,7 @@ private:
 
     ngpt::antex*              d_atx;
     std::vector<ant_pos_pair> d_antpos;
+    QString*                  cur_antenna;
 };
 
 #endif

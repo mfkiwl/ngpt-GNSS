@@ -25,9 +25,13 @@
 #include "settingseditor.hpp"
 #include "pixmaps.hpp"
 
+#include <iostream>
+
 MainWindow::MainWindow(QWidget* parent)
 : QMainWindow( parent )
 {
+    d_atx = NULL;
+
     QWidget* w = new QWidget( this );
 
     d_plot = new Plot( w );
@@ -94,7 +98,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     QPushButton* btnOpen = new QPushButton("Select Antex", toolBar);
     toolBar->addWidget( btnOpen );
-    addToolBar( toolBar );
+    //addToolBar( toolBar );
     connect( btnOpen,
              SIGNAL(clicked()),
              SLOT(set_antex_file()) );
@@ -104,9 +108,15 @@ MainWindow::MainWindow(QWidget* parent)
     toolBar->addWidget(d_cmbBox);
     connect( d_cmbBox,
              SIGNAL(currentTextChanged(const QString&)),
-             SLOT(plot_pcv_pattern(const QString&)) );
+             SLOT(set_current_antenna(const QString&)) );
 
-    d_atx = NULL;
+    QPushButton* btnPlot = new QPushButton("Plot", toolBar);
+    toolBar->addWidget( btnPlot );
+    connect( btnPlot,
+             SIGNAL(clicked()),
+             SLOT(plot_pcv_pattern()) );
+    
+    addToolBar(toolBar);
 }
 
 void
@@ -154,6 +164,9 @@ MainWindow::enableZoomMode(bool on)
 void
 MainWindow::set_antex_file()
 {
+    std::cout << "\nMainWindow::set_antex_file()";
+    try {
+        std::cout<<"\n\td_cmbBox->clear()";
     d_cmbBox->clear();
 
     QString atx_filename = QFileDialog::getOpenFileName(
@@ -162,23 +175,67 @@ MainWindow::set_antex_file()
                             QCoreApplication::applicationDirPath(),
                             tr("Antex (*.atx *.ATX)")
                             );
-    if ( d_atx )
+    std::cout<<"\n\tChecking d_atx";
+    if ( d_atx != NULL )
     {
         delete d_atx;
     }
+
+    std::cout<<"\n\tCreating d_atx";
     d_atx = new ngpt::antex (atx_filename.toStdString().c_str());
 
+    std::cout<<"\n\tCreating pairs";
     std::vector<ant_pos_pair> pairs = d_atx->get_antenna_list();
     
     for ( auto i : pairs )
     {
         d_cmbBox->addItem( i.first.to_string().c_str() );
+        std::cout <<"\n\t\tAdding " << i.first.to_string() << " to combo.";
+    }
+
+    } catch(...)
+    {
+        std::cerr<<"\nEXCEPTION in MainWindow::set_antex_file()";
     }
 
 }
 
 void
-MainWindow::plot_pcv_pattern(const QString& ant)
+MainWindow::set_current_antenna(const QString& ant)
 {
+    std::cout << "\nMainWindow::set_current_antenna()";
+    try {
+    if ( !cur_antenna )
+    {
+        cur_antenna = new QString;
+    }
+    *cur_antenna = ant;
+    } catch (...)
+    {
+        std::cerr<<"\nEXCEPTION in MainWindow::set_current_antenna()";
+    }
+    std::cout <<"\nMainWindow::set_current_antenna() exit";
+}
+
+void
+MainWindow::plot_pcv_pattern()
+{
+    std::cout << "\nMainWindow::plot_pcv_pattern()";
+    try{
+    if ( !cur_antenna )
+    {
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setText("No antenna model selected!");
+        msgBox.exec();
+        return;
+    }
+    QString ant ( *cur_antenna );
     d_plot->plot_pcv(d_atx, ant);
+    }catch(...)
+    {
+        std::cerr<<"\nEXCEPTION in MainWindow::plot_pcv_pattern()";
+    }
+    std::cout<<"\nMainWindow::plot_pcv_pattern() exit";
+    return;
 }
