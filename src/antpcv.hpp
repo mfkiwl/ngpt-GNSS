@@ -367,6 +367,16 @@ public:
         }
         throw std::runtime_error("antenna_pcv::freq_pcv_pattern -> Invalid frequency");
     }
+
+    // Return the index of the fequency_pcv which matches the given (input)
+    // observation_type. The matching (between freq_pcv.obtype and type) must 
+    // be performed based on Satellite System and frequency number/band.
+    /*std::vector<std::pair<double, std::size_t>>
+    freq_pcv_pattern( ngpt::observation_type type )
+    {
+        std::vector<std::pair<double, std::size_t>> coefs;
+        for (
+    }*/
     
     // Return/access a fequency_pcv based on its index.
     frequency_pcv<T>&

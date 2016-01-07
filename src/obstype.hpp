@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <type_traits>
+#include <tuple>
 #ifdef DEBUG
     #include <iostream>
     #include <string>
@@ -101,6 +102,21 @@ namespace gnss_obs_details {
  */ 
 class _rawobs_
 {
+
+public:
+#if __cplusplus > 201103L
+    /// see the match template function for this.
+    /// TODO should the template parameters of std::tuple be references ?
+    std::tuple<satellite_system, observable_type, short int, obs_attribute> 
+    tie()
+    const noexcept
+    { return std::tie(satsys_, obstype_, nfrequency_, attribute_); }
+#else
+    /// see the match template function for this.
+    template<typename>
+    friend
+    struct expose_guts;
+#endif
 
 private:
     satellite_system satsys_;     ///< satellite system.
@@ -255,6 +271,66 @@ public:
 #endif
 
 };
+
+#if __cplusplus > 201103L
+    /// C++14 
+    template<typename... Args>
+    bool
+    match(const _rawobs_& x1, const _rawobs_& x2)
+    noexcept
+    {
+        return std::make_tuple(std::get<Args>(x1.tie())...) ==
+               std::make_tuple(std::get<Args>(x2.tie())...);
+    }
+#else
+    /// C++11
+    template<typename>
+        struct expose_guts;
+
+    template<>
+        struct expose_guts<satellite_system>
+    { 
+        static const satellite_system&
+        get(const _rawobs_& x)
+        noexcept
+        { return x.satsys_; } 
+    };
+
+    template<>
+        struct expose_guts<observable_type>
+    {
+        static const observable_type&
+        get(const _rawobs_& x)
+        noexcept
+        { return x.obstype_; }
+    };
+
+    template<>
+        struct expose_guts<short int>
+    {
+        static const short int&
+        get(const _rawobs_& x)
+        noexcept
+        { return x.nfrequency_; }
+    };
+
+    template<>
+        struct expose_guts<obs_attribute>
+    { 
+        static const obs_attribute&
+        get(const _rawobs_& x)
+        noexcept
+        { return x.attribute_; }
+    };
+
+    template<typename ...Args>
+    bool
+    match(const _rawobs_& x1, const _rawobs_& x2)
+    {
+        return std::tie(expose_guts<Args>::get(x1)...) ==
+               std::tie(expose_guts<Args>::get(x2)...);
+    }
+#endif
 
 } // end gnss_obs_details
 
