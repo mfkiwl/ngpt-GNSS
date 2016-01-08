@@ -13,16 +13,23 @@ typedef ngpt::pcv_type                     pcv_type;
 typedef ngpt::antenna_pcv<ngpt::pcv_type>  pcv_pattern;
 typedef std::map<std::string, std::string> str_str_map;
 
-// print a bunch of details for an antenna pcv pattern, nothing fancy
+// Print a bunch of details for an antenna pcv pattern, nothing fancy
 void
 print_pcv_info(const pcv_pattern&, const antenna&,
                pcv_type zen_step, pcv_type azi_step);
 
+// Parse command line arguments
 int
 cmd_parse(int, char* c[], str_str_map&);
 
+// Parse the antenna argument
 std::size_t
 antenna_parser(str_str_map&, std::vector<antenna>&);
+
+// help and usage
+void help();
+void usage();
+void epilog();
 
 int main(int argv, char* argc[])
 {
@@ -32,11 +39,17 @@ int main(int argv, char* argc[])
     arg_dict["dazi" ] = std::string( "1.0" );
     arg_dict["types"] = std::string( "G01" );
 
-    // get comd arguments into the dictionary
-    if ( cmd_parse(argv, argc, arg_dict) )
+    // get cmd arguments into the dictionary
+    int status = cmd_parse(argv, argc, arg_dict);
+    if ( status > 0 )      // error
     {
-        std::cerr << "Wrong cmds. Stop.\n";
+        std::cerr << "\n\nWrong cmds. Stop.\n";
         return 1;
+    }
+    else if ( status < 0 ) // help/usage
+    {
+        std::cout << "\n";
+        return 0;
     }
 
     // this may throw in non-debug mode
@@ -77,7 +90,7 @@ int main(int argv, char* argc[])
     }
     catch (std::invalid_argument& e)
     {
-        std::cerr << "\nInvalid zen and/or azi step!";
+        std::cerr << "\nInvalid zen and/or azi step!\n";
         return 1;
     }
 
@@ -90,12 +103,93 @@ int main(int argv, char* argc[])
     return 0;
 }
 
+void
+help()
+{
+    std::cout << "\n"
+    "Program atxtr\n"
+    "This program will read, interpolate and report GNSS antenna Phase Center\n"
+    "Variation (PCV) corrections from an ANTEX file. All output is directed\n"
+    "to \'stdout\'\n"
+    "References: https://igscb.jpl.nasa.gov/projects/antenna/";
+    return;
+}
+
+void
+usage()
+{
+    std::cout << "\n"
+    "Usage:\n"
+    " atxtr -a ANTEX -m \"ANTENN1,ANTENNA2,...\" [ [-dzen 0.5] [dazi 2.0] ]\n"
+    "\n"
+    " -a [ANTEX]\n"
+    "\tSpecify the input ANTEX file.\n"
+    " -m [\"ANTENNA_1,ANTENNA_2,...\"]\n"
+    "\tSpecify the antenna model. Use quotation marks \n"
+    "\t(\"\") to correctly parse whitespaces.\n"
+    "\tThe antenna model must follow the IGS conventions:\n"
+    "\thttps://igscb.jpl.nasa.gov/igscb/station/general/rcvr_ant.tab\n"
+    "\tand the ANTEX file format specifications. You can\n"
+    "\tspecify a serial number, by typing it directly \n"
+    "\tafter the RADOME (as in ANTEX); if the serial is\n"
+    "\tnot matched, but the antenna (i.e. MODEL+RADOME)\n"
+    "\tis, then this generic antnna will be selected.\n"
+    " -dzen [ZENITH_STEP]\n"
+    "\tSpecify the zenith step in degrees. The interpolation\n"
+    "\tWill be performed on the interval [ZEN1, ZEN2] with a\n"
+    "\tstep size of ZENITH_STEP degrees. The ZEN1, ZEN2 are\n"
+    "\tread off from the ANTEX file.\n"
+    " -dazi [AZIMOUTH_STEP]\n"
+    "\tIf the antenna PCV pattern includes azimouth-dependent\n"
+    "\tcorrections, then this will set the step size for\n"
+    "\tthe azimouth interval. The interpolation will be\n"
+    "\tperformed on the interval [0, 360] with a step size of\n"
+    "\tAZIMOUTH_STEP degrees.";
+
+    std::cout << "\n"
+    "Example usage:\n"
+    "atxtr -a igs08.atx -m \"TRM41249.00     TZGD,LEIATX1230+GNSS NONE\"";
+    return;
+}
+
+void
+epilog()
+{
+    std::cout << "\n"
+    "Copyright 2015 National Technical University of Athens.\n"
+    "This work is free. You can redistribute it and/or modify it under the\n"
+    "terms of the Do What The Fuck You Want To Public License, Version 2,\n"
+    "as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.\n"
+    "\nSend bugs to: xanthos[AT]mail.ntua.gr, demanast[AT]mail.ntua.gr";
+    return;
+}
+
 int
 cmd_parse(int argv, char* argc[], str_str_map& smap)
 {
+    if ( argv == 1 )
+    {
+            help();
+            std::cout << "\n";
+            usage();
+            std::cout << "\n";
+            epilog();
+            return 1;
+    }
+
     for (int i = 1; i < argv; i++)
     {
-        if ( !std::strcmp(argc[i], "-a") )
+        if (   !std::strcmp(argc[i], "-h") 
+            || !std::strcmp(argc[i], "--help") )
+        {
+            help();
+            std::cout << "\n";
+            usage();
+            std::cout << "\n";
+            epilog();
+            return -1;
+        }
+        else if ( !std::strcmp(argc[i], "-a") )
         {
             if ( i+1 >= argv ) { return 1; }
             smap["antex"] = std::string( argc[i+1] );
