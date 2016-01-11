@@ -6,11 +6,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
-plot_options = {'wired': False,
-                'surfc': True }
+plot_options = {'wired': False,  ## plot as wire-frame
+                'surfc': True }  ## normal, surface plot
 
 def get_antenna_model(buf):
-    line = fin.readline()
+    """ Extract the antenna model from an input stream.
+    """
+    line = buf.readline()
     print 'ANTENNA LINE=[' + line.strip() + ']'
     l    = line.split()
     if l[0] != 'ANT:':
@@ -20,7 +22,9 @@ def get_antenna_model(buf):
     return line[5:]
 
 def get_zen_axis(buf):
-    line = fin.readline()
+    """ Extract the zenith distance grid details from an input stream.
+    """
+    line = buf.readline()
     l    = line.split()
     if l[0] != 'ZEN:':
         print >> sys.stderr, 'ERROR. Invalid \'Zen\' line:'
@@ -31,6 +35,8 @@ def get_zen_axis(buf):
     return zen1, zen2, dzen
 
 def get_azi_axis(buf):
+    """ Extract the azimouth grid details from an input stream.
+    """
     line = fin.readline()
     l    = line.split()
     if l[0] != 'AZI:':
@@ -112,7 +118,7 @@ with open('atx.grd', 'r') as fin:
             #cset = ax.contourf(X, Y, Z, zdir='y', offset=340,         cmap=cm.coolwarm)
 
 ##  Re-scale
-        ax.set_xlim(0, 90.0) ## zenith
+        ax.set_xlim(0, 90.0)  ## zenith
         ax.set_ylim(0, 360.0) ## azimuth
         ax.set_zlim(2*min(pcv), max(pcv)+1)
 

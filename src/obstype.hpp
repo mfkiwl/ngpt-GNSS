@@ -270,7 +270,7 @@ public:
     }
 #endif
 
-};
+}; // _rawobs_
 
 #if __cplusplus > 201103L
     /// C++14 
