@@ -1,0 +1,9 @@
+bin_PROGRAMS = atxtr
+
+MCXXFLAGS = \
+	-std=c++11 \
+	-O2
+
+atxtr_SOURCES     = atxtr.cpp
+atxtr_CXXFLAGS    = $(MCXXFLAGS) -I$(top_srcdir)/src -L$(top_srcdir)/src
+atxtr_LDADD       = $(top_srcdir)/src/libngpt.la
