@@ -16,10 +16,20 @@ typedef std::map<std::string, std::string> str_str_map;
 typedef std::ifstream::pos_type            pos_type;
 typedef std::pair<ngpt::antenna, pos_type> ant_pos_pair;
 
+/*
+pcv_type MIN_ZEN = 0;
+pcv_type MAX_ZEN = 90;
+pcv_type MIN_AZI = 0;
+pcv_type MAX_AZI = 360;
+*/
+
 // Print a bunch of details for an antenna pcv pattern, nothing fancy
 void
 print_pcv_info(const pcv_pattern&, const antenna&,
                pcv_type zen_step, pcv_type azi_step);
+void
+print_pcv_info_noazi(const pcv_pattern&, const antenna&,
+               pcv_type zen_step);
 
 // Parse command line arguments
 int
@@ -110,7 +120,7 @@ int main(int argv, char* argc[])
         std::cerr << "\nInvalid zen and/or azi step!\n";
         return 1;
     }
-
+    
     for (const auto& i : pcv_vec)
     {
         print_pcv_info(i, ant_vec[idx], zen_step, azi_step);
@@ -289,16 +299,40 @@ void
 print_pcv_info(const pcv_pattern& pcv, const antenna& ant,
                pcv_type zen_step, pcv_type azi_step)
 {
+    if ( !pcv.has_azi_pcv() )
+    {
+        std::cerr << "\n[WARNING] Antenna: "<< ant.to_string() << " has no"
+        " azimouth-dependent PCV corrections; Switching to NOAZI grid.";
+        print_pcv_info_noazi(pcv, ant, zen_step);
+        return;
+    }
+
     std::cout <<"\nANT: " << ant.to_string();
     std::cout <<"\nZEN: " << pcv.zen1() << " " << pcv.zen2() << " " << zen_step;
     std::cout <<"\nAZI: " << pcv.azi1() << " " << pcv.azi2() << " " << azi_step;
 
-    for ( pcv_type zen = .1; zen < 90.0 ; zen += zen_step )
+    for ( pcv_type zen = pcv.zen1(); zen < pcv.zen2(); zen += zen_step )
     {
-        for ( pcv_type azi = .1; azi < 360.0 ; azi += azi_step )
+        for ( pcv_type azi = pcv.azi1(); azi < pcv.azi2(); azi += azi_step )
         {
             std::cout << "\n" << pcv.azi_pcv(zen, azi, 0);
         }
     }
+
+    return;
+}
+
+void
+print_pcv_info_noazi(const pcv_pattern& pcv, const antenna& ant, pcv_type zen_step)
+{
+    std::cout <<"\nANT: " << ant.to_string();
+    std::cout <<"\nZEN: " << pcv.zen1() << " " << pcv.zen2() << " " << zen_step;
+    std::cout <<"\nAZI: 0 0 0";
+
+    for ( pcv_type zen = pcv.zen1(); zen < pcv.zen2(); zen += zen_step )
+    {
+        std::cout << "\n" << pcv.no_azi_pcv(zen, 0);
+    }
+
     return;
 }

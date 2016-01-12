@@ -46,11 +46,21 @@ int main(int argc, char* argv[])
     pcv = atx.get_antenna_pattern( ant );
     //print_pcv_info( pcv );
     // let's print the NOAZI pcv
-    for ( float zen = .1; zen < 90.0 ; zen += 1.0 ) {
-        std::cout << "\n\tZenith = " << zen << " pcv = " << pcv.no_azi_pcv(zen, 0);
-        for ( float azi = .1; azi < 360.0 ; azi += 1.0 ) {
-            std::cout << "\n\t" << zen << " " << azi << " " << pcv.azi_pcv(zen, azi, 0); 
-        }
+    //for ( float zen = .1; zen < 90.0 ; zen += 1.0 ) {
+    //    std::cout << "\n\tZenith = " << zen << " pcv = " << pcv.no_azi_pcv(zen, 0);
+    //    for ( float azi = .1; azi < 360.0 ; azi += 1.0 ) {
+    //        std::cout << "\n\t" << zen << " " << azi << " " << pcv.azi_pcv(zen, azi, 0); 
+    //    }
+    //}
+    float zen(0), azi(180);
+    try
+    {
+        std::cout<<"\nZen="<<zen<<", Azi="<<azi<<", pcv="<< pcv.azi_pcv(zen, azi, 0);
+    } catch (std::exception& e)
+    {
+        std::cerr<<"\nException caught for pcv at: Zen="<<zen<<", Azi="<<azi;
+        std::cerr<<e.what();
+        std::cerr<<"\n";
     }
 
     // exit.

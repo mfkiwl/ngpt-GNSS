@@ -268,9 +268,15 @@ template<typename T>
 class antenna_pcv
 {
 
-typedef GridSkeleton<T, false, Grid_Dimension::OneDim> dim1_grid;
-typedef GridSkeleton<T, false, Grid_Dimension::TwoDim> dim2_grid;
-typedef std::vector<frequency_pcv<T>>                  fr_pcv_vec;
+#ifdef DEBUG
+    typedef GridSkeleton<T, true, Grid_Dimension::OneDim> dim1_grid;
+    typedef GridSkeleton<T, true, Grid_Dimension::TwoDim> dim2_grid;
+#else
+    typedef GridSkeleton<T, false, Grid_Dimension::OneDim> dim1_grid;
+    typedef GridSkeleton<T, false, Grid_Dimension::TwoDim> dim2_grid;
+#endif
+
+typedef std::vector<frequency_pcv<T>> fr_pcv_vec;
 
 private:
     dim1_grid  no_azi_grid_; ///< Non-azimouth dependent grid (skeleton)
@@ -521,6 +527,15 @@ public:
         T           f01    = freq_pcv_[i].azi_vector( lowleft + azi_pts );
         T           f10    = freq_pcv_[i].azi_vector( lowleft + 1);
         T           f11    = freq_pcv_[i].azi_vector( lowleft + azi_pts + 1 );
+#ifdef DEBUG
+//        std::cout <<"\nInterpolating at: ("<<zenith<<", "<<azimouth<<")";
+//        std::cout <<"\n("<<x0_idx<<", "<<y1_idx<<") ----   ("<<x1_idx<<", "<<y1_idx<<")";
+//        std::cout <<"\n  |                     |";
+//        std::cout <<"\n  |                     |";
+//        std::cout <<"\n  |                     |";
+//        std::cout <<"\n("<<x0_idx<<", "<<y0_idx<<") ----   ("<<x1_idx<<", "<<y0_idx<<")";
+//        std::cout<<"\n";
+#endif
         
         // bilinear interpolation, see 
         // https://en.wikipedia.org/wiki/Bilinear_interpolation
