@@ -133,7 +133,7 @@ std::string antenna::radome_str() const noexcept
 std::string
 antenna::to_string()
 const noexcept
-{ return std::string(name_, antenna_full_max_chars); }
+{ return std::string(name_, std::strlen(this->name_))/*antenna_full_max_chars)*/; }
 
 /// Set all chars in \c name_ to \c '\0'. 
 inline void
