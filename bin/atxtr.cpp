@@ -96,15 +96,7 @@ int main(int argv, char* argc[])
         return 1;
     }
 
-    // get the pcv patterns
-    std::vector<pcv_pattern> pcv_vec;
-    for (const auto& i : ant_vec)
-    {
-        pcv_vec.emplace_back( atx.get_antenna_pattern(i) );
-    }
-
-    // print the correction pattern
-    std::size_t idx = 0;
+    // get the zenith & azimouth axis info
     pcv_type zen_step, azi_step;
     try
     {
@@ -120,10 +112,12 @@ int main(int argv, char* argc[])
         std::cerr << "\nInvalid zen and/or azi step!\n";
         return 1;
     }
-    
-    for (const auto& i : pcv_vec)
+
+    // compute and write pcv's
+    for (const auto& i : ant_vec)
     {
-        print_pcv_info(i, ant_vec[idx], zen_step, azi_step);
+        pcv_pattern pcv ( atx.get_antenna_pattern(i) );
+        print_pcv_info(pcv, i, zen_step, azi_step);
     }
 
     std::cout << "\n";
@@ -281,12 +275,15 @@ antenna_parser(str_str_map& arg_map, std::vector<antenna>& ant_vec)
                     [](const char c)->char{ return c==','?'\0':c;} );
     *(str+ant_lst.size()) = '\0';
 
+    //std::cerr <<"\nANTENNA LIST: " << it->second;
+
     std::size_t idx = 0;
     std::size_t lng;
     char* tmp = str;
     while ( idx < ant_lst.size() )
     {
         lng = std::strlen( tmp+idx );
+        //std::cerr<<"\nNew antenna: " << std::string(tmp+idx);
         ant_vec.emplace_back( tmp+idx );
         idx += lng + 1;
     }
@@ -302,7 +299,7 @@ print_pcv_info(const pcv_pattern& pcv, const antenna& ant,
     if ( !pcv.has_azi_pcv() )
     {
         std::cerr << "\n[WARNING] Antenna: "<< ant.to_string() << " has no"
-        " azimouth-dependent PCV corrections; Switching to NOAZI grid.";
+        " azimouth-dependent PCV corrections; Switching to NOAZI grid.\n";
         print_pcv_info_noazi(pcv, ant, zen_step);
         return;
     }
