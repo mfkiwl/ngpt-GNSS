@@ -124,7 +124,11 @@ come with help messages (use `-h` or `--help`) .
 
 The following figure is a result of `antex-view.py` program.
 
-![alt text](doc/figures/sepchoke_b3e6.png)
+![3d-plot of PCV corrections.](doc/figures/sepchoke_b3e6.png)
+
+```shell
+$> atxtr -a igs08_1869.atx -m "SEPCHOKE_B3E6   NONE" > sepchk.dat && antex-view.py -f sepchk.dat
+```
 
 ## Tested Compilers & OSs
 
