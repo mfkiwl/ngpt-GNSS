@@ -39,16 +39,24 @@ struct ellipsoid_traits<ellipsoid::pz90>
 };
 
 template<ellipsoid E>
+#if __cplusplus > 201103L
     constexpr double 
+#else
+    double
+#endif
     eccentricity_squared()
     noexcept
 {
-  constexpr double f { ellipsoid_traits<E>::f };
-  return ( 2.0e0 - f ) * f;
+    constexpr double f { ellipsoid_traits<E>::f };
+    return ( 2.0e0 - f ) * f;
 }
 
 template<ellipsoid E>
-    constexpr double
+#if __cplusplus > 201103L
+    constexpr double 
+#else
+    double
+#endif
     semi_minor()
     noexcept
 {
