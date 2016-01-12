@@ -12,6 +12,9 @@ The development will be very-very slow ...
 
 ## Prerequisites
 
+> :bangbang: Don't even try installing the project with a compiler not
+> supporting at least c++11.
+
 To install the library, you will need:
 
 * a C++ compiler supporting at least C++11 (see [C++ compiler support](http://en.cppreference.com/w/cpp/compiler_support))
@@ -32,9 +35,6 @@ To install the binaries, you will need (on top of the above list):
 
 * Python 2.7
 * [python-matplotlib](http://matplotlib.org/)
- 
-> :bangbang: Don't even try installing the project with a compiler not
-> supporting at least c++11.
 
 We are trying to keep the installation process compatible with
 the [GNU Build System](https://en.wikipedia.org/wiki/GNU_build_system)
@@ -94,7 +94,7 @@ As a final step, install the library and binaries, via the command:
 ```shell
 $> sudo make install
 ```
-[:heavy_exclamation_mark:]This step needs to be executed with super-user privileges.
+>:heavy_exclamation_mark: This step needs to be executed with super-user privileges.
 
 You don't need to run `autoreconf` ever again! You need to run the
 `configure` script though, if the `Makefile[.am]`'s change.
@@ -124,7 +124,7 @@ This will create the doc pages under `doc/html`; start at `index.html`.
 
 # What we haven't done but **should** do
 
-- [ ] provide a *prerequisities* list
+- [x] provide a *prerequisities* list
 - [ ] try compiling with [libc++](http://libcxx.llvm.org/index.html)
 - [ ] write a decent documentation (not just doxygen comments ...); a docbook would be nice!
 
