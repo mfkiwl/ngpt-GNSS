@@ -80,12 +80,33 @@ parser.add_argument('-i', '--altitude',
     dest   = 'plot_altitude'
     )
 
+parser.add_argument('-s', '--save-as',
+    action   = 'store',
+    default  = None,
+    help     = ''
+    'Export the plot to an output file. Depending on\n'
+    'the filename extension, the format of the file will\n'
+    'be deduced. Supported format (normally) include:\n'
+    'png, pdf, [e]ps, svg.',
+    required = False,
+    metavar  = 'SAVE_AS',
+    dest     = 'save_file'
+    )
+
+parser.add_argument('-n', '--non-interactive',
+    action   = 'store_true',
+    help     = ''
+    'Do not show (supress) the plot; this can be useful\n'
+    'if the user only wants the plot to be saved.',
+    dest     = 'no_int_plot'
+    )
+
 ##  Parse command line arguments
 args = parser.parse_args()
 
 FIG_NR = 0 
 new_antenna = True
-with open(args.pcv_grig_file, 'r') as fin:
+with open(args.pcv_grid_file, 'r') as fin:
     while new_antenna:
         try:
             antenna = get_antenna_model(fin)
@@ -135,7 +156,10 @@ with open(args.pcv_grig_file, 'r') as fin:
                                    cstride=5,
                                    cmap=cm.autumn,
                                    linewidth=0,
-                                   antialiased=False)
+                                   antialiased=False,
+                                   color='blue',
+                                   alpha=.75,
+                                   zorder=-1)
 
         ##  Plot the pcv values
         ##  ------------------------------------------------------------------
@@ -164,4 +188,9 @@ with open(args.pcv_grig_file, 'r') as fin:
         ax.set_ylim(0, 360.0) ## azimuth
         ax.set_zlim(2*min(pcv), max(pcv)+1)
 
-plt.show()
+        ## Export (if needed)
+        ## -------------------------------------------------------------------
+        if args.save_file is not None:
+            fig.savefig(args.save_file, dpi=100, bbox_inches='tight')
+
+if not args.no_int_plot: plt.show()

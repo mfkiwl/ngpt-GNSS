@@ -148,6 +148,11 @@ public:
   /// Move assignment operator.
   antex& operator=(antex&& a) 
   noexcept(std::is_nothrow_move_assignable<std::ifstream>::value) = default;
+
+  std::string
+  filename()
+  const noexcept
+  { return this->_filename; }
   
   //TODO This is a fucking bug! Cannot initialize ngpt::antenna_pcv<pcv_type>(0, 0, 0, 0, 0)
   //     an asesertion will fail; check the constructor.

@@ -4,6 +4,7 @@
 #include <cstring>
 #include <string>
 #include <stdexcept>
+
 #include "antex.hpp"
 
 using ngpt::antex;
@@ -12,6 +13,8 @@ using ngpt::antenna;
 typedef ngpt::pcv_type                     pcv_type;
 typedef ngpt::antenna_pcv<ngpt::pcv_type>  pcv_pattern;
 typedef std::map<std::string, std::string> str_str_map;
+typedef std::ifstream::pos_type            pos_type;
+typedef std::pair<ngpt::antenna, pos_type> ant_pos_pair;
 
 // Print a bunch of details for an antenna pcv pattern, nothing fancy
 void
@@ -38,6 +41,7 @@ int main(int argv, char* argc[])
     arg_dict["dzen" ] = std::string( "1.0" );
     arg_dict["dazi" ] = std::string( "1.0" );
     arg_dict["types"] = std::string( "G01" );
+    arg_dict["list" ] = std::string( "N"   );
 
     // get cmd arguments into the dictionary
     int status = cmd_parse(argv, argc, arg_dict);
@@ -46,7 +50,7 @@ int main(int argv, char* argc[])
         std::cerr << "\n\nWrong cmds. Stop.\n";
         return 1;
     }
-    else if ( status < 0 ) // help/usage
+    else if ( status < 0 ) // -h or -l
     {
         std::cout << "\n";
         return 0;
@@ -60,6 +64,19 @@ int main(int argv, char* argc[])
         return 1;
     }
     antex atx ( it->second.c_str() );
+
+    // maybe the user only wants the antenna list
+    if (arg_dict["list"] == "Y")
+    {
+       std::vector<ant_pos_pair> ants ( atx.get_antenna_list() );
+       std::cout << "\nAntennas included in ANTEX file: " << atx.filename();
+       for (auto const& i: ants)
+       {
+           std::cout << "\n" << i.first.to_string();       
+       }
+       std::cout << "\n";
+       return 0;
+    }
     
     // declare/construct the antenna vector
     std::vector<antenna> ant_vec;
@@ -122,6 +139,8 @@ usage()
     "Usage:\n"
     " atxtr -a ANTEX -m \"ANTENN1,ANTENNA2,...\" [ [-dzen 0.5] [dazi 2.0] ]\n"
     "\n"
+    " -h or --help\n"
+    "\tDisplay (this) help message and exit.\n"
     " -a [ANTEX]\n"
     "\tSpecify the input ANTEX file.\n"
     " -m [\"ANTENNA_1,ANTENNA_2,...\"]\n"
@@ -134,6 +153,9 @@ usage()
     "\tafter the RADOME (as in ANTEX); if the serial is\n"
     "\tnot matched, but the antenna (i.e. MODEL+RADOME)\n"
     "\tis, then this generic antnna will be selected.\n"
+    " -l or --list\n"
+    "\tList all available antennas recorded in the given ANTEX\n"
+    "\tfile and exit.\n"
     " -dzen [ZENITH_STEP]\n"
     "\tSpecify the zenith step in degrees. The interpolation\n"
     "\tWill be performed on the interval [ZEN1, ZEN2] with a\n"
@@ -188,6 +210,11 @@ cmd_parse(int argv, char* argc[], str_str_map& smap)
             std::cout << "\n";
             epilog();
             return -1;
+        }
+        else if ( !std::strcmp(argc[i], "-l")
+               || !std::strcmp(argc[i], "--list") )
+        {
+            smap["list"] = std::string("Y");
         }
         else if ( !std::strcmp(argc[i], "-a") )
         {
