@@ -17,11 +17,11 @@ To install the library, you will need:
 * a C++ compiler supporting at least C++11 (see [C++ compiler support](http://en.cppreference.com/w/cpp/compiler_support))
 * most packages of the [GNU Build System](https://en.wikipedia.org/wiki/GNU_build_system),
 including:
-    1 [autoreconf](http://linuxcommand.org/man_pages/autoreconf1.html); normally you need
+    * [autoreconf](http://linuxcommand.org/man_pages/autoreconf1.html); normally you need
     to install the package `dh-autoreconf`
-    2 [libtool](http://www.gnu.org/software/libtool/)
-    3 [automake](https://www.gnu.org/software/automake/)
-    4 [autoconf](http://www.gnu.org/software/autoconf/autoconf.html)
+    * [libtool](http://www.gnu.org/software/libtool/)
+    * [automake](https://www.gnu.org/software/automake/)
+    * [autoconf](http://www.gnu.org/software/autoconf/autoconf.html)
 Most Linux distros provide grouped-packages for easy installation; e.g. for Debian 
 see (build-essentials)[https://packages.debian.org/wheezy/build-essential] 
 and (Getting started with Autotools – GNU Build System on Debian)[http://abhinavsingh.com/getting-started-with-autotools-gnu-build-system-on-debian/], 
