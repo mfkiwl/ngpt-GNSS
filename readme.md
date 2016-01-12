@@ -144,14 +144,13 @@ $> atxtr -a igs08_1869.atx -m "SEPCHOKE_B3E6   NONE" > sepchk.dat && antex-view.
  
 # FAQ
 
-### + Error when trying to run (any of) the installed programs (typically something like: ```atxtr: error while loading shared libraries: libngpt.so.0: cannot open shared object file: No such file or directory```)
+### + Error loading the (shared) library
+
+>typically something like: `atxtr: error while loading shared libraries: libngpt.so.0: cannot open shared object file: No such file or directory`)
 The linker can't find the shared library. One way to fix this, is to run the following (as **root**):
-* first make sure the library is placed in the right path (i.e. `/usr/local/lib``); listing the directory, you should see something like: `libngpt.a  libngpt.la  libngpt.so  libngpt.so.0  libngpt.so.0.0.0`. If not, then the installation has failed.
+* first make sure the library is placed in the right path (i.e. `/usr/local/lib`); listing the directory, you should see something like: `libngpt.a  libngpt.la  libngpt.so  libngpt.so.0  libngpt.so.0.0.0`. If not, then the installation has failed.
 * add the path to the `/etc/ld.so.conf` file, i.e. append the line: `/usr/local/lib` in the file.
-* update the search path
-```shell
-$> ldconfig
-```
+* update the search path: `$> ldconfig`
 
 # References
 
