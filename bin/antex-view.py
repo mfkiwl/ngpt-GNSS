@@ -1,12 +1,12 @@
 #! /usr/bin/python
 
-from mpl_toolkits.mplot3d import axes3d
-from matplotlib import cm
 import matplotlib.pyplot as plt
 import numpy as np
 import argparse
-from argparse import RawTextHelpFormatter
 import sys
+from mpl_toolkits.mplot3d import axes3d
+from matplotlib import cm
+from argparse import RawTextHelpFormatter
 
 plot_options = {'wired': False,  ## plot as wire-frame
                 'surfc': True }  ## normal, surface plot
@@ -39,7 +39,7 @@ def get_zen_axis(buf):
 def get_azi_axis(buf):
     """ Extract the azimouth grid details from an input stream.
     """
-    line = fin.readline()
+    line = buf.readline()
     l    = line.split()
     if l[0] != 'AZI:':
         print >> sys.stderr, 'ERROR. Invalid \'Azi\' line:'
@@ -176,15 +176,16 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument('-f', '--file',
     action   = 'store',
-    required = True,
+    required = False,
     help     = ''
     'The input file containing the PCV corrections.\n'
     'The format of this file is strict; see the\n'
     '\"atx.grd.example\" file for details. Note that\n'
     'more than one antennas PCVs can be plotted in one\n'
-    'run.',
+    'run. By default, antex-view will read from stdin.',
     metavar  = 'PVC_GRID',
-    dest     = 'pcv_grid_file'
+    dest     = 'pcv_grid_file',
+    default  = sys.stdin
     )
 
 ## TODO implement this
@@ -226,7 +227,7 @@ FIG_NR      = 0
 plots       = []
 new_antenna = True
 
-with open(args.pcv_grid_file, 'r') as fin:
+with open(args.pcv_grid_file, 'r') if args.pcv_grid_file is not sys.stdin else sys.stdin as fin:
     while new_antenna:
         try:
             antenna = get_antenna_model(fin)
