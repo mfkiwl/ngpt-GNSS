@@ -22,15 +22,16 @@ including:
     * [libtool](http://www.gnu.org/software/libtool/)
     * [automake](https://www.gnu.org/software/automake/)
     * [autoconf](http://www.gnu.org/software/autoconf/autoconf.html)
+
 Most Linux distros provide grouped-packages for easy installation; e.g. for Debian 
-see (build-essentials)[https://packages.debian.org/wheezy/build-essential] 
-and (Getting started with Autotools – GNU Build System on Debian)[http://abhinavsingh.com/getting-started-with-autotools-gnu-build-system-on-debian/], 
+see [build-essentials](https://packages.debian.org/wheezy/build-essential)
+and [Getting started with Autotools – GNU Build System on Debian](http://abhinavsingh.com/getting-started-with-autotools-gnu-build-system-on-debian/), 
 for Fedora see the package "C Development Tools and Libraries"
 
 To install the binaries, you will need (on top of the above list):
 
 * Python 2.7
-* (python-matplotlib)[http://matplotlib.org/]
+* [python-matplotlib](http://matplotlib.org/)
  
 > :bangbang: Don't even try installing the project with a compiler not
 > supporting at least c++11.
