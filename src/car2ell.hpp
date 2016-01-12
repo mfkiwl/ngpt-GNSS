@@ -5,6 +5,12 @@
 #include "ellipsoid.hpp"
 #include "geoconst.hpp"
 
+#if __cplusplus > 201103L
+    #define CONSTEXPR constexpr
+#else
+    #define CONSTEXPR
+#endif
+
 namespace ngpt {
 
 /** \details  Transform Cartesian, geocentric coordinates to ellipsoidal (i.e.
@@ -30,16 +36,16 @@ car2ell(double x,    double y,       double z,
         double& phi, double& lambda, double& h)
 noexcept
 {
-    constexpr double a { ellipsoid_traits<E>::a };
-    constexpr double f { ellipsoid_traits<E>::f };
+    CONSTEXPR double a { ellipsoid_traits<E>::a };
+    CONSTEXPR double f { ellipsoid_traits<E>::f };
     
     // Functions of ellipsoid parameters.
-    constexpr double aeps2 { a*a*1e-32 };
-    constexpr double e2    { (2.0e0-f)*f };
-    constexpr double e4t   { e2*e2*1.5e0 };
-    constexpr double ep2   { 1.0e0-e2 };
-    constexpr double ep    { std::sqrt(ep2) };
-    constexpr double aep   { a*ep };
+    CONSTEXPR double aeps2 { a*a*1e-32 };
+    CONSTEXPR double e2    { (2.0e0-f)*f };
+    CONSTEXPR double e4t   { e2*e2*1.5e0 };
+    CONSTEXPR double ep2   { 1.0e0-e2 };
+    CONSTEXPR double ep    { std::sqrt(ep2) };
+    CONSTEXPR double aep   { a*ep };
 
     /* ---------------------------------------------------------
      * Compute Coefficients of (Modified) Quartic Equation

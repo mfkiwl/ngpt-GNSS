@@ -26,7 +26,10 @@ ell2car(double phi, double lambda, double h,
 noexcept
 {
     // Eccentricity squared.
-    constexpr double e2 { ngpt::eccentricity_squared<E>() };
+#if __cplusplus > 201103L
+    constexpr
+#endif
+    double e2 { ngpt::eccentricity_squared<E>() };
 
     // Trigonometric numbers.
     double sinf { std::sin(phi) };
