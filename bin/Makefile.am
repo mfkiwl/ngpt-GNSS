@@ -1,3 +1,5 @@
+dist_bin_SCRIPTS = antex-view.py
+
 bin_PROGRAMS = atxtr
 
 MCXXFLAGS = \

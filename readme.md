@@ -116,6 +116,16 @@ $> doxygen doxy.conf
 
 This will create the doc pages under `doc/html`; start at `index.html`.
 
+# Extracting and Plotting ANTEX information
+
+Two of the programs installed, namely `atxtr` and `antex-view.py` are used to
+create 3D plots of GNSS antenna Phase Center Variation corrections. Both programs
+come with help messages (use `-h` or `--help`) .
+
+The following figure is a result of `antex-view.py` program.
+
+![alt text](doc/figures/sepchoke_b3e6.png)
+
 ## Tested Compilers & OSs
 
 | Compiler    |  Version  |
