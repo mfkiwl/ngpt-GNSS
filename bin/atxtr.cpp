@@ -298,7 +298,7 @@ print_pcv_info(const pcv_pattern& pcv, const antenna& ant,
 {
     if ( !pcv.has_azi_pcv() )
     {
-        std::cerr << "\n[WARNING] Antenna: "<< ant.to_string() << " has no"
+        std::cerr << "\n## Antenna: "<< ant.to_string() << " has no"
         " azimouth-dependent PCV corrections; Switching to NOAZI grid.\n";
         print_pcv_info_noazi(pcv, ant, zen_step);
         return;

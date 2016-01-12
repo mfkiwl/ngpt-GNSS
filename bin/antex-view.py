@@ -3,7 +3,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import argparse
-import sys
+import sys, re
 from mpl_toolkits.mplot3d import axes3d
 from matplotlib import cm
 from argparse import RawTextHelpFormatter
@@ -162,16 +162,50 @@ def make_3d_plot(antenna, buf, fig_nr):
 
     ## Export (if needed)
     ## -------------------------------------------------------------------
-    if args.save_file is not None:
-        fig.savefig(args.save_file, dpi=100, bbox_inches='tight')
+    if args.save_format is not None:
+        fn = (re.sub(r'\s+', '_', antenna) + '.' + args.save_format).lower()
+        fig.savefig(fn, dpi=100, bbox_inches='tight', format=args.save_format)
+        print 'Plot exported to:', fn
     return fig
-
 
 parser = argparse.ArgumentParser(
     formatter_class = RawTextHelpFormatter,
     description     = ''
     'Utility to plot GNSS antenna Phase Center Variation correction\n'
-    'grid(s), as extracted from the ngpt atxtr program.'
+    'grid(s), as extracted from the ngpt atxtr program.\n'
+    'By default, antex-view will read data from STDIN, but you\n'
+    'can change this behavior via the \'-f\' option. You can\n'
+    'simultaniously plot multiple antenna pcv grids/corrections.\n'
+    'The plots will be (interactively) shown when all reading is\n'
+    'done; should you want to save them, use the \'-s\' option\n'
+    '(if you do not want to see the interactive plots a all, use\n'
+    '\'-n\'). Normally, you should be able to save files in all\n'
+    'commonly used formats, including:\n'
+    '\tpng,\n'
+    '\tpdf,\n'
+    '\t[e]ps,\n'
+    '\tsvg.\n'
+    'The format of the input data is strict and even slight changes\n'
+    'may cause the program to exit with failure.\n'
+    'NOAZI pcv corrections, i.e. antennas with non-azimouth-dependent\n'
+    'pcv corrections can (and will) be plotted if the \'AZI\' line is:\n'
+    '\t\'AZI: 0 0 0\'.\n'
+    'An exit status other than 0 (zero), denotes ERROR.\n\n'
+    '---------example input data ---------------------------------------\n'
+    'ANT: LEIAR25.R4      NONE\n'
+    'ZEN: 0 90 1\n'
+    'AZI: 0 360 1\n'
+    '0.003804\n'
+    '...\n'
+    '...\n'
+    '---------endof input data -----------------------------------------\n\n'
+    'See \'atxtr\' for more info.',
+    epilog = ''
+    'Copyright 2015 National Technical University of Athens.\n'
+    'This work is free. You can redistribute it and/or modify it under the\n'
+    'terms of the Do What The Fuck You Want To Public License, Version 2,\n'
+    'as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.\n'
+    '\nSend bugs to: xanthos[AT]mail.ntua.gr, demanast[AT]mail.ntua.gr'
     )
 
 parser.add_argument('-f', '--file',
@@ -203,13 +237,18 @@ parser.add_argument('-s', '--save-as',
     action   = 'store',
     default  = None,
     help     = ''
-    'Export the plot to an output file. Depending on\n'
-    'the filename extension, the format of the file will\n'
-    'be deduced. Supported format (normally) include:\n'
+    'Export the plot(s) to an output file. Only specify\n'
+    'the format (i.e. extension) of the exported file;\n'
+    'the name will be automatically deduced using the\n'
+    'antenna name/radome/serial, where all whitespaces\n'
+    'will be truncated to \'_\'.\n'
+    'Supported formats (normally) include:\n'
     'png, pdf, [e]ps, svg.',
     required = False,
-    metavar  = 'SAVE_AS',
-    dest     = 'save_file'
+    nargs    = '?',
+    metavar  = 'SAVE_FORMAT',
+    dest     = 'save_format',
+    choices  = ['png', 'pdf', 'eps', 'ps', 'svg']
     )
 
 parser.add_argument('-n', '--non-interactive',
