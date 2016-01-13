@@ -16,22 +16,28 @@ typedef std::map<std::string, std::string> str_str_map;
 typedef std::ifstream::pos_type            pos_type;
 typedef std::pair<ngpt::antenna, pos_type> ant_pos_pair;
 
-/*
-pcv_type MIN_ZEN = 0;
-pcv_type MAX_ZEN = 90;
-pcv_type MIN_AZI = 0;
-pcv_type MAX_AZI = 360;
-*/
 
-// Print a bunch of details for an antenna pcv pattern, nothing fancy
+// Print pcv corrections
 void
 print_pcv_info(const pcv_pattern&, const antenna&,
-               pcv_type zen_step, pcv_type azi_step,
-               pcv_type zen1, pcv_type zen2,
-               pcv_type azi1, pcv_type azi2);
+               pcv_type, pcv_type, pcv_type, pcv_type, pcv_type, pcv_type);
+
+// Print NOAZI pcv corrections
 void
 print_pcv_info_noazi(const pcv_pattern&, const antenna&,
-               pcv_type zen_step, pcv_type zen1, pcv_type zen2);
+               pcv_type, pcv_type, pcv_type);
+
+// Print pcv corrections (differences)
+void
+print_pcv_diff(const pcv_pattern&, const antenna&,
+               const pcv_pattern&, const antenna&,
+               pcv_type, pcv_type, pcv_type, pcv_type, pcv_type, pcv_type);
+
+// Print NOAZI pcv corrections (differences)
+void
+print_pcv_diff_noazi(const pcv_pattern&, const antenna&,
+                     const pcv_pattern&, const antenna&,
+                     pcv_type, pcv_type, pcv_type);
 
 // Parse command line arguments
 int
@@ -58,12 +64,12 @@ int main(int argv, char* argc[])
     arg_dict["dazi" ] = std::string( "1.0" );
     arg_dict["types"] = std::string( "G01" );
     arg_dict["list" ] = std::string( "N"   );
-    // arg_dict["zen"  ] = std::string( "0.0/90.0/1.0" );
-    // arg_dict["azi"  ] = std::string( "0.0/360.0/1.0" );
+    arg_dict["diff" ] = std::string( "N"   );
+    
+    // default axis limits
     pcv_type zen_start, zen_stop, zen_step;
     pcv_type azi_start, azi_stop, azi_step;
-    // default
-    zen_start = zen_stop = azi_step = azi_stop = -99999;
+    zen_start = zen_stop = azi_start = azi_stop = -99999;
 
     // get cmd arguments into the dictionary
     int status = cmd_parse(argv, argc, arg_dict);
@@ -144,11 +150,35 @@ int main(int argv, char* argc[])
         }
     }
 
-    // compute and write pcv's
-    for (const auto& i : ant_vec)
+    // compute and write pcv's (absolute)
+    if ( arg_dict["diff"] == "N" )
     {
-        pcv_pattern pcv ( atx.get_antenna_pattern(i) );
-        print_pcv_info(pcv, i, zen_step, azi_step, zen_start, zen_stop, azi_start, azi_stop);
+        for (const auto& i : ant_vec)
+        {
+            pcv_pattern pcv ( atx.get_antenna_pattern(i) );
+            print_pcv_info(pcv, i,
+                    zen_start, zen_stop, zen_step, azi_start, azi_stop, azi_step);
+        }
+    }
+    else // compute and write pcv's (differences)
+    {
+        if ( ant_vec.size() <= 1 )
+        {
+            std::cerr<<"\nNeed at least two antennas to compute diffs.\n";
+            return 1;
+        }
+        antenna ref_ant = ant_vec[0];
+        pcv_pattern ref_pcv ( atx.get_antenna_pattern(ref_ant) );
+        auto ant = ant_vec.cbegin() + 1;
+        auto last_ant = ant_vec.cend();
+
+        while ( ant != last_ant )
+        {
+            pcv_pattern pcv ( atx.get_antenna_pattern(*ant) );
+            print_pcv_diff(pcv, *ant, ref_pcv, ref_ant,
+                    zen_start, zen_stop, zen_step, azi_start, azi_stop, azi_step);
+            ++ant;
+        }
     }
 
     std::cout << "\n";
@@ -215,11 +245,16 @@ usage()
     "\tSpecify the range for the zenith ditance axis. The\n"
     "\tgrid will span the interval [from,to) with a step\n"
     "\tsize of step degrees. Default is [0,90,1]. Note\n"
-    "\tthat this option will overwrite the \'-dzen\' option.\n";
+    "\tthat this option will overwrite the \'-dzen\' option.\n"
+    " -diff\n"
+    "\tInstead of printing each antenna's pcv corrections,\n"
+    "\tprint the diffrences between pcv values. The first\n"
+    "\tantenna in the list is considered as \'reference\' and\n"
+    "\tfor each antenna in the specified list the respective\n"
+    "\tdiscrepancies are computed.";
 
-    /*std::cout << "\n";
-    "Example usage:\n"
-    "atxtr -a igs08.atx -m \"TRM41249.00     TZGD,LEIATX1230+GNSS NONE\"";*/
+    std ::cout << "Example usage:\n"
+    "atxtr -a igs08.atx -m \"TRM41249.00     TZGD,LEIATX1230+GNSS NONE\"";
     return;
 }
 
@@ -264,6 +299,10 @@ cmd_parse(int argv, char* argc[], str_str_map& smap)
                || !std::strcmp(argc[i], "--list") )
         {
             smap["list"] = std::string("Y");
+        }
+        else if ( !std::strcmp(argc[i], "-diff") )
+        {
+            smap["diff"] = std::string("Y");
         }
         else if ( !std::strcmp(argc[i], "-a") )
         {
@@ -384,22 +423,21 @@ antenna_parser(str_str_map& arg_map, std::vector<antenna>& ant_vec)
 
 void
 print_pcv_info(const pcv_pattern& pcv, const antenna& ant,
-               pcv_type zen_step, pcv_type azi_step,
-               pcv_type zen1, pcv_type zen2,
-               pcv_type azi1, pcv_type azi2)
+               pcv_type zen1, pcv_type zen2, pcv_type zen_step,
+               pcv_type azi1, pcv_type azi2, pcv_type azi_step)
 {
     if ( !pcv.has_azi_pcv() )
     {
         std::cerr << "\n## Antenna: "<< ant.to_string() << " has no"
         " azimouth-dependent PCV corrections; Switching to NOAZI grid.\n";
-        print_pcv_info_noazi(pcv, ant, zen_step, zen1, zen2);
+        print_pcv_info_noazi(pcv, ant, zen1, zen2, zen_step);
         return;
     }
 
     if ( zen1 < -9000 )
     {
         zen1 = pcv.zen1();
-        zen2 = pcv.zen2();   
+        zen2 = pcv.zen2();
     }
 
     if ( azi1 < -9000 )
@@ -424,8 +462,52 @@ print_pcv_info(const pcv_pattern& pcv, const antenna& ant,
 }
 
 void
+print_pcv_diff(const pcv_pattern& pcv, const antenna& ant,
+               const pcv_pattern& ref_pcv, const antenna& ref_ant,
+               pcv_type zen1, pcv_type zen2, pcv_type zen_step,
+               pcv_type azi1, pcv_type azi2, pcv_type azi_step)
+{
+    if ( !pcv.has_azi_pcv() || !ref_pcv.has_azi_pcv() )
+    {
+        std::cerr << "\n## Antenna: "<< ant.to_string() << " or " 
+        << ref_ant.to_string() << " has/ve no"
+        " azimouth-dependent PCV corrections; Switching to NOAZI grid.\n";
+        print_pcv_diff_noazi(pcv, ant, ref_pcv, ref_ant, zen1, zen2, zen_step);
+        return;
+    }
+
+    if ( zen1 < -9000 )
+    {
+        zen1 = std::max(pcv.zen1(), ref_pcv.zen1());
+        zen2 = std::min(pcv.zen2(), ref_pcv.zen2());
+    }
+
+    if ( azi1 < -9000 )
+    {
+        azi1 = std::max(pcv.azi1(), ref_pcv.azi1());
+        azi2 = std::min(pcv.azi2(), ref_pcv.azi2());
+    }
+
+    std::cout <<"\nANT: " << ref_ant.to_string() << "-" << ant.to_string();
+    std::cout <<"\nZEN: " << zen1 << " " << zen2 << " " << zen_step;
+    std::cout <<"\nAZI: " << azi1 << " " << azi2 << " " << azi_step;
+
+    //TODO make this a bit quicker
+    for ( pcv_type zen = zen1; zen < zen2; zen += zen_step )
+    {
+        for ( pcv_type azi = azi1; azi < azi2; azi += azi_step )
+        {
+            std::cout << "\n" << ref_pcv.azi_pcv(zen, azi, 0)
+                                - pcv.azi_pcv(zen, azi, 0);
+        }
+    }
+
+    return;
+}
+
+void
 print_pcv_info_noazi(const pcv_pattern& pcv, const antenna& ant, 
-    pcv_type zen_step, pcv_type zen1, pcv_type zen2)
+    pcv_type zen1, pcv_type zen2, pcv_type zen_step)
 {
     if ( zen1 < -9000 )
     {
@@ -440,6 +522,29 @@ print_pcv_info_noazi(const pcv_pattern& pcv, const antenna& ant,
     for ( pcv_type zen = zen1; zen < zen2; zen += zen_step )
     {
         std::cout << "\n" << pcv.no_azi_pcv(zen, 0);
+    }
+
+    return;
+}
+
+void
+print_pcv_diff_noazi(const pcv_pattern& pcv, const antenna& ant,
+                     const pcv_pattern& ref_pcv, const antenna& ref_ant, 
+                     pcv_type zen1, pcv_type zen2, pcv_type zen_step)
+{
+    if ( zen1 < -9000 )
+    {
+        zen1 = std::max(pcv.zen1(), ref_pcv.zen1());
+        zen2 = std::min(pcv.zen2(), ref_pcv.zen2());
+    }
+
+    std::cout <<"\nANT: " << ref_ant.to_string() << "-" << ant.to_string();
+    std::cout <<"\nZEN: " << zen1 << " " << zen2 << " " << zen_step;
+    std::cout <<"\nAZI: 0 0 0";
+
+    for ( pcv_type zen = zen1; zen < zen2; zen += zen_step )
+    {
+        std::cout << "\n" << ref_pcv.no_azi_pcv(zen, 0) - pcv.no_azi_pcv(zen, 0);
     }
 
     return;

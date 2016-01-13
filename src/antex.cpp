@@ -85,7 +85,7 @@ antex::antex(const char *filename)
     try {
         this->read_header();
     } catch (std::exception& e) {
-        std::cerr << "\n[ERROR] Failed to read header for antex file: "
+        std::cerr << "\n[DEBUG] Failed to read header for antex file: "
                   << "\"" <<  filename << "\"";
         std::cerr << e.what();
         if ( _istream.is_open() ) {
@@ -155,7 +155,7 @@ antex::read_header()
     } else {
 #ifdef DEBUG
         throw std::runtime_error
-        ("antex::read_header -> Invalid Antex version.");
+        ("[DEBUG] antex::read_header -> Invalid Antex version.");
 #endif
         return 1;
     }
@@ -165,7 +165,7 @@ antex::read_header()
     } catch (std::runtime_error& e) {
 #ifdef DEBUG
         throw std::runtime_error
-        ("antex::read_header -> Invalid Satellite System.");
+        ("[DEBUG] antex::read_header -> Invalid Satellite System.");
 #endif
         return 1;
     }
@@ -180,7 +180,7 @@ antex::read_header()
     } else {
 #ifdef DEBUG
         throw std::runtime_error
-        ("antex::read_header -> Invalid PCV type.");
+        ("[DEBUG] antex::read_header -> Invalid PCV type.");
 #endif
         return 1;
     }
@@ -202,7 +202,7 @@ antex::read_header()
     if (dummy_it >= MAX_HEADER_LINES) {
 #ifdef DEBUG
         throw std::runtime_error
-        ("antex::read_header -> Could not find 'END OF HEADER'.");
+        ("[DEBUG] antex::read_header -> Could not find 'END OF HEADER'.");
 #endif
         return 1;
     }
@@ -312,7 +312,7 @@ ngpt::antex::read_pattern()
         // make sure we are at the START OF FREQUENCY line
         if ( strncmp(line+60, "START OF FREQUENCY", 18) ) {
 #ifdef DEBUG
-            std::cerr << "\n[ERROR] Expected 'START OF FREQUENCY' but found:"
+            std::cerr << "\n[DEBUG] Expected 'START OF FREQUENCY' but found:"
                       << line;
 #endif
             throw  std::runtime_error
@@ -399,7 +399,7 @@ ngpt::antex::read_pattern()
                                           + std::to_string(antpat.azi_grid_pts())
                                           + ")" );
                         throw std::runtime_error
-                        ("WTF? Reading more azi-grid values than expected " + msg);
+                        ("[DEBUG] WTF? Reading more azi-grid values than expected " + msg);
                     }
 #endif
                 }
@@ -561,7 +561,7 @@ __skip_rest_of_antenna__(std::ifstream& fin)
     if ( strncmp(line+60, "END OF ANTENNA", 14) )
     {
 #ifdef DEBUG
-        std::cerr << "\n(details) Expected \"END OF ANTENNA\", but found:\n"
+        std::cerr << "\n[DEBUG] (details) Expected \"END OF ANTENNA\", but found:\n"
                   << line;
 #endif
         return 10;
@@ -663,9 +663,9 @@ antex::find_antenna(const antenna& ant)
         // skip the antenna details ...
         if ( (status = __skip_rest_of_antenna__(_istream)) ) {
 #ifdef DEBUG
-            std::cerr << "\n\t[DEBUG] ERROR in __skip_rest_of_antenna__; "
+            std::cerr << "\n[DEBUG] ERROR in __skip_rest_of_antenna__; "
                       << "status="<<status;
-            std::cerr << "\n\tError in line:\n"
+            std::cerr << "\nError in line:\n"
                       << line;
 #endif
             return -1;
@@ -717,15 +717,15 @@ antex::find_antenna(const antenna& ant)
             best_match = _istream.tellg();
         }
 #ifdef DEBUG
-        std::cout << "\nSearching for a better match than:"
+        std::cout << "\n[DEBUG] Searching for a better match than:"
                   << line;
 #endif
         // skip the antenna details ...
         if ( (status = __skip_rest_of_antenna__(_istream)) ) {
 #ifdef DEBUG
-            std::cerr << "\n\t[DEBUG] ERROR in __skip_rest_of_antenna__; "
+            std::cerr << "\n[DEBUG] ERROR in __skip_rest_of_antenna__; "
                       << "status="<<status;
-            std::cerr << "\n\tError in line:\n"
+            std::cerr << "\nError in line:\n"
                       << line;
 #endif
             return -1;
@@ -774,8 +774,10 @@ antex::find_antenna(const antenna& ant)
     } else {
         _istream.seekg( best_match );
     }
-    
-    printf ("\nANTENNA FOUND AFTER READING %zu ANTENNAS",antennas_read);
+
+#ifdef DEBUG
+    printf ("\n[DEBUG] Antenna found after reading %zu antennas",antennas_read);
+#endif
     return 0;
 }
 
@@ -844,7 +846,7 @@ antex::get_antenna_list()
         // skip the antenna details ...
         if ( (status = __skip_rest_of_antenna__(_istream)) ) {
 #ifdef DEBUG
-            std::cerr << "\n\t[DEBUG] ERROR in __skip_rest_of_antenna__; "
+            std::cerr << "\n[DEBUG] ERROR in __skip_rest_of_antenna__; "
                       << "status="<<status;
             std::cerr << "\n\tError in line:\n"
                       << line;

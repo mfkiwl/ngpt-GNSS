@@ -14,12 +14,20 @@ plot_options = {'wired': False,  ## plot as wire-frame
 def get_antenna_model(buf):
     """ Extract the antenna model from an input stream.
     """
+    dummy_it = 0
     line = buf.readline()
-    print 'ANTENNA LINE=[' + line.strip() + ']'
-    l    = line.split()
+    while line and dummy_it < 100:
+        l = line.split()
+        if len(l) > 0 and l[0] != '[DEBUG]': break
+        else                : line = buf.readline()
+        dummy_it += 1
+    if dummy_it == 100:
+        print >> sys.stderr, '!! ERROR. Failed to read new antenna. !!'
+        sys.exit(1)
+    l = line.split()
     if l[0] != 'ANT:':
-        print >> sys.stderr, 'ERROR. Invalid \'Ant\' line:'
-        print >> sys.stderr, '       [' + line.strip() + ']'
+        print >> sys.stderr, '!! ERROR. Invalid \'Ant\' line: !!'
+        print >> sys.stderr, '!!        [' + line.strip() + '] !!'
         sys.exit(1)
     return line[5:]
 
@@ -57,16 +65,16 @@ def make_2d_plot(antenna, buf, fig_nr, zen1, zen2, dzen):
         line = buf.readline()
         l    = line.split()
         if len(l) != 1:
-            print >> sys.stderr, 'ERROR. Invalid line PCV line'
-            print >> sys.stderr, '       [' + line.strip() + ']'
-            sys.exit(1)
+            print >> sys.stderr, '!! ERROR. Invalid line PCV line !!',
+            print >> sys.stderr, '!!        [' + line.strip() + '] !!'
+            raise RuntimeError
         pcv.append(float(l[0]))
         idx += 1
         ##print 'read',idx,'/',max_lines, '(FIG=', fig_nr,')'
     ##  Setup plot env
     ## -------------------------------------------------------------------
     fig = plt.figure(fig_nr)
-    fig.suptitle(antenna + ' (NOAZI)', fontsize=14, fontweight='bold')
+    fig.suptitle(re.sub(r'\s+', ' ', antenna) + ' (NOAZI)', fontsize=14, fontweight='bold')
     ax  = fig.gca()
     if args.plot_altitude:
         ax.set_xlabel('Altitude ($^\circ$)')
@@ -81,8 +89,10 @@ def make_2d_plot(antenna, buf, fig_nr, zen1, zen2, dzen):
 
     ## Export (if needed)
     ## -------------------------------------------------------------------
-    if args.save_file is not None:
-        fig.savefig(args.save_file, dpi=100, bbox_inches='tight')
+    if args.save_format is not None:
+        fn = (re.sub(r'\s+', '_', antenna) + '.' + args.save_format).lower()
+        fig.savefig(fn, dpi=100, bbox_inches='tight', format=args.save_format)
+        print '## Plot exported to:', fn,
     return fig
 
 
@@ -103,16 +113,15 @@ def make_3d_plot(antenna, buf, fig_nr):
         line = buf.readline()
         l    = line.split()
         if len(l) != 1:
-            print >> sys.stderr, 'ERROR. Invalid line PCV line'
-            print >> sys.stderr, '       [' + line.strip() + ']'
-            sys.exit(1)
+            print >> sys.stderr, '!! ERROR. Invalid line PCV line !!',
+            print >> sys.stderr, '!!        [' + line.strip() + '] !!'
+            raise RuntimeError
         pcv.append(float(l[0]))
         idx += 1
-        ##print 'read',idx,'/',max_lines, '(FIG=', fig_nr,')'
     ##  Setup plot env
     ## -------------------------------------------------------------------
     fig = plt.figure(fig_nr)
-    fig.suptitle(antenna, fontsize=14, fontweight='bold')
+    fig.suptitle(re.sub(r'\s+', ' ', antenna), fontsize=14, fontweight='bold')
     ax  = fig.gca(projection='3d')
     if args.plot_altitude:
         ax.set_xlabel('Altitude ($^\circ$)')
@@ -165,7 +174,7 @@ def make_3d_plot(antenna, buf, fig_nr):
     if args.save_format is not None:
         fn = (re.sub(r'\s+', '_', antenna) + '.' + args.save_format).lower()
         fig.savefig(fn, dpi=100, bbox_inches='tight', format=args.save_format)
-        print 'Plot exported to:', fn
+        print '## Plot exported to:', fn,
     return fig
 
 parser = argparse.ArgumentParser(
@@ -270,9 +279,14 @@ with open(args.pcv_grid_file, 'r') if args.pcv_grid_file is not sys.stdin else s
     while new_antenna:
         try:
             antenna = get_antenna_model(fin)
+            print '## Found new antenna:', antenna,
             FIG_NR += 1
-            plots.append( make_3d_plot(antenna, fin, FIG_NR) )
-            print 'Ploted antenna:', antenna
+            try:
+                plots.append( make_3d_plot(antenna, fin, FIG_NR) )
+                print '## Compiled plot for:', antenna,
+            except:
+                print >> sys.stderr, '!! Error compiling plot !!',
+                print >> sys.stderr, '!! Unexpected error: ', sys.exc_info()[0]
         except:
             break
             new_antenna = False
