@@ -298,7 +298,7 @@ parser.add_argument('-t', '--plot-style',
     action   = 'store',
     default  = 'surfc',
     help     = ''
-    'Choosing plot style. You can choose between:\n'
+    'Choose the plot style. You can choose between:\n'
     '\t* \'surfc\' (default) compile a 3D plot,\n'
     '\t* \'wired\' compile a 3D wired-plot,\n'
     '\t* \'contr\' compile a 2D contour plot\n'
@@ -313,8 +313,8 @@ parser.add_argument('-t', '--plot-style',
 parser.add_argument('-n', '--non-interactive',
     action   = 'store_true',
     help     = ''
-    'Do not show (supress) the plot; this can be useful\n'
-    'if the user only wants the plot to be saved.',
+    'Do not show (supress) the plot(s); this can be useful\n'
+    'if the user only wants the plot(s) to be saved.',
     dest     = 'no_int_plot'
     )
 
