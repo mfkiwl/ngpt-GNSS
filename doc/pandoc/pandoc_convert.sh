@@ -67,7 +67,7 @@ if ! cat ${NGPT_DIR}/readme.md >> ${PAND_DOC} ; then
 fi
 
 # customize the readme.md
-sed -i "s|doc/figures/sepchoke_b3e6.png|${DOC_DIR}/figures/sepchoke_b3e6.png|g" \
+sed -i "s|doc/figures/sep-various-antex-example.png|${DOC_DIR}/figures/sep-various-antex-example.png|g" \
     ${PAND_DOC}
 
 HTML_CMDS="--html-q-tags"

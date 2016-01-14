@@ -106,7 +106,20 @@ The following figure is a result of `antex-view.py` program.
 ![3d-plot of PCV corrections.](doc/figures/sep-various-antex-example.png)
 
 ```shell
+   ## example usage (normal surface plot for one antenna)
    atxtr -a igs08_1869.atx -m "SEPCHOKE_B3E6   NONE" | antex-view.py
+
+   ## example usage (normal surface plot for one antenna for NOAZI pcv's)
+   ## save plot in png format
+   atxtr -a igs08_1869.atx -m "SEPCHOKE_MC     SPKE" -dazi 0.0 \
+       | antex-view.py -i -s png
+
+   ##  example usage (contour plot of pcv differences;
+   ##+ convert zenith to altitude)
+   atxtr -a igs08_1869.atx \
+       -m "TPSCR.G3        NONE,TPSCR.G3        SCIS,TPSCR.G3        TPSH" \
+       -diff \
+       | antex-view.py -t contr -i
 ```
 
 ## Tested Compilers & OSs
