@@ -127,7 +127,7 @@ The following figure is a result of `antex-view.py` program.
 ![3d-plot of PCV corrections.](doc/figures/sepchoke_b3e6.png)
 
 ```shell
-$> atxtr -a igs08_1869.atx -m "SEPCHOKE_B3E6   NONE" | antex-view.py -f sepchk.dat
+$> atxtr -a igs08_1869.atx -m "SEPCHOKE_B3E6   NONE" | antex-view.py
 ```
 
 ## Tested Compilers & OSs
@@ -146,7 +146,7 @@ $> atxtr -a igs08_1869.atx -m "SEPCHOKE_B3E6   NONE" | antex-view.py -f sepchk.d
 
 ### + Error loading the (shared) library
 
->typically something like: `atxtr: error while loading shared libraries: libngpt.so.0: cannot open shared object file: No such file or directory`)
+>typically something like: `atxtr: error while loading shared libraries: libngpt.so.0: cannot open shared object file: No such file or directory`
 
 The linker can't find the shared library. One way to fix this, is to run the following (as **root**):
 * first make sure the library is placed in the right path (i.e. `/usr/local/lib`); listing the directory, you should see something like: `libngpt.a  libngpt.la  libngpt.so  libngpt.so.0  libngpt.so.0.0.0`. If not, then the installation has failed.
