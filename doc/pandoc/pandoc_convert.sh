@@ -49,9 +49,15 @@ PAND_DOC=${DOC_DIR}/pandoc/pndc.md
 if ! test -f "${DOC_DIR}/pandoc/meta.yaml" ; then
     echo 1>&2 "File \"${DOC_DIR}/pandoc/meta.yaml\" seems to be missing!"
 else
+    ## set the meta-file (yaml)
     dt=$(date -R)
     cat ${DOC_DIR}/pandoc/meta.yaml | sed "s/date:.*/date: ${dt}/g" > ${PAND_DOC}
     echo "Meta-file \"${DOC_DIR}/pandoc/meta.yaml\" pasted to \"${PAND_DOC}\""
+    if test -f "${DOC_DIR}/pandoc/ngpt-pd.css" ; then
+        sed -i "s|  ngpt-pd.css|  ${DOC_DIR}/pandoc/ngpt-pd.css|g" ${DOC_DIR}/pandoc/meta.yaml
+    else
+        echo "${DOC_DIR}/pandoc/ngpt-pd.css not found."
+    fi
 fi
 
 # Paste readme.md to /doc
@@ -64,7 +70,12 @@ fi
 sed -i "s|doc/figures/sepchoke_b3e6.png|${DOC_DIR}/figures/sepchoke_b3e6.png|g" \
     ${PAND_DOC}
 
+HTML_CMDS="--html-q-tags"
+
 # run pandoc
+if test "${1}" == "html" ; then ext=html ; fi
+if [[ "${1}" == "pdf" ]] || [[ "${1}" == "latex" ]] ; then ext=latex ; fi
+
 pandoc ${PAND_DOC} -o ${DOC_DIR}/readme.${1} \
     --from=markdown_github+simple_tables+table_captions+yaml_metadata_block \
     -s \
@@ -72,9 +83,9 @@ pandoc ${PAND_DOC} -o ${DOC_DIR}/readme.${1} \
     --normalize \
     --standalone \
     --table-of-contents \
-    --highlight-style=tango \
+    --highlight-style=pygments \
     --number-sections \
-    --template=${DOC_DIR}/pandoc/ngpt-template.${1}
+    --template=${DOC_DIR}/pandoc/ngpt-template.${ext}
 
 # output
 if test "$?" -eq 0 ; then

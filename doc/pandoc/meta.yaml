@@ -1,13 +1,14 @@
 ---
 title: ngpt Library & Tools
 subtitle: A Reference Guide
+css:
+  /home/xanthos/Software/ngpt/doc/pandoc/ngpt-pd.css
 author:
-  name: Xanthos P.
-  affiliation: ntua
+- name: Xanthos P
+  affiliation: National Technical University of Athens
   email: xanthos@mail.ntua.gr
-author:
-  name: Demitris A.
-  affiliation: ntua
+- name: Demitris A
+  affiliation: National Technical University of Athens
   email: demanast@mail.ntua.gr
 date: January 2014
 abstract: Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enimad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.

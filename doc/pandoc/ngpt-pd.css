@@ -1,0 +1,13 @@
+.subtitle {
+    font-style: italic;
+}
+
+/*.author {
+    position: absolute;
+    right: 0px;
+}*/
+
+code {
+        font-family: monospace;
+        background-color: #F0F0F0;
+} 
