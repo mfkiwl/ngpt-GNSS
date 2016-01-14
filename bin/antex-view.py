@@ -33,6 +33,7 @@ def get_pcv_vals(buf, zen1, zen2, dzen, azi1, azi2, dazi):
             counter += 1
             if not line:
                 print >> sys.stderr, '!! ERROR. Could not read pcv vals. !!'
+                print >> sys.stderr, '!! Line number:', counter, '!!'
                 sys.exit(1)
             val = float(line)
             if val < min_pcv : min_pcv = val
@@ -101,17 +102,16 @@ def make_2d_plot(antenna, buf, fig_nr, zen1, zen2, dzen):
         ax.set_xlabel('Zenith Distance ($^\circ$)')
     ax.set_ylabel('Pcv (mm)') 
     X = np.arange(zen1, zen2, dzen)
-    Y = np.array(itertools.chain(*pcv))
-    ax.set_xlim(zen1, zen2) if zen2 > zen1 else ax.set_xlim(zen2, zen1)## zenith
+    Y = np.array([i for sublist in pcv for i in sublist])
+    ax.set_xlim(zen1, zen2) if zen2 > zen1 else ax.set_xlim(zen2, zen1) ## zenith
     ax.set_ylim(min_pcv-1,max_pcv+1) ## pcv
     ax.plot(X, Y, 'yo-')
-
     ## Export (if needed)
     ## -------------------------------------------------------------------
     if args.save_format is not None:
         fn = (re.sub(r'\s+', '_', antenna) + '.' + args.save_format).lower()
         fig.savefig(fn, dpi=100, bbox_inches='tight', format=args.save_format)
-        if args.degub: print '## Plot exported to:', fn,
+        if args.debug_mode: print '## Plot exported to:', fn,
     return fig
 
 
@@ -126,7 +126,7 @@ def make_3d_plot(antenna, buf, fig_nr):
         if args.debug_mode: print '## Ploting altitude [',zen1,zen2,dzen,')'
     azi1, azi2, dazi = get_azi_axis(buf)
     if azi1 == azi2 or dazi == 0:
-        if args.debug:
+        if args.debug_mode:
             print '## No azi-dependent pcv; falling back to NOAZI plot.'
         return make_2d_plot(antenna, buf, fig_nr, zen1, zen2, dzen)
     min_pcv, max_pcv, pcv = get_pcv_vals(buf, zen1, zen2, dzen, azi1, azi2, dazi)
@@ -166,7 +166,6 @@ def make_3d_plot(antenna, buf, fig_nr):
     Z    = np.zeros((len(zen), len(azi)))
     for i in range(0, len(zen)):
         for j in range(0, len(azi)):
-            #print '[',i,j,']=',pcv[i][j]
             Z[i,j] = pcv[i][j]
             #if args.debug_mode:
             #    print '\tpcv(%+02.2f, %03.1f) = %+03.1f'%(zen1+i*dzen,
@@ -190,8 +189,8 @@ def make_3d_plot(antenna, buf, fig_nr):
     ## projections/contours
     if plot_options['surfc'] == True:
         cset = ax.contourf(X, Y, Z, zdir='z', offset=2*min_pcv, cmap=cm.coolwarm)
-        cset = ax.contourf(X, Y, Z, zdir='x', offset=0, cmap=cm.coolwarm)
-        cset = ax.contourf(X, Y, Z, zdir='y', offset=azi2+10, cmap=cm.coolwarm)
+    ##  cset = ax.contourf(X, Y, Z, zdir='x', offset=0, cmap=cm.coolwarm)
+    ##  cset = ax.contourf(X, Y, Z, zdir='y', offset=azi2+10, cmap=cm.coolwarm)
     ##  Re-scale
     ## -----------------------------------------------------------------------
     if plot_options['surfc'] == True:
@@ -201,9 +200,10 @@ def make_3d_plot(antenna, buf, fig_nr):
     ## Export (if needed)
     ## -------------------------------------------------------------------
     if args.save_format is not None:
+        print 'wtf now ??'
         fn = (re.sub(r'\s+', '_', antenna) + '.' + args.save_format).lower()
         fig.savefig(fn, dpi=100, bbox_inches='tight', format=args.save_format)
-        if args.debug: print '## Plot exported to:', fn,
+        if args.debug_mode: print '## Plot exported to:', fn,
     return fig
 
 parser = argparse.ArgumentParser(

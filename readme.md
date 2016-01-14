@@ -103,7 +103,7 @@ Two of the programs installed, namely `atxtr` and `antex-view.py` are used to cr
 
 The following figure is a result of `antex-view.py` program.
 
-![3d-plot of PCV corrections.](doc/figures/sepchoke_b3e6.png)
+![3d-plot of PCV corrections.](doc/figures/sep-various-antex-example.png)
 
 ```shell
    atxtr -a igs08_1869.atx -m "SEPCHOKE_B3E6   NONE" | antex-view.py

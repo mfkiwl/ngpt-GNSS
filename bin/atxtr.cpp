@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstring>
 #include <string>
+#include <cmath>
 #include <stdexcept>
 
 #include "antex.hpp"
@@ -16,6 +17,14 @@ typedef std::map<std::string, std::string> str_str_map;
 typedef std::ifstream::pos_type            pos_type;
 typedef std::pair<ngpt::antenna, pos_type> ant_pos_pair;
 
+/*
+ * TODO
+ * well, what if dazi == 0 or (azi1==azi2==0) ?? Should i read the pcv values
+ * off from the NOAZI or the AZI block ?? It should be the same but shit
+ * can happen.
+ * what if someone wants a section, i.e. azi=30, azi2=30, dazi=0. chek wtf 
+ * happens.
+ */
 
 // Print pcv corrections
 void
@@ -119,7 +128,7 @@ int main(int argv, char* argc[])
     {
         zen_step = std::stod( arg_dict["dzen"] );
         azi_step = std::stod( arg_dict["dazi"] );
-        if (zen_step <= .0 || azi_step <= .0 )
+        if (zen_step < .0 || azi_step < .0 )
         {
             throw std::invalid_argument("\nFuck off\n");
         }
@@ -430,6 +439,11 @@ print_pcv_info(const pcv_pattern& pcv, const antenna& ant,
     {
         std::cerr << "\n## Antenna: "<< ant.to_string() << " has no"
         " azimouth-dependent PCV corrections; Switching to NOAZI grid.\n";
+        print_pcv_info_noazi(pcv, ant, zen1, zen2, zen_step);
+        return;
+    }
+    else if ( std::abs(azi_step) <=  1e-5*std::abs(azi_step) )
+    {
         print_pcv_info_noazi(pcv, ant, zen1, zen2, zen_step);
         return;
     }
