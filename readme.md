@@ -11,8 +11,7 @@ The development will be very-very slow ...
 
 ## Prerequisites
 
-> :bangbang: Don't even try installing the project with a compiler not
-> supporting at least c++11.
+> ==Don't even try installing the project with a compiler not supporting at least c++11.==
 
 To install the library, you will need:
 
