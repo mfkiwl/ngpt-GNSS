@@ -7,7 +7,18 @@
     right: 0px;
 }*/
 
-code {
-        font-family: monospace;
-        background-color: #F0F0F0;
-} 
+.shell {
+    font-family: monospace;
+    background-color: #F0F0F0;
+}
+
+.mlsc {
+    border: solid 2px navy;
+    padding:2px;
+    background-color: #F0F0F0;
+}
+
+.inline-src {
+    font-family: monospace;
+    background-color: #F0F0F0;
+}

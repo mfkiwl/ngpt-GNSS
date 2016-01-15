@@ -36,7 +36,7 @@ We are trying to keep the installation process compatible with the [GNU Build Sy
 
 Clone the repository in a local folder:
 ```shell
-   git clone https://github.com/xanthospap/ngpt.git
+   $> git clone https://github.com/xanthospap/ngpt.git
 ```
 
 (this will clone the repository into a local folder named `ngpt` at the current path).
@@ -46,29 +46,29 @@ Henceforth the `ngpt` folder will be the **root_dir**.
 Go to the `root_dir`. The files you will have to customize (if needed) are  [src/Makefile.am](src/Makefile.am), [test/Makefile.am](test/Makefile.am) and [bin/Makefile.am](bin/Makefile.am).
 But first, you have to run the `autoreconf` tool (see [[1]](#autoreconf)):
 ```shell
-   autoreconf -i
+   $> autoreconf -i
 ```
 
 If you do not need the development version (with a **lot** of debugging info and no optimizations) then replace the `Makefile.am`s files with their `Makefile.am.production` counterparts (see [src/Makefile.am.production](src/Makefile.am.production) and [test/Makefile.am.production](test/Makefile.am.production)). That is:
 ```shell
-   for dir in src test bin ; do cat ${dir}/Makefile.am.production > ${dir}/Makefile.am ; done
+   $> for dir in src test bin ; do cat ${dir}/Makefile.am.production > ${dir}/Makefile.am ; done
 ```
 
 If your compiler/compiler version does not support **c++14**, then change that in the `Makefile.am`s to c++11, e.g.:
 ```shell
-   for dir in src test bin ; do
-       sed -i 's/-std=c++14/-std=c++11/g' ${dir}/Makefile.am
-   done
+   $> for dir in src test bin ; do
+    >    sed -i 's/-std=c++14/-std=c++11/g' ${dir}/Makefile.am
+    >  done
 ```
 
 Go ahead and create the `Makefile`s; these are constructed based on the `Makefile.am` you have set-up, using the configure script :
 ```shell
-   ./configure
+   $> ./configure
 ```
 
 Now you should be good to go! Just type:
-````shell
-    make
+```shell
+    $> make
 ```
 to build the project.
 
@@ -91,7 +91,7 @@ If available [graphviz](www.graphviz.org/) will be used to generate the document
 
 Go to the `/doc` folder and type:
 ```shell
-   doxygen doxy.conf
+   $> doxygen doxy.conf
 ```
 
 This will create the doc pages under `doc/html`; start at `index.html`.
@@ -106,16 +106,16 @@ The following figure is a result of `antex-view.py` program.
 
 ```shell
    ## example usage (normal surface plot for one antenna)
-   atxtr -a igs08_1869.atx -m "SEPCHOKE_B3E6   NONE" | antex-view.py
+   $> atxtr -a igs08_1869.atx -m "SEPCHOKE_B3E6   NONE" | antex-view.py
 
    ## example usage (normal surface plot for one antenna for NOAZI pcv's)
    ## save plot in png format
-   atxtr -a igs08_1869.atx -m "SEPCHOKE_MC     SPKE" -dazi 0.0 \
+   $> atxtr -a igs08_1869.atx -m "SEPCHOKE_MC     SPKE" -dazi 0.0 \
        | antex-view.py -i -s png
 
    ##  example usage (contour plot of pcv differences;
    ##+ convert zenith to altitude)
-   atxtr -a igs08_1869.atx \
+   $> atxtr -a igs08_1869.atx \
        -m "TPSCR.G3        NONE,TPSCR.G3        SCIS,TPSCR.G3        TPSH" \
        -diff \
        | antex-view.py -t contr -i
@@ -143,7 +143,7 @@ The linker can't find the shared library. One way to fix this, is to run the fol
 
 * first make sure the library is placed in the right path (i.e. `/usr/local/lib`); listing the directory, you should see something like: `libngpt.a  libngpt.la  libngpt.so  libngpt.so.0  libngpt.so.0.0.0`. If not, then the installation has failed.
 * add the path to the `/etc/ld.so.conf` file, i.e. append the line: `include /usr/local/lib` in the file.
-* update the search path: `$> ldconfig`
+* update the search path by running `ldconfig` as **root**.
 
 # References
 

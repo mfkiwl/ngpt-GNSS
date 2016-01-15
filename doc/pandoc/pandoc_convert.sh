@@ -54,7 +54,7 @@ else
     cat ${DOC_DIR}/pandoc/meta.yaml | sed "s/date:.*/date: ${dt}/g" > ${PAND_DOC}
     echo "Meta-file \"${DOC_DIR}/pandoc/meta.yaml\" pasted to \"${PAND_DOC}\""
     if test -f "${DOC_DIR}/pandoc/ngpt-pd.css" ; then
-        sed -i "s|  ngpt-pd.css|  ${DOC_DIR}/pandoc/ngpt-pd.css|g" ${DOC_DIR}/pandoc/meta.yaml
+        sed -i "s|  ngpt-pd.css|  ${DOC_DIR}/pandoc/ngpt-pd.css|g" ${PAND_DOC}
     else
         echo "${DOC_DIR}/pandoc/ngpt-pd.css not found."
     fi
@@ -89,6 +89,11 @@ pandoc ${PAND_DOC} -o ${DOC_DIR}/readme.${1} \
 
 # output
 if test "$?" -eq 0 ; then
+    # Run through the code-blocks.py script to change multiline source code
+    if test "${1}" == "html" ; then
+        ${DOC_DIR}/pandoc/code-blocks.py ${DOC_DIR}/readme.${1} > .tmp.htm
+        mv .tmp.htm ${DOC_DIR}/readme.${1}
+    fi
     echo "Output file created: \"${DOC_DIR}/readme.${1}\""
     echo "All done!"
     # rm ${PAND_DOC}
