@@ -34,6 +34,15 @@ We are trying to keep the installation process compatible with the [GNU Build Sy
 
 ## Build/Install Steps
 
+The installation process, will :
+* build the library
+* build the test programs
+* build the executables
+* install the library
+* install the executables
+
+Should you want to skip some of the above, see [FAQ](#+ Can i only install the library (no tests, no executables) ?)
+
 Clone the repository in a local folder:
 ```shell
    $> git clone https://github.com/xanthospap/ngpt.git
@@ -144,6 +153,14 @@ The linker can't find the shared library. One way to fix this, is to run the fol
 * first make sure the library is placed in the right path (i.e. `/usr/local/lib`); listing the directory, you should see something like: `libngpt.a  libngpt.la  libngpt.so  libngpt.so.0  libngpt.so.0.0.0`. If not, then the installation has failed.
 * add the path to the `/etc/ld.so.conf` file, i.e. append the line: `include /usr/local/lib` in the file.
 * update the search path by running `ldconfig` as **root**.
+
+### + Can i only install the library (no tests, no executables) ?
+
+To only install the library you 'll need to modify the `Makefile.am` in the `root_dir`. The contents of the `Makefile.am` should be something like: 
+```makefile
+   SUBDIRS = src test bin
+```
+If you remove the `bin` part, no executable is going to be build/installed; to also skip the test programs, remove the `test` part.
 
 # References
 
