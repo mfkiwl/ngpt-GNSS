@@ -30,7 +30,9 @@ To install the binaries, you will need (on top of the above list):
 * Python 2.7
 * [python-matplotlib](http://matplotlib.org/)
 
-We are trying to keep the installation process compatible with the [GNU Build System](https://en.wikipedia.org/wiki/GNU_build_system) but this may not always be the case.
+To create documentation (e.g. a reference API), see [Documentation](#documentation). Hopefuly, somewhere in the near future, we are going to provide a webpage with all documents in various formats.
+
+*We are trying to keep the installation process compatible with the [GNU Build System](https://en.wikipedia.org/wiki/GNU_build_system) but this may not always be the case.*
 
 ## Build/Install Steps
 
