@@ -41,7 +41,7 @@ The installation process, will :
 * install the library
 * install the executables
 
-Should you want to skip some of the above, see [FAQ](#+ can i only install the library (no tests, no executables) ?)
+Should you want to skip some of the above, see [FAQ](#faq2)
 
 Clone the repository in a local folder:
 ```shell
@@ -144,7 +144,9 @@ The following figure is a result of `antex-view.py` program.
  
 # FAQ
 
+<a name="faq1">
 ### + Error loading the (shared) library
+</a>
 
 > typically something like: `atxtr: error while loading shared libraries: libngpt.so.0: cannot open shared object file: No such file or directory`
 
@@ -154,7 +156,9 @@ The linker can't find the shared library. One way to fix this, is to run the fol
 * add the path to the `/etc/ld.so.conf` file, i.e. append the line: `include /usr/local/lib` in the file.
 * update the search path by running `ldconfig` as **root**.
 
+<a name="faq2">
 ### + Can i only install the library (no tests, no executables) ?
+<a>
 
 To only install the library you 'll need to modify the `Makefile.am` in the `root_dir`. The contents of the `Makefile.am` should be something like: 
 ```makefile
