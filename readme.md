@@ -143,6 +143,7 @@ The following figure is a result of `antex-view.py` program.
 - [x] provide a *prerequisities* list
 - [ ] try compiling with [libc++](http://libcxx.llvm.org/index.html)
 - [ ] write a decent documentation (not just doxygen comments ...); a docbook would be nice!
+- [ ] make man pages for the executables
  
 # FAQ
 
