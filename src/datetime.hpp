@@ -24,6 +24,10 @@ constexpr double mjd0_jd             { 2400000.5e0 };
 /// TT minus TAI (s)
 constexpr double tt_minus_tai        { 32.184e0 };
 
+/// Time-Scales
+enum class time_scale : char
+{ tai, tt, utc, ut1 };
+
 /// Calendar date to MJD.
 long cal2mjd(int, int, int);
 

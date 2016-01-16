@@ -68,7 +68,7 @@ antex2obstype(const char* s)
  *           If the file is successefuly opened, the constructor will read
  *           the ANTEX header and assign info.
  */
-antex::antex(const char *filename)
+antex::antex(const char* filename)
     : _filename   {filename},
       _istream    {filename, std::ios_base::in},
       _satsys     {ngpt::satellite_system::mixed},
@@ -253,11 +253,12 @@ ngpt::antex::read_pattern()
     if (_istream.getline(line, MAX_HEADER_CHARS)
         && !strncmp(line+60, "ZEN1 / ZEN2 / DZEN", 18))
     {
+        // TODO is this always correct ?
         zen1 = std::stof(line+2, nullptr);
         zen2 = std::stof(line+8, nullptr);
         dzen = std::stof(line+14, nullptr);
         // see the decleration of MAX_GRID_CHARS for why this is needed.
-        assert( 8*(std::size_t)((zen2-zen1)/dzen) < MAX_GRID_CHARS-10  );
+        assert( 8*(std::size_t)((zen2-zen1)/dzen) < MAX_GRID_CHARS-10 );
     }
 
     // next field is '# OF FREQUENCIES'
@@ -265,6 +266,7 @@ ngpt::antex::read_pattern()
     if (_istream.getline(line, MAX_HEADER_CHARS)
         && !strncmp(line+60, "# OF FREQUENCIES", 16))
     {
+        // TODO is this ALWAYS correct ?
         num_of_freqs = std::stoi(line, nullptr);
     }
   
@@ -437,7 +439,7 @@ ngpt::antex::read_pattern()
 int
 __skip_rest_of_antenna__(std::ifstream& fin)
 {
-    static char line[MAX_HEADER_CHARS];
+    static char line     [MAX_HEADER_CHARS];
     static char grid_line[MAX_GRID_CHARS];
 
     // next field is 'METH / BY / # / DATE'
@@ -466,7 +468,7 @@ __skip_rest_of_antenna__(std::ifstream& fin)
     float zen2 { std::stof(line+8, nullptr) };
     float dzen { std::stof(line+14, nullptr) };
     // see the decleration of MAX_GRID_CHARS for why this is needed.
-    assert( 8*(std::size_t)((zen2-zen1)/dzen) < MAX_GRID_CHARS-10  );
+    assert( 8*(std::size_t)((zen2-zen1)/dzen) < MAX_GRID_CHARS-10 );
 
     // next field is '# OF FREQUENCIES'
     if (!fin.getline(line, MAX_HEADER_CHARS)
