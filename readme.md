@@ -41,7 +41,7 @@ The installation process, will :
 * install the library
 * install the executables
 
-Should you want to skip some of the above, see [FAQ](#faq)
+Should you want to skip some of the above, see [FAQ](#+ can i only install the library (no tests, no executables) ?)
 
 Clone the repository in a local folder:
 ```shell
