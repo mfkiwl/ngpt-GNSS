@@ -1,8 +1,8 @@
 #include <cassert>
-#include <stdlib.h>
+#include <cstdlib>
 #include <cmath>
 #include <stdexcept>
-#include <string.h>
+#include <cstring>
 #include "antex.hpp"
 // #include "obstype.hpp"
 

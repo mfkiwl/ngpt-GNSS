@@ -39,33 +39,25 @@ double hms2fd(int, int, double) noexcept;
 void fd2hms(double, int, int ihmsf[4]);
 
 /// Return true if given year is leap.
-bool
-is_leap(int iy)
-noexcept
-{
-    return !(iy%4) && (iy%100 || !(iy%400));
-}
+inline bool is_leap(int iy) noexcept
+{ return !(iy%4) && (iy%100 || !(iy%400)); }
 
 namespace datetime_clock {
-    template<int N>
-    struct clock {};
+    template<int N> struct clock {};
 
-    template<> 
-    struct clock<0>
+    template<> struct clock<0>
     {
         static constexpr double sec_tolerance { 1 };
         static constexpr double day_tolerance { 1 / sec_per_day };
     };
 
-    template<>    
-    struct clock<3>
+    template<> struct clock<3>
     {
         static constexpr double sec_tolerance { 1e-3 };
         static constexpr double day_tolerance { 1e-3 / sec_per_day };
     };
     
-    template<>
-    struct clock<6>
+    template<> struct clock<6>
     {
         static constexpr double sec_tolerance { 1e-6 };
         static constexpr double day_tolerance { 1e-6 / sec_per_day };
@@ -142,17 +134,13 @@ template<class C = datetime_clock::milli_seconds>
 constexpr
 datetime<C> min_date()
 noexcept
-{
-    return datetime<C>{1821, 1, 1};
-}
+{ return datetime<C>{1821, 1, 1}; }
 
 template<class C = datetime_clock::milli_seconds>
 constexpr
 datetime<C> max_date()
 noexcept
-{
-    return datetime<C>{2500, 1, 1};
-}
+{ return datetime<C>{2500, 1, 1}; }
 
 } // end namespace
 

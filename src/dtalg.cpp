@@ -22,7 +22,7 @@ long ngpt::cal2mjd(int iy, int im, int id)
     }
 
     // If February in a leap year, 1, otherwise 0
-    int ly { (im == 2) && ngpt::is_leap(iy) };
+    int ly ( (im == 2) && /*ngpt::*/is_leap(iy) );
 
     // Validate day, taking into account leap years
     if ( (id < 1) || (id > (mtab[im-1] + ly))) {
@@ -46,8 +46,8 @@ long ngpt::cal2mjd(int iy, int im, int id)
 ///          The computation is performed using the absolute values of the
 ///          input arguments.
 ///
-inline
-double ngpt::hms2fd(int h, int m, double s)
+double
+ngpt::hms2fd(int h, int m, double s)
 noexcept
 {
     return ( 60.0 * ( 60.0 * ( static_cast<double>(std::abs(h)))  +
@@ -56,17 +56,17 @@ noexcept
 }
 
 template<typename T>
-inline constexpr
-T sofa_dint(T a)
-noexcept
+    inline constexpr
+    T sofa_dint(T a)
+    noexcept
 {
     return a < (T)0 ? std::ceil(a) : std::floor(a);
 }
 
 template<typename T>
-inline constexpr
-T sofa_dnint(T a)
-noexcept
+    inline constexpr
+    T sofa_dnint(T a)
+    noexcept
 {
     return a < (T)0 
            ? std::ceil (a - (T)0.5) 
@@ -95,7 +95,8 @@ noexcept
 ///
 /// Reference iauD2tf (shamelesly stolen!)
 ///
-void ngpt::fd2hms(double days, int ndp, int ihmsf[4])
+void
+ngpt::fd2hms(double days, int ndp, int ihmsf[4])
 {
     // Express in seconds
     double a { days * ngpt::sec_per_day };

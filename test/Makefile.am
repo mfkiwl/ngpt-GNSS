@@ -3,7 +3,9 @@ noinst_PROGRAMS = testReceiver \
 		testObstype \
 		testGrid \
 		testAntex \
-		testGeodesy
+		testGeodesy \
+		testDatetime \
+		testIonex
 
 MCXXFLAGS = \
 	-std=c++14 \
@@ -41,3 +43,11 @@ testAntex_LDADD       = $(top_srcdir)/src/libngpt.la
 testGeodesy_SOURCES   = test_geodesy.cpp
 testGeodesy_CXXFLAGS  = $(MCXXFLAGS) -I$(top_srcdir)/src -L$(top_srcdir)/src
 testGeodesy_LDADD     = $(top_srcdir)/src/libngpt.la
+
+testDatetime_SOURCES   = test_datetime.cpp
+testDatetime_CXXFLAGS  = $(MCXXFLAGS) -I$(top_srcdir)/src -L$(top_srcdir)/src
+testDatetime_LDADD     = $(top_srcdir)/src/libngpt.la
+
+testIonex_SOURCES   = test_ionex.cpp
+testIonex_CXXFLAGS  = $(MCXXFLAGS) -I$(top_srcdir)/src -L$(top_srcdir)/src
+testIonex_LDADD     = $(top_srcdir)/src/libngpt.la

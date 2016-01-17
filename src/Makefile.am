@@ -24,6 +24,7 @@ dist_include_HEADERS = \
 	grid.hpp \
 	antpcv.hpp \
 	antex.hpp \
+	ionex.hpp \
 	geodesy.hpp \
 	geoconst.hpp \
 	car2ell.hpp \
@@ -38,4 +39,5 @@ dist_libngpt_la_SOURCES = \
 	antenna.cpp \
 	satsys.cpp \
 	antex.cpp \
+	ionex.cpp \
 	top2daz.cpp

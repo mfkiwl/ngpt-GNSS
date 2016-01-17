@@ -1,5 +1,5 @@
-#ifndef __IONEX_HPP__
-#define __IONEX_HPP__
+#ifndef __IONEX_NGPT_
+#define __IONEX_NGPT_
 
 #include <fstream>
 #include "datetime.hpp"
@@ -68,16 +68,19 @@ using ionex_grd_type = float;
  *          target, delay calculations in interferometers, and diurnal aberration,
  *          parallax and Doppler corrections.
  *
- * \warning The class only knows how te **read** IONEX files, i.e. they are
+ * \warning -# The class only knows how te **read** IONEX files, i.e. they are
  *          always considered as input file streams. You cannot write to/a
  *          IONEX file.
+ *          -# Record lines in IONEX files do not exceed 80 chars.
  */
 class ionex
 {
-  /// Let's not write this more than once.
-  typedef std::ifstream::pos_type pos_type;
+    /// Let's not write this more than once.
+    typedef std::ifstream::pos_type pos_type;
 
 public:
+    /// This is the datetime resolution for ionex dates
+    typedef ngpt::datetime<datetime_clock::milli_seconds> datetime_ms;
 
     /// Valid IONEX versions.
     enum class ionex_version : char { v10 };
@@ -86,10 +89,7 @@ public:
     ionex(const char*);
 
     /// Destructor (closing the file is not mandatory, but nevertheless)
-    ~ionex() noexcept 
-    {
-        if ( _istream.is_open() ) { _istream.close(); }
-    }
+    ~ionex() noexcept { if ( _istream.is_open() ) _istream.close(); }
 
     /// Copy not allowed !
     ionex(const ionex&) = delete;
@@ -98,7 +98,7 @@ public:
     ionex& operator=(const ionex&) = delete;
 
     /// Move Constructor.
-    ionex(antex&& a)
+    ionex(ionex&& a)
       /*noexcept(std::is_nothrow_move_constructible<std::ifstream>::value)*/ = default;
 
     /// Move assignment operator.
@@ -116,11 +116,11 @@ private:
 
     std::string      _filename;      ///< The name of the antex file.
     std::ifstream    _istream;       ///< The infput (file) stream.
-    INX_VERSION      _version;       ///< Ionex  version (1.0).
+    ionex_version    _version;       ///< Ionex  version (1.0).
     pos_type         _end_of_head;   ///< Mark the 'END OF HEADER' field.
     ngpt::time_scale _time_scale;    ///< The timescale
-    ngpt::datetime   _first_epoch;   ///< Epoch of first TEC map (UT)
-    ngpt::datetime   _last_epoch;    ///< Epoch of first TEC map (UT)
+    datetime_ms      _first_epoch;   ///< Epoch of first TEC map (UT)
+    datetime_ms      _last_epoch;    ///< Epoch of first TEC map (UT)
     int              _interval;      ///< Time interval between maps in integer
     ///< seconds. If 0, interval may vary.
     std::size_t      _maps_in_file;  ///< Total number of TEC/RMS/HGT maps
