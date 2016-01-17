@@ -308,23 +308,28 @@ ionex::read_header()
     return 0;
 }
 
-/// Read a TEC map off from sthe stream
-/// \warning The buffer should be placed exactly after the line:
-/// "START OF TEC MAP"
+/// Read a TEC map off from the stream
+/// \warning -# The buffer should be placed in a position such that the next line
+///          to be read is "EPOCH OF CURRENT MAP".
+///          -# Also, always clear errno before calling this!
 ///
 int
-ionex::read_map()
+ionex::read_map(std::size_t num_of_tec_lines)
 {
     static char line [MAX_HEADER_CHARS];
     datetime_ms d;
+    char* start, *end;
+    ionex_grd_type lat, lon1, lon2, dlon, hgt;
+    long lval;
+    int  ival;
     
     // The stream should be open by now!
     assert( this->_istream.is_open() );
     
     // next line we read should be 'EPOCH OF CURRENT MAP'
-    _istream.getline(line, MAX_HEADER_CHARS);
-    if ( strncmp(line+60, "EPOCH OF CURRENT MAP", 20) ||
-        _read_ionex_datetime_(line, &d) )
+    if ( !_istream.getline(line, MAX_HEADER_CHARS)
+         || std::strncmp(line+60, "EPOCH OF CURRENT MAP", 20)
+         || _read_ionex_datetime_(line, &d) )
     {
 #ifdef DEBUG
         std::cerr<<"\n[DEBUG] Error reading TEC map 'EPOCH OF CURRENT MAP'";
@@ -335,6 +340,68 @@ ionex::read_map()
         return 1;
     }
 
-    // newxt line should be 'LAT/LON1/LON2/DLON/H'
+    // next line should be 'LAT/LON1/LON2/DLON/H'
+    if ( !_istream.getline(line, MAX_HEADER_CHARS) 
+         || std::strncmp(line+60, "LAT/LON1/LON2/DLON/H", 20) )
+    {
+#ifdef DEBUG
+        std::cerr<<"\n[DEBUG] Error reading TEC map 'LAT/LON1/LON2/DLON/H'";
+        std::cerr<<"\n        found line: " << line;
+        throw std::runtime_exception
+        ("ionex::read_map() -> Invalid line");
+#endif
+        return 1;
+    }
+    start = line+2;
+    lat  = std::strtof(start, &end);
+    start += 6;
+    lon1 = std::strtof(start, &end);
+    start +=6;
+    lon2 = std::strtof(start, &end);
+    start +=6;
+    dlon = std::strtof(start, &end);
+    start +=6;
+    hgt  = std::strtof(start, &end);
+#ifdef DEBUG
+    if ( lon1!=_lon1 || lon2!=_lon2 || dlon!=_dlon )
+    {
+        std::cerr << "\n[DEBUG] Oh Fuck! this longtitude seems corrupt!";
+        std::cerr << "\n        line: " << line;
+        throw std::runtime_error("ionex::read_map() -> Invalid line");
+    }
+#endif
 
+    // ok, now we should read these fucking TEC vals; format: I5 max 16 values
+    // per line.
+    for (std::size_t i=0; i<num_of_tec_lines; ++i) {
+        if ( !_istream.getline(line, MAX_HEADER_CHARS) ) {
+#ifdef DEBUG
+            std::cerr<<"\n[DEBUG] Fucking weird! Failed to read tec map!";
+            throw std::runtime_error("ionex::read_map() -> Invalid line");
+#endif
+            return 1;
+        }
+        start = line;
+        end   = nullptr;
+        for (lval = std::strtol(start, &end, 10);
+             start != end;
+             lval = std::strtol(start, &end, 10) )
+        {
+            ival = static_cast<int>( lval );
+        }
+    }
+
+    // check for transformation errors!
+    if ( errno )
+    {
+        errno = 0;
+#ifdef DEBUG
+        std::cerr<<"\n[DEBUG] Fuck! Reading tec values failed!";
+        throw std::runtime_error("ionex::read_map() -> Invalid line");
+#endif
+        return 1;
+    }
+
+    // all done probably correctly.
+    return 0;
 }
