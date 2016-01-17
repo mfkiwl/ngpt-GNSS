@@ -4,7 +4,6 @@
 #include <stdexcept>
 #include <string.h>
 #include "ionex.hpp"
-// #include "obstype.hpp"
 
 #ifdef DEBUG
     #include <iostream>
