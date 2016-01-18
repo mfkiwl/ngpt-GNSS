@@ -27,7 +27,7 @@ The `TickAxisImpl` is a template class, based on two parameters:
 summing up to a decleration:
 
 ```cpp
-template<typename T, bool RangeCheck> class TickAxisImpl { /*...*/ };
+    template<typename T, bool RangeCheck> class TickAxisImpl { /*...*/ };
 ```
 
 Any instance, holds four `private` member variables, 
@@ -41,6 +41,8 @@ private:
 ```
 
 To compute the number of (tick) points, the following is used:
+
 ```cpp
-   npts_ = ( step_ ? static_cast<std::size_t>((stop_-start_)/step_) + 1 : 0 )
+    npts_ = ( step_ ? static_cast<std::size_t>((stop_-start_)/step_) + 1 : 0 );
+    assert( npts_ < std::numeric_limits<int>::max() );
 ```
