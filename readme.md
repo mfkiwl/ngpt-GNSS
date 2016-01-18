@@ -2,8 +2,6 @@
 
 This repository is an effort to construct:
 
-This <span style="color:red">word</span> is not black.
-
 * a (kind-of) elementary c++ gnss-related library, with focus on scientific applications
 * a collection of basic programs for analyzing gnss (and gnss related) data; these are mostly based on the (above mentioned) library.
 
