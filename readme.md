@@ -132,6 +132,8 @@ The following figure is a result of `antex-view.py` program.
        | antex-view.py -t contr -i
 ```
 
+> **Note** ANTEX files are published by [IGS](#igs) [here](https://igscb.jpl.nasa.gov/igscb/station/general/).
+
 ## Tested Compilers & OSs
 
 | Compiler    |  Version  |
@@ -172,3 +174,4 @@ If you remove the `bin` part, no executable is going to be build/installed; to a
 # References
 
 <a name="autoreconf">[[1]](https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.69/html_node/autoreconf-Invocation.html)</a>
+<a name="igs">[International GNSS Service](http://www.igs.org/)
