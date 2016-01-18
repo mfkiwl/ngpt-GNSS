@@ -179,7 +179,7 @@ Probably you shouldn't even be here! But is you like debugging sessions, take at
 ```
 Always compile with `-DDEBUG` on, to inspect any debug messages before starting a gdb session.
 
-*Good luck, this will hurt.*
+<span style="color:red">*Good luck, this will hurt.*</span>
 
 # References
 
