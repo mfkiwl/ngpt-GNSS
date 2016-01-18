@@ -174,4 +174,5 @@ If you remove the `bin` part, no executable is going to be build/installed; to a
 # References
 
 <a name="autoreconf">[[1]](https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.69/html_node/autoreconf-Invocation.html)</a>
+
 <a name="igs">[International GNSS Service](http://www.igs.org/)
