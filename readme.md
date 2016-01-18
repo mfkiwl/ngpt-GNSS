@@ -171,6 +171,16 @@ To only install the library you 'll need to modify the `Makefile.am` in the `roo
 ```
 If you remove the `bin` part, no executable is going to be build/installed; to also skip the test programs, remove the `test` part.
 
+# Debugging
+
+Probably you shouldn't even be here! But is you like debugging sessions, take at look at [this](https://www.gnu.org/software/libtool/manual/html_node/Debugging-executables.html). Meaning that to examine i.e. the `test/foo` program, run somethin like:
+```shell
+   $> libtool --mode=execute gdb --args test/foo arg1 arg2 ...
+```
+Always compile with `-DDEBUG` to inspect any debug messages before starting a gdb session.
+
+Good luck!
+
 # References
 
 <a name="autoreconf">[[1]](https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.69/html_node/autoreconf-Invocation.html)</a>
