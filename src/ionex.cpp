@@ -11,6 +11,12 @@
 #endif
 
 using ngpt::ionex;
+using ngpt::ionex_grd_type;
+
+typedef std::tuple<std::size_t, ionex_grd_type,
+                   std::size_t, ionex_grd_type,
+                   std::size_t, ionex_grd_type,
+                   std::size_t, ionex_grd_type>  tec_cell;
 
 /// No header line can have more than 80 chars. However, there are cases when
 /// they  exceed this limit, just a bit ...
@@ -491,10 +497,6 @@ ionex::read_tec_map(std::vector<int>& pcv_vals)
             return 1;
     }
 
-#ifdef DEBUG
-    std::cout<<"\n[DEBUG] Read " << index << " TEC values from map.";
-#endif
-
     return 0;
 }
 
@@ -658,7 +660,7 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
 
     // for each point in the vector, we are going to need the indexes of the
     // surounding nodes (so that we extract these values and interpolate).
-    std::vector<std::tuple<std::size_t, int, std::size_t, int, std::size_t, int, std::size_t, int>> indexes;
+    std::vector<tec_cell> indexes;
     indexes.reserve( points.size() );
     for ( auto const& i : points ) {
         indexes.emplace_back(grid.neighbor_nodes( 
@@ -667,7 +669,6 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
 
     // get me a vector large enough to hold a whole map
     std::vector<int> tec_map (grid.size(), 0);
-    std::cout<<"\nI expect that for every map i will need " << tec_map.size() << "vals";
 
     // skip all maps until we find the one we are interested in
     char line[MAX_HEADER_CHARS];
@@ -721,6 +722,7 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
 #endif
             throw std::runtime_error("ionex::get_tec_at() -> Invalid line!");
         }
+        
         std::cout<<"\nreading map: " << line;
         *(line+6) = '\0';
         assert( map_num == std::strtol(line, &c, 10) );
@@ -735,6 +737,7 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
 #endif
             throw std::runtime_error("ionex::get_tec_at() -> Invalid line!");
         }
+        
         // read the map into memmory
         if ( this->read_tec_map(tec_map) ) {
 #ifdef DEBUG
@@ -742,10 +745,69 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
 #endif
             throw std::runtime_error("ionex::get_tec_at() -> failed reading maps.");
         }
-        std::cout<<"\ndone reading map: " << line;
+
+        // ok. we got the map and we need to extract the cells for all points
+        //TODO
+        std::size_t j = 0;
+        for (const auto& p : points) {
+            bilinear_interpolate(p.first, p.second, tec_map, indexes[j], 
+                                grid.y_axis_pts() );
+            ++j;
+        }
         _istream.getline(line, MAX_HEADER_CHARS);
         ++map_num;
     }
 
     return std::vector<int> (5,0);   
+}
+
+void
+bilinear_interpolate(float longtitude, float latitude,
+                     std::vector<int>& tec_vals,
+                     teq_cell& cell,
+                     std::size_t lat_grid_size)
+{
+    // resolve the tuple
+    std::size_t x0_idx = std::get<0>( cell );
+    std::size_t y0_idx = std::get<4>( cell );
+#ifdef DEBUG
+    std::size_t x1_idx = std::get<2>( cell );
+    std::size_t y1_idx = std::get<6>( cell );
+    assert( x1_idx == x0_idx + 1 );
+    assert( y1_idx == y0_idx + 1 );
+#else
+    std::size_t x1_idx = x0_idx + 1;
+    std::size_t y1_idx = y0_idx + 1;
+#endif
+
+    ionex_grd_type x0 = std::get<1>( cell );
+    ionex_grd_type x1 = std::get<3>( cell );
+    ionex_grd_type y0 = std::get<5>( cell );
+    ionex_grd_type y1 = std::get<7>( cell );
+
+    std::size_t lowleft= y0_idx*lat_grid_size+x0_idx;
+    ionex_grd_type f00 = static_cast<ionex_grd_type>(tec_vals[lowleft]);
+    ionex_grd_type f01 = static_cast<ionex_grd_type>(tec_vals[lowleft+lat_grid_size]);
+    ionex_grd_type f10 = static_cast<ionex_grd_type>(tec_vals[lowleft+1]);
+    ionex_grd_type f11 = static_cast<ionex_grd_type>(tec_vals[lowleft+lat_grid_size+1]);
+
+#ifdef DEBUG
+std::cout <<"\nInterpolating at: ("<<longtitude<<", "<<latitude<<")";
+std::cout <<"\n("<<x0_idx<<", "<<y1_idx<<") ----   ("<<x1_idx<<", "<<y1_idx<<")";
+std::cout <<"\n  |                     |";
+std::cout <<"\n  |                     |";
+std::cout <<"\n  |                     |";
+std::cout <<"\n("<<x0_idx<<", "<<y0_idx<<") ----   ("<<x1_idx<<", "<<y0_idx<<")";
+std::cout<<"\n";
+#endif
+
+    // bilinear interpolation, see
+    // https://en.wikipedia.org/wiki/Bilinear_interpolation
+    float x { longtitude };
+    float y { latitude };
+    T denom { (x1-x0)*(y1-y0) };
+    return  ((x1-x)*(y1-y)/denom)*f00
+           +((x-x0)*(y1-y)/denom)*f10
+           +((x1-x)*(y-y0)/denom)*f01
+           +((x-x0)*(y-y0)/denom)*f11;
 }
