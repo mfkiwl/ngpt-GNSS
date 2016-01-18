@@ -15,6 +15,10 @@ using ngpt::ionex;
 /// they  exceed this limit, just a bit ...
 constexpr int MAX_HEADER_CHARS { 82 };
 
+/// According to IONEX specification, each longtitude line can contain a
+/// maximum of 16 TEC values (\cite inx1).
+constexpr std::size_t MAX_TEC_PER_LINE { 16 };
+
 /**
  *  Size of 'END OF HEADER' C-string.
  *  std::strlen is not 'constexr' so eoh_size can't be one either. Note however
@@ -232,6 +236,15 @@ ionex::read_header()
         {
             *(line+6) = '\0';
             _map_dimension = std::strtol(line, &end, 10);
+            if ( _map_dimension != 2 ) {
+#ifdef DEBUG
+                std::cerr <<"\n[DEBUG] Oh shit! This map-dimension is not supported";
+                std::cerr <<"\n        Need to add code bitch!";
+                throw std::runtime_error
+                    ("ionex::read_header() -> Invalid map dimension");
+#endif
+                    return 1;
+            }
         }
         else if ( !strncmp(line+60, "HGT1 / HGT2 / DHGT", 18) )
         {
@@ -308,23 +321,52 @@ ionex::read_header()
     return 0;
 }
 
-/// Read a TEC map off from the stream
+/// Compute # of maps for constant height.
+///
+/// \warning This function uses the fact that the (latitude) grid is given
+/// with a precision of 1e-1 degrees.
+///
+std::size_t
+ionex::latitude_maps()
+const noexcept
+{
+    long lat1 = static_cast<long>(_lat1 * 100);
+    long lat2 = static_cast<long>(_lat2 * 100);
+    long dlat = static_cast<long>(_dlat * 100);
+    long maps = (lat2 - lat1) / dlat + 1;
+    assert( maps > 0 );
+    return static_cast<std::size_t>( maps );
+}
+
+/// Compute how many lines should be read off from a const-latitude map instant
+///
+/// \warning This function uses the fact that the (longtitude) grid is given
+/// with a precision of 1e-1 degrees.
+///
+std::size_t
+ionex::longtitude_lines()
+const noexcept
+{
+    long lon1 = static_cast<long>(_lon1 * 100);
+    long lon2 = static_cast<long>(_lon2 * 100);
+    long dlon = static_cast<long>(_dlon * 100);
+    long vals = (lon2 - lon1) / dlon + 1;
+    assert( vals > 0 );
+    long rows = vals / MAX_TEC_PER_LINE + (vals % MAX_TEC_PER_LINE > 0);
+    return static_cast<std::size_t>( rows );
+}
+
+/// Read a TEC map for a given epoch
 /// \warning -# The buffer should be placed in a position such that the next line
 ///          to be read is "EPOCH OF CURRENT MAP".
-///          -# Also, always clear errno before calling this!
-///
 int
-ionex::read_map(std::size_t num_of_tec_lines)
+ionex::read_tec_map()
 {
+    // stream should definitely be open!
+    assert( _istream.is_open() );
+    
     static char line [MAX_HEADER_CHARS];
     datetime_ms d;
-    char* start, *end;
-    ionex_grd_type lat, lon1, lon2, dlon, hgt;
-    long lval;
-    int  ival;
-    
-    // The stream should be open by now!
-    assert( this->_istream.is_open() );
     
     // next line we read should be 'EPOCH OF CURRENT MAP'
     if ( !_istream.getline(line, MAX_HEADER_CHARS)
@@ -334,12 +376,52 @@ ionex::read_map(std::size_t num_of_tec_lines)
 #ifdef DEBUG
         std::cerr<<"\n[DEBUG] Error reading TEC map 'EPOCH OF CURRENT MAP'";
         std::cerr<<"\n        found line: " << line;
-        throw std::runtime_exception
+        throw std::runtime_error
         ("ionex::read_map() -> Invalid line");
 #endif
         return 1;
     }
 
+    // how many const latitude maps should we read ?
+    std::size_t lat_maps  (this->latitude_maps() );
+    // each const-latitude map has how many tec lines ?
+    std::size_t lon_lines (this->longtitude_lines() );
+
+    // reset errno
+    errno = 0;
+
+    for (std::size_t i=0; i<lat_maps; ++i)
+    {
+        if ( this->read_latitude_map(lon_lines) ) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/// Read a TEC map (for a given but irrelevant latitude) off from the stream
+///
+/// \warning -# The buffer should be placed in a position such that the next line
+///          to be read is "LAT/LON1/LON2/DLON/H".
+///          -# Also, always clear errno before calling this!
+///          -# When this function returns, errno should be what is was before
+///          the function call.
+///
+/// \param[in] num_of_tec_lines The number of lines to read off from a const
+///                             latitude map.
+///
+int
+ionex::read_latitude_map(std::size_t num_of_tec_lines)
+{
+    static char line [MAX_HEADER_CHARS];
+    datetime_ms d;
+    char* start, *end;
+    ionex_grd_type lat, lon1, lon2, dlon, hgt;
+    long lval;
+    int  ival;
+    int  prev_errno = errno;
+    
     // next line should be 'LAT/LON1/LON2/DLON/H'
     if ( !_istream.getline(line, MAX_HEADER_CHARS) 
          || std::strncmp(line+60, "LAT/LON1/LON2/DLON/H", 20) )
@@ -347,7 +429,7 @@ ionex::read_map(std::size_t num_of_tec_lines)
 #ifdef DEBUG
         std::cerr<<"\n[DEBUG] Error reading TEC map 'LAT/LON1/LON2/DLON/H'";
         std::cerr<<"\n        found line: " << line;
-        throw std::runtime_exception
+        throw std::runtime_error
         ("ionex::read_map() -> Invalid line");
 #endif
         return 1;
@@ -363,11 +445,13 @@ ionex::read_map(std::size_t num_of_tec_lines)
     start +=6;
     hgt  = std::strtof(start, &end);
 #ifdef DEBUG
-    if ( lon1!=_lon1 || lon2!=_lon2 || dlon!=_dlon )
+    if ( lon1!=_lon1 || lon2!=_lon2 || dlon!=_dlon || hgt != _hgt1 )
     {
+        errno = prev_errno;
         std::cerr << "\n[DEBUG] Oh Fuck! this longtitude seems corrupt!";
         std::cerr << "\n        line: " << line;
-        throw std::runtime_error("ionex::read_map() -> Invalid line");
+        std::string lat_str = std::to_string(lat);
+        throw std::runtime_error("ionex::read_map() -> Invalid line ("+lat_str+")");
     }
 #endif
 
@@ -375,6 +459,7 @@ ionex::read_map(std::size_t num_of_tec_lines)
     // per line.
     for (std::size_t i=0; i<num_of_tec_lines; ++i) {
         if ( !_istream.getline(line, MAX_HEADER_CHARS) ) {
+            errno = prev_errno;
 #ifdef DEBUG
             std::cerr<<"\n[DEBUG] Fucking weird! Failed to read tec map!";
             throw std::runtime_error("ionex::read_map() -> Invalid line");
@@ -388,13 +473,16 @@ ionex::read_map(std::size_t num_of_tec_lines)
              lval = std::strtol(start, &end, 10) )
         {
             ival = static_cast<int>( lval );
+            // this does nothing except uses ival so that the fucking
+            // compiler stops crying like a baby
+            ival += 1;
         }
     }
 
     // check for transformation errors!
     if ( errno )
     {
-        errno = 0;
+        errno = prev_errno;
 #ifdef DEBUG
         std::cerr<<"\n[DEBUG] Fuck! Reading tec values failed!";
         throw std::runtime_error("ionex::read_map() -> Invalid line");

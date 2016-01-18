@@ -72,6 +72,14 @@ template<class C = datetime_clock::milli_seconds>
 class datetime {
 public:
 
+    /// Default constructor (makes min date)
+    constexpr explicit
+    datetime()
+    noexcept
+        : mjd_{cal2mjd(1821, 1, 1)},
+          fd_ {0.0f}
+    {}
+
     /// Constructor from YYMMDD HH:MM:SS.SSS
     explicit 
     datetime(int year, int month, int day, 

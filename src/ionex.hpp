@@ -72,6 +72,10 @@ using ionex_grd_type = float;
  *          always considered as input file streams. You cannot write to/a
  *          IONEX file.
  *          -# Record lines in IONEX files do not exceed 80 chars.
+ *          -# The map grid points (lat, lon, hgt) are recorded within the
+ *          IONEX files with a precision of 1e-1 degrees. Various functions use
+ *          this fact to turn the (float/double) grid values to (int/long).
+ *          Should this change, we're fucked!
  */
 class ionex
 {
@@ -113,6 +117,19 @@ public:
 private:
     /// Read the instance header, and assign (most of) the fields.
     int read_header();
+
+    // Read a TEC map for a constant epoch
+    int read_tec_map();
+
+    // Read an individual map
+    int read_latitude_map(std::size_t);
+
+    // Compute how many (const) latitude maps there exist for each height.
+    std::size_t latitude_maps() const noexcept;
+
+    // Compute how many longtitude lienes there exist for a single const-
+    // latitude map.
+    std::size_t longtitude_lines() const noexcept;
 
     std::string      _filename;      ///< The name of the antex file.
     std::ifstream    _istream;       ///< The infput (file) stream.
