@@ -2,6 +2,7 @@
 #define __IONEX_NGPT_
 
 #include <fstream>
+#include <vector>
 #include "datetime.hpp"
 
 /**
@@ -41,8 +42,9 @@
 namespace ngpt
 {
 
-/// The type we store ionex TEC values in.
-using ionex_tec_type = float;
+// The type we store ionex TEC values in.
+// TODO remove this shit. Always int
+using ionex_tec_type = int;
 
 /// The type we store ionex grid values in.
 using ionex_grd_type = float;
@@ -113,16 +115,21 @@ public:
     filename()
     const noexcept
     { return this->_filename; }
+
+    std::vector<int>
+    get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& points, 
+        datetime_ms* from = nullptr, datetime_ms* to = nullptr, int every=.0f);
   
 private:
     /// Read the instance header, and assign (most of) the fields.
     int read_header();
 
     // Read a TEC map for a constant epoch
-    int read_tec_map();
+    int read_tec_map(std::vector<int>&);
+    int skip_tec_map();
 
     // Read an individual map
-    int read_latitude_map(std::size_t);
+    int read_latitude_map(std::size_t, std::vector<int>&, std::size_t&);
 
     // Compute how many (const) latitude maps there exist for each height.
     std::size_t latitude_maps() const noexcept;

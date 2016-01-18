@@ -1,6 +1,11 @@
 #ifndef __DATETIME_NGPT__
 #define __DATETIME_NGPT__
 
+#include <ostream>
+#ifdef DEBUG
+    #include <iostream>
+#endif
+
 namespace ngpt {
 
 /// Seconds per day.
@@ -98,7 +103,7 @@ public:
     const noexcept
     {
         return ( mjd_ == lhs.mjd_ &&
-                 std::abs(fd_ - lhs.fd) < C::day_tolerance );
+                 std::abs(fd_ - lhs.fd_) < C::day_tolerance );
     }
     
     inline
@@ -106,7 +111,7 @@ public:
     const noexcept
     {
         return ( mjd_ > lhs.mjd_ || 
-               ( mjd_ == lhs.mjd_ && (fd_ - lhs.fd > C::day_tolerance) ) );
+               ( mjd_ == lhs.mjd_ && (fd_ - lhs.fd_ > C::day_tolerance) ) );
     }
     
     inline
@@ -114,15 +119,15 @@ public:
     const noexcept
     {
         return ( mjd_ > lhs.mjd_ || 
-               ( mjd_ == lhs.mjd_ && (fd_ - lhs.fd >= C::day_tolerance) ) );
+               ( mjd_ == lhs.mjd_ && (fd_ - lhs.fd_ >= C::day_tolerance) ) );
     }
     
     inline
     bool operator<(const datetime& lhs)
     const noexcept
     {
-        return ( mjd_ < lhs.mjd_ || 
-               ( mjd_ == lhs.mjd_ && (fd_ - lhs.fd < C::day_tolerance) ) );
+        return ( mjd_ < lhs.mjd_ ||
+               ( mjd_ == lhs.mjd_ && (fd_ - lhs.fd_ > C::day_tolerance) ) );
     }
     
     inline
@@ -130,7 +135,13 @@ public:
     const noexcept
     {
         return ( mjd_ < lhs.mjd_ || 
-               ( mjd_ == lhs.mjd_ && (fd_ - lhs.fd <= C::day_tolerance) ) );
+               ( mjd_ == lhs.mjd_ && (fd_ - lhs.fd_ >= C::day_tolerance) ) );
+    }
+
+    friend std::ostream& operator<<(std::ostream& o, const datetime& d)
+    {
+        o << ( static_cast<double>(d.mjd_) + d.fd_ );
+        return o;
     }
 
 private:
