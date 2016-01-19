@@ -73,4 +73,6 @@ Untracked files:                                              ## <- αρχεία
    $> git push origin pydev
 ```
 
-το `origin` είναι το `remote repository` και το `pydev` είναι το `remote branch`. *Πρόσεχε σε ποιό remote branch κάνεις push*, αν έκανες π.χ. `git push origin master` θα γίνει μαλακία (τίποτα δεν χάνεται και όλα αντιστρέφονται αλλά καταλαβαίνεις ...).
+το `origin` είναι το `remote repository` και το `pydev` είναι το `remote branch`. **Πρόσεχε σε ποιό remote branch κάνεις push**, αν έκανες π.χ. `git push origin master` θα παιζόταν μαλακία (τίποτα δεν χάνεται και όλα αντιστρέφονται αλλά καταλαβαίνεις ...).
+
+Για να αλλάξεις το branch που δουλεύεις (και να πας π.χ. στο `dev`), κάνεις `git checkout dev`· καλό είναι πριν το κάνεις αυτό να κάνεις ένα commit ... Για να συνχρονίσεις το local `dev` με το remote `dev`, κάνεις `git pull origin dev`. **ΠΡΟΣΟΧΗ** το `pull` όπως και το `push` συνχρονίζουν το remote που τους *λες* me to local που *είσαι*. Αν π.χ. δουλεύεις στο branch `pydev` και κάνεις `git pull origin dev`, το git θα "κολλήσει" το remote `pydev` στο local `dev`, οπότε και την πούτσησες· ομοίως, αν δουλεύεις στο local `pydev` και κάνεις `git push origin dev`, θα την πουτσήσω εγώ. Πάντως, αν πας να κάνεις μαλακία, συνήθως το git σε προειδοποιεί.
