@@ -54,7 +54,7 @@ Untracked files:                                              ## <- αρχεία
 Για να κάνεις το commit:
 
 ```bash
-   $> git commit -m "describe my commit in some way"
+   $> git commit -am "describe my commit in some way"
 ```
 
 Αυτό θα κάνει commit για όλα τα αρχεία που βρίσκονται στο κομμάτι `Changes not staged for commit:`. Αν υπάρχει κάποιο αρχείο στα `Untracked files` το οποίο θες να προσθέσεις στο branch, πρέπει να το προσθέσεις manually πριν κάνεις commit, με την εντολή:
@@ -91,7 +91,7 @@ Untracked files:                                              ## <- αρχεία
    $> git add doc/git-basics.md
    $> git commit -m "added file git-basics.md"
    ## forgot to add Mitsos's cheatsheet
-   $> git commit -m "add cheatsheet"
+   $> git commit -am "add cheatsheet"
    $> git push origin master
 ```
 
