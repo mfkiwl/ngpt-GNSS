@@ -634,6 +634,7 @@ bilinear_interpolate(float longtitude, float latitude,
     ionex_grd_type f11 = static_cast<ionex_grd_type>(tec_vals[low_left+1+lon_grid_size]);
 
 #ifdef DEBUG
+//TODO remove this check1
 std::cout <<"\nInterpolating at: ("<<longtitude<<", "<<latitude<<")";
 std::cout <<"\n("<<x0_idx<<", "<<y1_idx<<") ----   ("<<x1_idx<<", "<<y1_idx<<")";
 std::cout <<"\n  |                  |";
