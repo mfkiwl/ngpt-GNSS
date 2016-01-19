@@ -101,9 +101,8 @@ Untracked files:                                              ## <- αρχεία
 
 Basic commands to use git repositories
 
-######################################
-      create setup repository
-#####################################
+### create setup repository
+
 ```
 ## git directory
 git init
@@ -122,9 +121,7 @@ git push origin master
 git clone <url>
 ```
 
-################################
-       pull ad push master
-################################
+### pull ad push master
 
 ```
 ## get master edition
@@ -136,9 +133,7 @@ git commit -am "comments"
 git push origin master
 ```
 
-###############################
-        use branches
-###############################
+### use branches
 
 ```
 git branch		##List all of the branches in your repository.
@@ -151,9 +146,7 @@ git checkout <existing-branch>   ## chnange to this branch
                                  ## for new branches add commit and push to main repository
 ```
 
-###############################
-        merge branches
-###############################
+### merge branches
 
 ```
 git merge <branch>		## Merge the specified branch into the current branch. 
@@ -164,10 +157,8 @@ git merge --no-ff <branch>	## Merge the specified branch into the current branch
 
 Below are quite a few commands that neither we have used them... HAVE FUN!... obviously there are many other commands!
 
+### Changes and Differences
 
-###############################
-   Changes and Differences
-###############################
 ```
 git status			## Show files added to the index, files with changes, and untracked files.
 git diff			## Show unstaged changes made since your last commit.
@@ -178,9 +169,7 @@ git diff rev1..rev2 [path(s)]	## Show differences between two revisions, rev1 an
 git diff rev1...rev2 [path(s)]	## Show differences between the last common ancestor of two revisions, rev1 and rev2, optionally limiting comparison to files found in one or more space-separated file paths or subdirectories given by path(s).
 ```
 
-###############################
-  File and Directory Contents
-###############################
+### File and Directory Contents
 
 ```
 git show rev:file		## Show contents of file (specified relative to the project root) from revision rev.
@@ -188,9 +177,7 @@ git ls-files [-t]		## Show all tracked files (â€œ-tâ€ shows file status
 git ls-files --others		## Show all untracked files.
 ```
 
-###############################
-	  History
-###############################
+### History
 
 ```
 git log				##Show recent commits, most recent on top.
@@ -211,9 +198,7 @@ git show rev			##Show the changeset (diff) of a commit specified by rev.
 git show rev -- path(s)		##Show the changeset (diff) of a commit rev , optionally limited to files found in one or more space-separated file paths or subdirectories given by path(s).
 ```
 
-###############################
-     Searching for Content
-###############################
+### Searching for Content
 
 ```
 git grep regexp					##Search working tree for text matching regular expression regexp.
@@ -224,9 +209,7 @@ git grep regexp $(git rev-list --all)		##Search all revisions for text matching 
 git grep regexp $(git rev-list rev1..rev2)	##Search all revisions between rev1 and rev2 for text matching regular expression regexp.
 ```
 
-###############################
-	Stashing
-###############################
+### Stashing
 
 ```
 ##The command saves your local modifications away and reverts the working directory to match the HEAD commit.
@@ -239,9 +222,7 @@ git stash drop [stash]			##Remove a single stashed state from the stash list. Wh
 git stash branch new-branch [stash]	##Creates and checks out a new branch named new-branch starting from the commit at which the stash was originally created, applies the changes recorded in stash to the new working tree and index, then drops the stash if that completes successfully. When no stash is given, applies the latest one.
 ```
 
-###############################
-  Cleaning
-###############################
+### Cleaning
 
 ```
 git clean -f		##Remove all untracked files from working copy.
@@ -252,9 +233,7 @@ git clean -fx		##Remove all untracked and ignored files from working copy.
 git clean -fxd		##Remove all untracked and ignored files and directories from working copy.
 ```
 
-###############################
-    Configuration
-###############################
+### Configuration
 
 ```
 git config user.email author@email.com		##Set email for commit messages.
