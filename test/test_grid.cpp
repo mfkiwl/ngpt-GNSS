@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include "grid.hpp"
 
 using std::cout;
@@ -92,7 +93,9 @@ int main()
   cout << "\n>>ngpt::GridSkeleton<> in ascending order";
   ngpt::GridSkeleton<float, true, ngpt::Grid_Dimension::TwoDim>
     d2grd (ele1, ele2, dele, azi1, azi2, dazi);
-
+  std::cout <<"\nXaxis (i.e. elevation): "<<d2grd.x_axis_from()<<"/"<<d2grd.x_axis_to()<<"/"<<d2grd.x_axis_step();
+  std::cout <<"\nYaxis (i.e. azimouth ): "<<d2grd.y_axis_from()<<"/"<<d2grd.y_axis_to()<<"/"<<d2grd.y_axis_step();
+  
   float ptx (21.34), pty (254.12);
   auto smth = d2grd.nearest_neighbor(ptx, pty);
   cout <<"\nCalling nearest_neighbor on a 2-D Grid (Skeleton) ";
@@ -112,7 +115,62 @@ int main()
     << "\n\tXaxis-> index: " << std::get<0>(smth) << " with value: " << std::get<1>(smth)
     << "\n\tYaxis-> index: " << std::get<2>(smth) << " with value: " << std::get<3>(smth)
     << "\n";
-
+  
   cout << "\n";
+  cout << "\n\n==================================================================";
+  cout << "\nTESTING THE CLASS: ngpt::GridSkeleton<>";
+  cout << "\n==================================================================";
+  
+  cout << "\n>>ngpt::GridSkeleton<> in ascending order";
+  ngpt::GridSkeleton<float, true, ngpt::Grid_Dimension::TwoDim> d2grd2 (0,-4,-1,0,5,1);
+  std::cout <<"\nXaxis : "<<d2grd2.x_axis_from()<<"/"<<d2grd2.x_axis_to()<<"/"<<d2grd2.x_axis_step();
+  std::cout <<"\nYaxis : "<<d2grd2.y_axis_from()<<"/"<<d2grd2.y_axis_to()<<"/"<<d2grd2.y_axis_step();
+  std::vector<int> ivec (d2grd2.size(), 0);
+  for (std::size_t i=0; i<ivec.size(); ++i) ivec[i] = i;
+
+  auto cell = d2grd2.neighbor_nodes(-2.2, 3.8);
+    // resolve the tuple
+    std::size_t x0_idx = std::get<0>( cell );
+    std::size_t y0_idx = std::get<4>( cell );
+#ifdef DEBUG
+    std::size_t x1_idx = std::get<2>( cell );
+    std::size_t y1_idx = std::get<6>( cell );
+    assert( x1_idx == x0_idx + 1 );
+    assert( y1_idx == y0_idx + 1 );
+#else
+    std::size_t x1_idx = x0_idx + 1;
+    std::size_t y1_idx = y0_idx + 1;
+#endif
+
+    float x0 = std::get<1>(cell);
+    float x1 = std::get<3>(cell);
+    float y0 = std::get<5>(cell);
+    float y1 = std::get<7>(cell);
+    // Normally we don't have to do this! see the assert stetements!
+    std::size_t lowleft= y0_idx*d2grd2.x_axis_pts()+x0_idx;
+    int f00 = ivec[lowleft];
+    int f01 = ivec[lowleft+d2grd2.x_axis_pts()];
+    int f10 = ivec[lowleft+1];
+    int f11 = ivec[lowleft+d2grd2.x_axis_pts()+1];
+    assert( lowleft == d2grd2.node_to_index(x0_idx, y0_idx) );
+    assert( lowleft+d2grd2.x_axis_pts() == d2grd2.node_to_index(x0_idx, y1_idx) );
+    assert( lowleft+1 == d2grd2.node_to_index(x1_idx, y0_idx) );
+    assert( lowleft+d2grd2.x_axis_pts()+1 == d2grd2.node_to_index(x1_idx, y1_idx) );
+
+std::cout <<"\nInterpolating at: ("<<2.2<<", "<<3.8<<")";
+std::cout <<"\n("<<x0_idx<<", "<<y1_idx<<") ----   ("<<x1_idx<<", "<<y1_idx<<")";
+std::cout <<"\n  |                  |";
+std::cout <<"\n  |                  |";
+std::cout <<"\n  |                  |";
+std::cout <<"\n("<<x0_idx<<", "<<y0_idx<<") ----   ("<<x1_idx<<", "<<y0_idx<<")";
+std::cout<<"\n";
+std::cout <<"\nInterpolating at: ("<<2.2<<", "<<3.8<<")";
+std::cout <<"\n("<<x0<<", "<<y1<<")="<<f01<<" ----   ("<<x1<<", "<<y1<<")="<<f11;
+std::cout <<"\n  |                  |";
+std::cout <<"\n  |                  |";
+std::cout <<"\n  |                  |";
+std::cout <<"\n("<<x0<<", "<<y0<<")="<<f00<<" ----   ("<<x1<<", "<<y0<<")="<<f10;
+std::cout<<"\n";
+  
   return 0;
 }

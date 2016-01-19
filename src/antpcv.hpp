@@ -391,57 +391,43 @@ public:
 
     /// Get the ZEN1 value, i.e. the starting zenith angle for the correction
     /// grid.
-    T
-    zen1()
-    const noexcept
+    T zen1() const noexcept
     { return no_azi_grid_.from(); }
     
     /// Get the ZEN2 value, i.e. the ending zenith angle for the correction
     /// grid.
-    T
-    zen2()
-    const noexcept
+    T zen2() const noexcept
     { return no_azi_grid_.to();   }
     
     /// Get the DZEN value, i.e. the zenith angle step size for the correction
     /// grid.
-    T
-    dzen()
-    const noexcept
+    T dzen() const noexcept
     { return no_azi_grid_.step(); }
     
     /// Does this (correction) pattern have azimouth-dependent pcv values?
-    bool
-    has_azi_pcv()
-    const noexcept
+    bool has_azi_pcv() const noexcept
     { return azi_grid_ != nullptr; }
     
     /// Get the AZI1 value, i.e. the starting azimouth angle for the correction
     /// grid.
     /// \warning Watch yourself bitch! can cause UB if azi_grid_ is invalid.
-    T azi1()
-    const noexcept
+    T azi1() const noexcept
     { return azi_grid_->y_axis_from(); }
 
     /// Get the AZI2 value, i.e. the ending azimouth angle for the correction
     /// grid.
     /// \warning Watch yourself bitch! can cause UB if azi_grid_ is invalid.
-    T azi2()
-    const noexcept
+    T azi2() const noexcept
     { return azi_grid_->y_axis_to();   }
     
     /// Get the DAZI value, i.e. the azimouth angle step size for the correction
     /// grid.
     /// \warning Watch yourself bitch! can cause UB if azi_grid_ is invalid.
-    T
-    dazi()
-    const noexcept
+    T dazi() const noexcept
     { return azi_grid_->y_axis_step(); }
 
     /// Return the size (number of correction values) for the NOAZI pattern.
-    std::size_t
-    no_azi_grid_pts()
-    const noexcept
+    std::size_t no_azi_grid_pts() const noexcept
     { 
 #ifdef DEBUG
         /// make sure the size computed from the Grid is the same as the size
@@ -460,9 +446,7 @@ public:
     /// \warning This will return the (possible) number of pcv values that can 
     /// be held within the grid. The actual number of pcv values hold in the 
     /// vector can be different.
-    std::size_t
-    azi_grid_pts()
-    const noexcept 
+    std::size_t azi_grid_pts() const noexcept 
     { 
         return   azi_grid_ 
                ? azi_grid_->size()
@@ -470,9 +454,7 @@ public:
     }
 
     //TODO
-    T
-    no_azi_pcv(T zenith, std::size_t i)
-    const
+    T no_azi_pcv(T zenith, std::size_t i) const
     {
         // TODO what if elevation == 90 ??
         // get the left and right nodes
@@ -488,15 +470,14 @@ public:
 #endif
         T           x0     = std::get<1>( nodes );
         T           x1     = std::get<3>( nodes );
+        //TODO is this correct ?
         T           y0     = freq_pcv_[i].no_azi_vector( x0_idx   );
         T           y1     = freq_pcv_[i].no_azi_vector( x0_idx+1 );
         return y0 + (y1-y0)*(zenith-x0)/(x1-x0);
     }
     
     //TODO
-    T
-    azi_pcv(T zenith, T azimouth, std::size_t i)
-    const
+    T azi_pcv(T zenith, T azimouth, std::size_t i) const
     {
         // TODO what if elevation == 90 ??
         
@@ -522,6 +503,7 @@ public:
         T           x1     = std::get<3>( nodes );
         T           y0     = std::get<5>( nodes );
         T           y1     = std::get<7>( nodes );
+        //TODO is this correct ?
         std::size_t lowleft= y0_idx*azi_pts+x0_idx;
         T           f00    = freq_pcv_[i].azi_vector( lowleft );
         T           f01    = freq_pcv_[i].azi_vector( lowleft + azi_pts );

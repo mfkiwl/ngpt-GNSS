@@ -169,61 +169,49 @@ public:
         : start_{s},
           stop_{e},
           step_{d},
+          // in case (e-s)/d is negative, the cast will result in a huge (positive)
+          // number; the assert (inside the con'tor body) will check for this.
           npts_{ d ? static_cast<std::size_t>((e-s)/d)+1 : 0 }
     {
         assert( npts_ < std::numeric_limits<int>::max() );
     }
 
     /// This is designed to be a base class.
-    virtual ~TickAxisImpl()
-    {}
+    virtual ~TickAxisImpl() {}
 
-    TickAxisImpl(const TickAxisImpl&)
-    noexcept
-    = default;
+    TickAxisImpl(const TickAxisImpl&) noexcept = default;
 
     TickAxisImpl&
-    operator=(const TickAxisImpl&)
-    noexcept
-    = default;
+    operator=(const TickAxisImpl&) noexcept = default;
 
-    TickAxisImpl(TickAxisImpl&&)
-    noexcept
-    = default;
+    TickAxisImpl(TickAxisImpl&&) noexcept = default;
 
     TickAxisImpl&
-    operator=(TickAxisImpl&&)
-    noexcept
-    = default;
+    operator=(TickAxisImpl&&) noexcept = default;
 
     /// Return the left-most tick.
     constexpr T
-    from()
-    const noexcept
+    from() const noexcept
     { return start_; }
 
     /// Return the right-most tick.
     constexpr T 
-    to()
-    const noexcept 
+    to() const noexcept 
     { return stop_; }
 
     /// Return the axis step size.
     constexpr T 
-    step()
-    const noexcept 
+    step() const noexcept 
     { return step_; }
 
     /// Check if the axis is in ascending order.
     constexpr bool 
-    is_ascending()
-    const noexcept 
+    is_ascending() const noexcept 
     { return stop_ - start_ > 0; }
 
     /// Return the number of tick-points.
     constexpr std::size_t
-    size()
-    const noexcept 
+    size() const noexcept 
     { return npts_; }
 
     /// Check if the given input value \p x is left from start_ (i.e. if it is
@@ -232,10 +220,8 @@ public:
     ///         if false is returned, the input \p x value lays outside the axis
     ///         limits on the left).
     ///
-    constexpr
-    bool
-    far_left(T x)
-    const noexcept
+    constexpr bool
+    far_left(T x) const noexcept
     { return this->is_ascending() ? x < start_ : x > start_ ; }
 
     /// Check if the given input value \p x is right from stop_ (i.e. if it is
@@ -246,8 +232,7 @@ public:
     ///
     constexpr
     bool
-    far_right(T x)
-    const noexcept
+    far_right(T x) const noexcept
     { return this->is_ascending() ? x > stop_ : x < stop_; }
 
     /// Check if the given input value \p x lays between the limits of the tick
@@ -263,8 +248,7 @@ public:
     constexpr
 #endif
     int
-    out_of_range(T x)
-    const noexcept
+    out_of_range(T x) const noexcept
     {
         if ( this->far_left(x) ) {
             return -1;
@@ -284,9 +268,7 @@ public:
     constexpr
 #endif
     auto
-    neighbor_nodes(T x) 
-    const
-    noexcept( !RangeCheck )
+    neighbor_nodes(T x) const noexcept( !RangeCheck )
 #if __cplusplus == 201103L
     -> std::tuple<std::size_t, T, std::size_t, T>
 #endif
@@ -303,8 +285,7 @@ public:
     constexpr
 #endif
     auto
-    nearest_neighbor(T x)
-    const noexcept
+    nearest_neighbor(T x) const noexcept
 #if __cplusplus == 201103L
     -> std::tuple<std::size_t, T>
 #endif
@@ -321,11 +302,7 @@ public:
 
 };
 
-enum class Grid_Dimension : char
-{
-    OneDim,
-    TwoDim
-};
+enum class Grid_Dimension : char { OneDim, TwoDim };
 
 /// A skeleton for a generic, two-dimensional grid.
 template<typename       T,
@@ -376,53 +353,43 @@ public:
     virtual ~GridSkeleton() {};
 
     std::size_t
-    size()
-    const noexcept 
+    size() const noexcept 
     { return xaxis_.size() * yaxis_.size(); }
 
     std::size_t
-    x_axis_pts()
-    const noexcept
+    x_axis_pts() const noexcept
     { return xaxis_.size(); }
 
     std::size_t
-    y_axis_pts()
-    const noexcept
+    y_axis_pts() const noexcept
     { return yaxis_.size(); }
 
     T
-    x_axis_from()
-    const noexcept
+    x_axis_from() const noexcept
     { return xaxis_.from(); }
     
     T
-    x_axis_to()
-    const noexcept
+    x_axis_to() const noexcept
     { return xaxis_.to(); }
     
     T
-    x_axis_step()
-    const noexcept
+    x_axis_step() const noexcept
     { return xaxis_.step(); }
     
     T
-    y_axis_from()
-    const noexcept
+    y_axis_from() const noexcept
     { return yaxis_.from(); }
     
     T
-    y_axis_to()
-    const noexcept
+    y_axis_to() const noexcept
     { return yaxis_.to(); }
     
     T
-    y_axis_step()
-    const noexcept
+    y_axis_step() const noexcept
     { return yaxis_.step(); }
 
     auto
-    nearest_neighbor(T x, T y)
-    noexcept 
+    nearest_neighbor(T x, T y) noexcept 
 #if __cplusplus == 201103L
     -> std::tuple<std::size_t, T, std::size_t, T>
 #endif
@@ -442,8 +409,7 @@ public:
     ///    v     v
     ///   x_0   x_1
     auto
-    neighbor_nodes(T x, T y)
-    const noexcept( !RangeCheck )
+    neighbor_nodes(T x, T y) const noexcept( !RangeCheck )
 #if __cplusplus == 201103L
     -> std::tuple<std::size_t, T, std::size_t, T, 
                   std::size_t, T, std::size_t, T>
@@ -451,9 +417,54 @@ public:
     {
         auto t1 ( xaxis_.neighbor_nodes(x) );
         auto t2 ( yaxis_.neighbor_nodes(y) );
-        // TODO: this is not right! place in right order
         return std::tuple_cat(t1, t2);
     };
+
+    // This function will convert a tuple of (x, y) indexes, to an index.
+    // For example, if we have an instance of GridSkeleton assosicated with
+    // a vector<...>, where: 
+    // vector[0] -> (0, 0)
+    // vector[1] -> (1, 0)
+    // ...
+    // and we want to find the index of the vector corresponding to the tuple
+    // (x, y), then this function will compute it.
+    //
+    std::size_t
+    node_to_index(const std::tuple<std::size_t,std::size_t>& t)
+    const
+    {
+        auto x = std::get<0>( t );
+        auto y = std::get<1>( t );
+        return y * xaxis_.size() + x;
+    }
+    std::size_t
+    node_to_index(const std::size_t x, const std::size_t y)
+    const noexcept
+    { return y * xaxis_.size() + x; }
+
+    /* This function perfoms the same operation as node_to_index(), only it is
+     * used for cases when the y-axis (in the corresponding vector) is filled
+     * in reverse order, i.e.
+    \verbatim
+      A.                   B.
+
+[3]   15--16--17--18--19   0---1---2---3---4
+       |   |   |   |   |   |   |   |   |   |
+[2]   10--11--12--13--14   5---6---7---8---9
+       |   |   |   |   |   |   |   |   |   |
+[1]    5---6---7---8---9  10--11--12--13--14
+       |   |   |   |   |   |   |   |   |   |
+[0]    0---1---2---3---4  15--16--17--18--19
+
+     [0]  [1] [2] [3] [4]
+     \endverbatim
+     * Incase the vector is storead in the A. form, use node_to_index(), else
+     * (i.e. for case B.) use node_to_index_inv().
+     */
+    std::size_t
+    node_to_index_inv(const std::size_t x, const std::size_t y)
+    const noexcept
+    { return (yaxis_.size() - y -1) * xaxis_.size() + x; }
 
 };
 

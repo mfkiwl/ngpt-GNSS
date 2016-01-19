@@ -601,7 +601,8 @@ ionex_grd_type
 bilinear_interpolate(float longtitude, float latitude,
                      std::vector<int>& tec_vals,
                      tec_cell&         cell,
-                     std::size_t       lat_grid_size)
+                     std::size_t       lon_grid_size
+                     /*std::size_t       lat_grid_size*/)
 {
     // resolve the tuple
     std::size_t x0_idx = std::get<0>( cell );
@@ -622,11 +623,15 @@ bilinear_interpolate(float longtitude, float latitude,
     ionex_grd_type y0 = std::get<5>(cell)/100.0f;
     ionex_grd_type y1 = std::get<7>(cell)/100.0f;
 
-    std::size_t lowleft= y0_idx*lat_grid_size+x0_idx;
-    ionex_grd_type f00 = static_cast<ionex_grd_type>(tec_vals[lowleft]);
-    ionex_grd_type f01 = static_cast<ionex_grd_type>(tec_vals[lowleft+lat_grid_size]);
-    ionex_grd_type f10 = static_cast<ionex_grd_type>(tec_vals[lowleft+1]);
-    ionex_grd_type f11 = static_cast<ionex_grd_type>(tec_vals[lowleft+lat_grid_size+1]);
+    // get the tec values at the indexes we want
+    std::size_t low_left = y0_idx * lon_grid_size + x0_idx;
+#ifdef DEBUG
+    assert( low_left+1+lon_grid_size < tec_vals.size() );
+#endif
+    ionex_grd_type f00 = static_cast<ionex_grd_type>(tec_vals[low_left]);
+    ionex_grd_type f01 = static_cast<ionex_grd_type>(tec_vals[low_left+lon_grid_size]);
+    ionex_grd_type f10 = static_cast<ionex_grd_type>(tec_vals[low_left+1]);
+    ionex_grd_type f11 = static_cast<ionex_grd_type>(tec_vals[low_left+1+lon_grid_size]);
 
 #ifdef DEBUG
 std::cout <<"\nInterpolating at: ("<<longtitude<<", "<<latitude<<")";
@@ -815,7 +820,7 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
             std::cout<<"\nxaxis: "<<grid.x_axis_from()<<" to "<<grid.x_axis_to()<<" with step="<<grid.x_axis_step();
             std::cout<<"\nyaxis: "<<grid.y_axis_from()<<" to "<<grid.y_axis_to()<<" with step="<<grid.y_axis_step();
             bilinear_interpolate(p.first, p.second, tec_map, indexes[j], 
-                                grid.y_axis_pts() );
+                                grid.x_axis_pts()/*, grid.y_axis_pts()*/ );
             ++j;
         }
         _istream.getline(line, MAX_HEADER_CHARS);
