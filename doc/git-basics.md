@@ -54,7 +54,7 @@ Untracked files:                                              ## <- αρχεία
 Για να κάνεις το commit:
 
 ```bash
-   $> git commit -am "describe my commit in some way"
+   $> git commit -m "describe my commit in some way"
 ```
 
 Αυτό θα κάνει commit για όλα τα αρχεία που βρίσκονται στο κομμάτι `Changes not staged for commit:`. Αν υπάρχει κάποιο αρχείο στα `Untracked files` το οποίο θες να προσθέσεις στο branch, πρέπει να το προσθέσεις manually πριν κάνεις commit, με την εντολή:
@@ -63,3 +63,5 @@ Untracked files:                                              ## <- αρχεία
    $> git add bin/foo.py και src/py/baz.py
    ## now commit !
 ```
+
+Όταν θες να κάνεις add ένα αρχείο, να θυμάσαι ότι: στο `ngpt/.gitignore` υπάρχουν αρχεία και φάκελοι τα/οι οποίοι είναι (περίπου) blacklisted. Για να προσθέσεις τέτοια αρχεία, πρέπει να κάνεις `git add --force my/ignore/file.foo`. Επίσης, μπορείς να προσθέσεις patterns στο `.gitignore` για να μην παρακολουθεί μαλακίες (π.χ. `*.pyc`).
