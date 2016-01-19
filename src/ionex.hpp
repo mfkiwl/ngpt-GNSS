@@ -44,7 +44,7 @@ namespace ngpt
 
 // The type we store ionex TEC values in.
 // TODO remove this shit. Always int
-using ionex_tec_type = int;
+// using ionex_tec_type = int;
 
 /// The type we store ionex grid values in.
 using ionex_grd_type = float;
