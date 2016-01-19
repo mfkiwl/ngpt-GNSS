@@ -98,6 +98,13 @@ public:
     datetime& operator=(const datetime&) noexcept = default;
     datetime& operator=(datetime&&)      noexcept = default;
 
+    template<typename T>
+    void
+    add_seconds(T sec)
+    {
+        //TODO
+    }
+
     inline
     bool operator==(const datetime& lhs)
     const noexcept

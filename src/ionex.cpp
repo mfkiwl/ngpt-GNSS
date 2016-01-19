@@ -601,8 +601,7 @@ ionex_grd_type
 bilinear_interpolate(float longtitude, float latitude,
                      std::vector<int>& tec_vals,
                      tec_cell&         cell,
-                     std::size_t       lon_grid_size
-                     /*std::size_t       lat_grid_size*/)
+                     std::size_t       lon_grid_size)
 {
     // resolve the tuple
     std::size_t x0_idx = std::get<0>( cell );
@@ -634,21 +633,20 @@ bilinear_interpolate(float longtitude, float latitude,
     ionex_grd_type f11 = static_cast<ionex_grd_type>(tec_vals[low_left+1+lon_grid_size]);
 
 #ifdef DEBUG
-//TODO remove this check1
-std::cout <<"\nInterpolating at: ("<<longtitude<<", "<<latitude<<")";
-std::cout <<"\n("<<x0_idx<<", "<<y1_idx<<") ----   ("<<x1_idx<<", "<<y1_idx<<")";
-std::cout <<"\n  |                  |";
-std::cout <<"\n  |                  |";
-std::cout <<"\n  |                  |";
-std::cout <<"\n("<<x0_idx<<", "<<y0_idx<<") ----   ("<<x1_idx<<", "<<y0_idx<<")";
-std::cout<<"\n";
-std::cout <<"\nInterpolating at: ("<<longtitude<<", "<<latitude<<")";
-std::cout <<"\n("<<x0<<", "<<y1<<")="<<f01<<" ----   ("<<x1<<", "<<y1<<")="<<f11;
-std::cout <<"\n  |                  |";
-std::cout <<"\n  |                  |";
-std::cout <<"\n  |                  |";
-std::cout <<"\n("<<x0<<", "<<y0<<")="<<f00<<" ----   ("<<x1<<", "<<y0<<")="<<f10;
-std::cout<<"\n";
+//std::cout <<"\nInterpolating at: ("<<longtitude<<", "<<latitude<<")";
+//std::cout <<"\n("<<x0_idx<<", "<<y1_idx<<") ----   ("<<x1_idx<<", "<<y1_idx<<")";
+//std::cout <<"\n  |                  |";
+//std::cout <<"\n  |                  |";
+//std::cout <<"\n  |                  |";
+//std::cout <<"\n("<<x0_idx<<", "<<y0_idx<<") ----   ("<<x1_idx<<", "<<y0_idx<<")";
+//std::cout<<"\n";
+//std::cout <<"\nInterpolating at: ("<<longtitude<<", "<<latitude<<")";
+//std::cout <<"\n("<<x0<<", "<<y1<<")="<<f01<<" ----   ("<<x1<<", "<<y1<<")="<<f11;
+//std::cout <<"\n  |                  |";
+//std::cout <<"\n  |                  |";
+//std::cout <<"\n  |                  |";
+//std::cout <<"\n("<<x0<<", "<<y0<<")="<<f00<<" ----   ("<<x1<<", "<<y0<<")="<<f10;
+//std::cout<<"\n";
 #endif
 
     // bilinear interpolation, see
@@ -676,7 +674,7 @@ std::cout<<"\n";
  *                    set to '0', it will be set equal to the interval in the
  *                    IONEX file. The value denotes (integer) seconds.
  * 
- * \TODO Fuck this throws in a milloin places. Fucking do something!
+ * \TODO Fuck this throws in a million places. Fucking do something!
  */
 std::vector<int>
 ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& points,
@@ -818,10 +816,8 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
         //TODO
         std::size_t j = 0;
         for (const auto& p : points) {
-            std::cout<<"\nxaxis: "<<grid.x_axis_from()<<" to "<<grid.x_axis_to()<<" with step="<<grid.x_axis_step();
-            std::cout<<"\nyaxis: "<<grid.y_axis_from()<<" to "<<grid.y_axis_to()<<" with step="<<grid.y_axis_step();
             bilinear_interpolate(p.first, p.second, tec_map, indexes[j], 
-                                grid.x_axis_pts()/*, grid.y_axis_pts()*/ );
+                                grid.x_axis_pts());
             ++j;
         }
         _istream.getline(line, MAX_HEADER_CHARS);
