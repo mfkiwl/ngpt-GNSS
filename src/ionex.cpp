@@ -500,20 +500,21 @@ ionex::read_tec_map(std::vector<int>& pcv_vals)
     return 0;
 }
 
-/// Read a TEC map (for a given latitude) off from the stream and store the
-/// values in the vec vector, starting at vec[index]. The function will modify
-/// the index value, such that at return it will denote the last index inserted
-/// into the vector plus one.
-///
-/// \warning -# The buffer should be placed in a position such that the next line
-///          to be read is "LAT/LON1/LON2/DLON/H".
-///          -# Also, always clear errno before calling this!
-///          -# When this function returns, errno should be what is was before
-///          the function call.
-///
-/// \param[in] num_of_tec_lines The number of lines to read off from a const
-///                             latitude map.
-///
+/*
+ *  Read a TEC map (for a given latitude) off from the stream and store the
+ *  values in the vec vector, starting at vec[index]. The function will modify
+ *  the index value, such that at return it will denote the last index inserted
+ *  into the vector plus one.
+ * 
+ *  \warning -# The buffer should be placed in a position such that the next line
+ *           to be read is "LAT/LON1/LON2/DLON/H".
+ *           -# Also, always clear errno before calling this!
+ *           -# When this function returns, errno should be what is was before
+ *           the function call.
+ * 
+ *  \param[in] num_of_tec_lines The number of lines to read off from a const
+ *                              latitude map.
+ */ 
 int
 ionex::read_latitude_map(std::size_t num_of_tec_lines,
                          std::vector<int>& vec,
@@ -596,20 +597,81 @@ ionex::read_latitude_map(std::size_t num_of_tec_lines,
     return 0;
 }
 
-///
-/// \param[in] points A vector of coordinates of type (longtitude, latitude)
-///                   in (decimal) degrees (two decimal places are considered)
-/// \param[in] ifrom  Starting epoch; if not set it will be equal to the first
-///                   epoch in the IONEX file. If it is prior to the first epoch
-///                   in the file, it will be adjusted.
-/// \param[in] ito    Ending epoch; if not set it will be equal to the last
-///                   epoch in the IONEX file. If it is past the last epoch
-///                   in the file, it will be adjusted.
-/// \param[in] interval The time step with which to extract the TEC values. If
-///                   set to '0', it will be set equal to the interval in the
-///                   IONEX file. The value denotes (integer) seconds.
-///
-///\TODO Fuck this throws in a milloin places. Fucking do something!
+ionex_grd_type
+bilinear_interpolate(float longtitude, float latitude,
+                     std::vector<int>& tec_vals,
+                     tec_cell&         cell,
+                     std::size_t       lat_grid_size)
+{
+    // resolve the tuple
+    std::size_t x0_idx = std::get<0>( cell );
+    std::size_t y0_idx = std::get<4>( cell );
+#ifdef DEBUG
+    std::size_t x1_idx = std::get<2>( cell );
+    std::size_t y1_idx = std::get<6>( cell );
+    assert( x1_idx == x0_idx + 1 );
+    assert( y1_idx == y0_idx + 1 );
+#else
+    std::size_t x1_idx = x0_idx + 1;
+    std::size_t y1_idx = y0_idx + 1;
+#endif
+
+    // do not forget the scale factor !!
+    ionex_grd_type x0 = std::get<1>(cell)/100.0f;
+    ionex_grd_type x1 = std::get<3>(cell)/100.0f;
+    ionex_grd_type y0 = std::get<5>(cell)/100.0f;
+    ionex_grd_type y1 = std::get<7>(cell)/100.0f;
+
+    std::size_t lowleft= y0_idx*lat_grid_size+x0_idx;
+    ionex_grd_type f00 = static_cast<ionex_grd_type>(tec_vals[lowleft]);
+    ionex_grd_type f01 = static_cast<ionex_grd_type>(tec_vals[lowleft+lat_grid_size]);
+    ionex_grd_type f10 = static_cast<ionex_grd_type>(tec_vals[lowleft+1]);
+    ionex_grd_type f11 = static_cast<ionex_grd_type>(tec_vals[lowleft+lat_grid_size+1]);
+
+#ifdef DEBUG
+std::cout <<"\nInterpolating at: ("<<longtitude<<", "<<latitude<<")";
+std::cout <<"\n("<<x0_idx<<", "<<y1_idx<<") ----   ("<<x1_idx<<", "<<y1_idx<<")";
+std::cout <<"\n  |                  |";
+std::cout <<"\n  |                  |";
+std::cout <<"\n  |                  |";
+std::cout <<"\n("<<x0_idx<<", "<<y0_idx<<") ----   ("<<x1_idx<<", "<<y0_idx<<")";
+std::cout<<"\n";
+std::cout <<"\nInterpolating at: ("<<longtitude<<", "<<latitude<<")";
+std::cout <<"\n("<<x0<<", "<<y1<<")="<<f01<<" ----   ("<<x1<<", "<<y1<<")="<<f11;
+std::cout <<"\n  |                  |";
+std::cout <<"\n  |                  |";
+std::cout <<"\n  |                  |";
+std::cout <<"\n("<<x0<<", "<<y0<<")="<<f00<<" ----   ("<<x1<<", "<<y0<<")="<<f10;
+std::cout<<"\n";
+#endif
+
+    // bilinear interpolation, see
+    // https://en.wikipedia.org/wiki/Bilinear_interpolation
+    ionex_grd_type x     { longtitude };
+    ionex_grd_type y     { latitude };
+    ionex_grd_type denom { (x1-x0)*(y1-y0) };
+
+    return  ((x1-x)*(y1-y)/denom)*f00
+           +((x-x0)*(y1-y)/denom)*f10
+           +((x1-x)*(y-y0)/denom)*f01
+           +((x-x0)*(y-y0)/denom)*f11;
+}
+
+/* 
+ *  \param[in] points A vector of coordinates of type (longtitude, latitude)
+ *                    in (decimal) degrees (two decimal places are considered)
+ *  \param[in] ifrom  Starting epoch; if not set it will be equal to the first
+ *                    epoch in the IONEX file. If it is prior to the first epoch
+ *                    in the file, it will be adjusted.
+ *  \param[in] ito    Ending epoch; if not set it will be equal to the last
+ *                    epoch in the IONEX file. If it is past the last epoch
+ *                    in the file, it will be adjusted.
+ *  \param[in] interval The time step with which to extract the TEC values. If
+ *                    set to '0', it will be set equal to the interval in the
+ *                    IONEX file. The value denotes (integer) seconds.
+ * 
+ * \TODO Fuck this throws in a milloin places. Fucking do something!
+ */
 std::vector<int>
 ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& points,
                 datetime_ms* ifrom, datetime_ms* ito, int interval)
@@ -750,6 +812,8 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
         //TODO
         std::size_t j = 0;
         for (const auto& p : points) {
+            std::cout<<"\nxaxis: "<<grid.x_axis_from()<<" to "<<grid.x_axis_to()<<" with step="<<grid.x_axis_step();
+            std::cout<<"\nyaxis: "<<grid.y_axis_from()<<" to "<<grid.y_axis_to()<<" with step="<<grid.y_axis_step();
             bilinear_interpolate(p.first, p.second, tec_map, indexes[j], 
                                 grid.y_axis_pts() );
             ++j;
@@ -759,55 +823,4 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
     }
 
     return std::vector<int> (5,0);   
-}
-
-void
-bilinear_interpolate(float longtitude, float latitude,
-                     std::vector<int>& tec_vals,
-                     teq_cell& cell,
-                     std::size_t lat_grid_size)
-{
-    // resolve the tuple
-    std::size_t x0_idx = std::get<0>( cell );
-    std::size_t y0_idx = std::get<4>( cell );
-#ifdef DEBUG
-    std::size_t x1_idx = std::get<2>( cell );
-    std::size_t y1_idx = std::get<6>( cell );
-    assert( x1_idx == x0_idx + 1 );
-    assert( y1_idx == y0_idx + 1 );
-#else
-    std::size_t x1_idx = x0_idx + 1;
-    std::size_t y1_idx = y0_idx + 1;
-#endif
-
-    ionex_grd_type x0 = std::get<1>( cell );
-    ionex_grd_type x1 = std::get<3>( cell );
-    ionex_grd_type y0 = std::get<5>( cell );
-    ionex_grd_type y1 = std::get<7>( cell );
-
-    std::size_t lowleft= y0_idx*lat_grid_size+x0_idx;
-    ionex_grd_type f00 = static_cast<ionex_grd_type>(tec_vals[lowleft]);
-    ionex_grd_type f01 = static_cast<ionex_grd_type>(tec_vals[lowleft+lat_grid_size]);
-    ionex_grd_type f10 = static_cast<ionex_grd_type>(tec_vals[lowleft+1]);
-    ionex_grd_type f11 = static_cast<ionex_grd_type>(tec_vals[lowleft+lat_grid_size+1]);
-
-#ifdef DEBUG
-std::cout <<"\nInterpolating at: ("<<longtitude<<", "<<latitude<<")";
-std::cout <<"\n("<<x0_idx<<", "<<y1_idx<<") ----   ("<<x1_idx<<", "<<y1_idx<<")";
-std::cout <<"\n  |                     |";
-std::cout <<"\n  |                     |";
-std::cout <<"\n  |                     |";
-std::cout <<"\n("<<x0_idx<<", "<<y0_idx<<") ----   ("<<x1_idx<<", "<<y0_idx<<")";
-std::cout<<"\n";
-#endif
-
-    // bilinear interpolation, see
-    // https://en.wikipedia.org/wiki/Bilinear_interpolation
-    float x { longtitude };
-    float y { latitude };
-    T denom { (x1-x0)*(y1-y0) };
-    return  ((x1-x)*(y1-y)/denom)*f00
-           +((x-x0)*(y1-y)/denom)*f10
-           +((x1-x)*(y-y0)/denom)*f01
-           +((x-x0)*(y-y0)/denom)*f11;
 }

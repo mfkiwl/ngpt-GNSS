@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
     std::cout << "\nIONEX header read ok!";
 
     std::vector<point> pts;
-    pts.emplace_back(38.0, 23.6);
+    pts.emplace_back(-180.0, 87.0);
 
     inx.get_tec_at( pts );
 
