@@ -43,6 +43,8 @@ private:
 To compute the number of (tick) points, the following is used:
 
 ```cpp
+    // if this turns out to be negative, npts_ will be a huge number (positive)
     npts_ = ( step_ ? static_cast<std::size_t>((stop_-start_)/step_) + 1 : 0 );
+    // restrict the range
     assert( npts_ < std::numeric_limits<int>::max() );
 ```
