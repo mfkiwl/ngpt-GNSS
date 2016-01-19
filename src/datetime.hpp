@@ -33,14 +33,18 @@ constexpr double tt_minus_tai        { 32.184e0 };
 enum class time_scale : char
 { tai, tt, utc, ut1 };
 
+/// Time-Formats
+enum class datetime_format : char
+{ ymd, ymdhms, gps, ydoy, jd, mjd };
+
 /// Calendar date to MJD.
 long cal2mjd(int, int, int);
 
 /// Convert hours, minutes, seconds into fractional days.
 double hms2fd(int, int, double) noexcept;
 
-/// Decompose fraction days to hours, minutes, seconds and fractional sec
-/// with a gicen precision.
+/// Decompose fractional days to hours, minutes, seconds and fractional seconds
+/// with a given precision.
 void fd2hms(double, int, int ihmsf[4]);
 
 /// Return true if given year is leap.
@@ -145,7 +149,8 @@ public:
                ( mjd_ == lhs.mjd_ && (fd_ - lhs.fd_ >= C::day_tolerance) ) );
     }
 
-    friend std::ostream& operator<<(std::ostream& o, const datetime& d)
+    friend
+    std::ostream& operator<<(std::ostream& o, const datetime& d)
     {
         o << ( static_cast<double>(d.mjd_) + d.fd_ );
         return o;
@@ -167,6 +172,12 @@ constexpr
 datetime<C> max_date()
 noexcept
 { return datetime<C>{2500, 1, 1}; }
+
+template<typename C, datetime_format FORMAT>
+std::string dt_to_string(const datetime<C>& d)
+{}
+
+
 
 } // end namespace
 
