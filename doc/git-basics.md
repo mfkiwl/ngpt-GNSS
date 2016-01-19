@@ -14,10 +14,10 @@ pydev   -> python development
 [xanthos@jpmarat ngpt]$ git branch
   dev
 * master
-  origin/gcc-484
+  gcc-484
   pydev
 ```
-σου δείχνει όλα τα διαθέσιμα branches. Μπορεί να μήν έχεις όλα τα branches που υπάρχουν στο github (λογικά θα σου λείπει το `pydev`). Με αστεράκι είναι το branch που δουλεύεις τώρα. Δεν χρειάζεται να υπάρχει 1 προς 1 αντιστοιχία μετάξυ των local και remote branches. Μπορεί στο remote (δλδ. github) να υπαρχουν branches που δεν σε ενδιαφέρουν και δεν θες να τα παρακολουθείς· αντίστοιχα, μπορεί να έχεις δικά σου, local branches (π.χ. `pydev-bug01`, `pydev-bug02`, κτλ ...).
+σου δείχνει όλα τα διαθέσιμα branches. Μπορεί να μήν έχεις όλα τα branches που υπάρχουν στο github (λογικά θα σου λείπει το `pydev`). Με αστεράκι είναι το branch που δουλεύεις τώρα. Δεν χρειάζεται να υπάρχει 1 προς 1 αντιστοιχία μετάξυ των local και remote branches. Μπορεί στο remote (δλδ. github) να υπαρχουν branches που δεν σε ενδιαφέρουν και δεν θες να τα παρακολουθείς· αντίστοιχα, μπορεί να έχεις δικά σου, local branches (π.χ. `pydev-bug01`, `pydev-bug02`, κτλ ...). Εγώ π.χ., έχω ένα branch `gcc-484` που δεν υπάρχει στο remote (github), για να διορθώνω το compilation ειδικά στο γαμημένο gcc-4.8.4 που μου τα έχει κάνει τσουρέκια.
 
 Για να αρχίσεις να *παρακολουθείς* ένα branch (που υπάρχει ήδη στο github), κάνεις:
 
@@ -65,3 +65,12 @@ Untracked files:                                              ## <- αρχεία
 ```
 
 Όταν θες να κάνεις add ένα αρχείο, να θυμάσαι ότι: στο `ngpt/.gitignore` υπάρχουν αρχεία και φάκελοι τα/οι οποίοι είναι (περίπου) blacklisted. Για να προσθέσεις τέτοια αρχεία, πρέπει να κάνεις `git add --force my/ignore/file.foo`. Επίσης, μπορείς να προσθέσεις patterns στο `.gitignore` για να μην παρακολουθεί μαλακίες (π.χ. `*.pyc`).
+
+Μέχρι τώρα, το remote branch **ΔΕΝ** έχει πειραχτεί καθόλου. Το commit έχει πειράξει μόνο το local branch (*το οποίο είναι ένα commit forward από το remote*). Για να "στείλεις" τις αλλαγές στο remote branch (έτσι ώστε να μπορώ να τις δω κι εγώ π.χ.), πρέπει να κάνεις push.
+
+```bash
+   ##  when working on local branch: pydev
+   $> git push origin pydev
+```
+
+το `origin` είναι το `remote repository` και το `pydev` είναι το `remote branch`. *Πρόσεχε σε ποιό remote branch κάνεις push*, αν έκανες π.χ. `git push origin master` θα γίνει μαλακία (τίποτα δεν χάνεται και όλα αντιστρέφονται αλλά καταλαβαίνεις ...).
