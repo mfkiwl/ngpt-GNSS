@@ -46,3 +46,8 @@ To compute the number of (tick) points, the following is used:
     npts_ = ( step_ ? static_cast<std::size_t>((stop_-start_)/step_) + 1 : 0 );
     assert( npts_ < std::numeric_limits<int>::max() );
 ```
+
+```python
+    import datetime
+    print datetime.datetime.now()
+```
