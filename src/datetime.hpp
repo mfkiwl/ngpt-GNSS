@@ -2,6 +2,7 @@
 #define __DATETIME_NGPT__
 
 #include <ostream>
+#include <cstdio>
 #ifdef DEBUG
     #include <iostream>
 #endif
@@ -61,18 +62,21 @@ namespace datetime_clock {
     {
         static constexpr double sec_tolerance { 1 };
         static constexpr double day_tolerance { 1 / sec_per_day };
+        static constexpr int    exp           { 1 };
     };
 
     template<> struct clock<3>
     {
         static constexpr double sec_tolerance { 1e-3 };
         static constexpr double day_tolerance { 1e-3 / sec_per_day };
+        static constexpr int    exp           { 3 };
     };
     
     template<> struct clock<6>
     {
         static constexpr double sec_tolerance { 1e-6 };
         static constexpr double day_tolerance { 1e-6 / sec_per_day };
+        static constexpr int    exp           { 6 };
     };
 
     typedef clock<0> seconds;
@@ -191,10 +195,21 @@ std::string dt_to_string<C, datetime_format::ymd>(const datetime<C>& d)
     mjd2cal(d.mjd(), year, month, day);
     static char str[/*4+1+2+1+2+1*/11];
     str[10] = '\0';
-    str[4]  = str[7] = '/';
-    str     = std::to_string(year).c_str();
-    str+5   = std::to_string(month).c_str();
-
+    std::sprintf(str, "%04i/%02i/%02i");
+    return std::string( str );
+}
+template<typename C>
+std::string dt_to_string<C, datetime_format::ymdhms>(const datetime<C>& d)
+{
+    //TODO
+    int ihmsf[4];
+    int year, month, day;
+    mjd2cal(d.mjd(), year, month, day);
+    fd2hms(d.fd(), C::exp, ihmsf);
+    static char str[/*4+1+2+1+2+1 +2+1+2+1+*/11];
+    str[10] = '\0';
+    std::sprintf(str, "%04i/%02i/%02i");
+    return std::string( str );
 }
 
 } // end namespace
