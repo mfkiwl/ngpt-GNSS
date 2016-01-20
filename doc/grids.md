@@ -47,7 +47,3 @@ To compute the number of (tick) points, the following is used:
     assert( npts_ < std::numeric_limits<int>::max() );
 ```
 
-#```python
-#    import datetime
-#    print datetime.datetime.now()
-#```
