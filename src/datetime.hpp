@@ -40,6 +40,9 @@ enum class datetime_format : char
 /// Calendar date to MJD.
 long cal2mjd(int, int, int);
 
+/// MJD to calendar date.
+void mjd2cal(long, int&, int&, int&) noexcept;
+
 /// Convert hours, minutes, seconds into fractional days.
 double hms2fd(int, int, double) noexcept;
 
@@ -101,6 +104,9 @@ public:
     datetime(datetime&&)                 noexcept = default;
     datetime& operator=(const datetime&) noexcept = default;
     datetime& operator=(datetime&&)      noexcept = default;
+
+    long   mjd() const noexcept { return mjd_; }
+    double fd()  const noexcept { return fd_;  }
 
     template<typename T>
     void
@@ -173,31 +179,23 @@ datetime<C> max_date()
 noexcept
 { return datetime<C>{2500, 1, 1}; }
 
+
 template<typename C, datetime_format FORMAT>
 std::string dt_to_string(const datetime<C>& d)
 {}
 
 template<typename C>
-std::string
-dt_to_string<C,datetime_format::ymd>(const datetime<C>& d)
+std::string dt_to_string<C, datetime_format::ymd>(const datetime<C>& d)
 {
-    long days_fr_jan1_1901 = d.mjd() - JAN11901;
-    long num_four_yrs      = days_fr_jan1_1901/1461;
-    long years_so_far      = 1901 + 4*num_four_yrs;
-    long days_left         = days_fr_jan1_1901 - 1461*num_four_yrs;
-    long delta_yrs         = days_left/365 - days_left/1460;
+    int year, month, day;
+    mjd2cal(d.mjd(), year, month, day);
+    static char str[/*4+1+2+1+2+1*/11];
+    str[10] = '\0';
+    str[4]  = str[7] = '/';
+    str     = std::to_string(year).c_str();
+    str+5   = std::to_string(month).c_str();
 
-    long year              = years_so_far + delta_yrs;
-    long yday              = days_left - 365*delta_yrs + 1;
-    long leap              = ( year%4 == 0 );
-    long guess             = yday*0.032;
-    long more              = (( yday - month_day[leap][guess+1] ) > 0);
-    
-    month = static_cast<int>(guess + more + 1);
-    mday  = static_cast<int>(yday - month_day[leap][guess+more]);
-    iyear = static_cast<int>(year);
 }
-
 
 } // end namespace
 

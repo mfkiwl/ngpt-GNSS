@@ -55,6 +55,38 @@ noexcept
                              std::abs(s))   / ngpt::sec_per_day;
 }
 
+/*
+ * Convert Modified Julian Date to Calendar data (i.e. year, month, day)
+ *
+ * Reference: Source code for the Remondi Date/Time Algorithms, GPS-TOOLBOX,
+ *            http://www.ngs.noaa.gov/gps-toolbox/bwr-02.htm
+ */
+void
+ngpt::mjd2cal(long mjd, double fd)
+noexcept
+{
+    static long month_day[2][13] = {
+        {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365},
+        {0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366}
+    };
+
+    long days_fr_jan1_1901 = mjd - 15385L;
+    long num_four_yrs      = days_fr_jan1_1901/1461L;
+    long years_so_far      = 1901L + 4*num_four_yrs;
+    long days_left         = days_fr_jan1_1901 - 1461*num_four_yrs;
+    long delta_yrs         = days_left/365 - days_left/1460;
+
+    long year              = years_so_far + delta_yrs;
+    long yday              = days_left - 365*delta_yrs + 1;
+    long leap              = ( year%4 == 0 );
+    long guess             = yday*0.032;
+    long more              = (( yday - month_day[leap][guess+1] ) > 0);
+    
+    month = static_cast<int>(guess + more + 1);
+    mday  = static_cast<int>(yday - month_day[leap][guess+more]);
+    iyear = static_cast<int>(year);
+}
+
 template<typename T>
     inline constexpr
     T sofa_dint(T a)
