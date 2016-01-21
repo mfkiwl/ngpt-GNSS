@@ -48,3 +48,4 @@ To compute the number of (tick) points, the following is used:
     // restrict the range
     assert( npts_ < std::numeric_limits<int>::max() );
 ```
+
