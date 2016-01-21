@@ -61,6 +61,7 @@ noexcept
  * Reference: Source code for the Remondi Date/Time Algorithms, GPS-TOOLBOX,
  *            http://www.ngs.noaa.gov/gps-toolbox/bwr-02.htm
  */
+/*
 void
 ngpt::mjd2cal(long mjd, double fd)
 noexcept
@@ -86,6 +87,7 @@ noexcept
     mday  = static_cast<int>(yday - month_day[leap][guess+more]);
     iyear = static_cast<int>(year);
 }
+*/
 
 template<typename T>
     inline constexpr

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <type_traits>
 
-CHECKOUT THIS -> http://embeddedgurus.com/stack-overflow/2009/06/division-of-integers-by-constants/
+//CHECKOUT THIS -> http://embeddedgurus.com/stack-overflow/2009/06/division-of-integers-by-constants/
 
 namespace koko {
 
@@ -50,7 +50,21 @@ public:
         : _h(h), _m(m), _s(s)
     { std::cout<<"\nUsing template c'tor"; }
 
-    void add_hours( hours h ) { _h += h; }
+    void add_hours  ( hours h ) noexcept
+    { _h += h; }
+    void add_minutes( minutes m ) noexcept 
+    { 
+        if (_m+m<60) {
+            _m += m;      
+        } else {
+            _m += (_m+m)%60;
+            return add_hours( hours{(_m+m)/60} );
+        }
+        return;
+
+    }
+
+
 
 private:
     hours   _h;

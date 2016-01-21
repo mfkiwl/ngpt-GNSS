@@ -3,6 +3,7 @@
 
 #include <ostream>
 #include <cstdio>
+#include <limits>
 #ifdef DEBUG
     #include <iostream>
 #endif
@@ -42,7 +43,7 @@ enum class datetime_format : char
 long cal2mjd(int, int, int);
 
 /// MJD to calendar date.
-void mjd2cal(long, int&, int&, int&) noexcept;
+//void mjd2cal(long, int&, int&, int&) noexcept;
 
 /// Convert hours, minutes, seconds into fractional days.
 double hms2fd(int, int, double) noexcept;
@@ -60,31 +61,138 @@ namespace datetime_clock {
 
     template<> struct clock<0>
     {
-        static constexpr double sec_tolerance { 1 };
-        static constexpr double day_tolerance { 1 / sec_per_day };
-        static constexpr int    exp           { 1 };
+        static constexpr double sec_tolerance  { 1 };
+        static constexpr double day_tolerance  { 1 / sec_per_day };
+        static constexpr int    exp            { 1 };
+        static constexpr bool   is_second_type { true };
     };
 
     template<> struct clock<3>
     {
-        static constexpr double sec_tolerance { 1e-3 };
-        static constexpr double day_tolerance { 1e-3 / sec_per_day };
-        static constexpr int    exp           { 3 };
+        static constexpr double sec_tolerance  { 1e-3 };
+        static constexpr double day_tolerance  { 1e-3 / sec_per_day };
+        static constexpr int    exp            { 3 };
+        static constexpr bool   is_second_type { true };
     };
     
     template<> struct clock<6>
     {
-        static constexpr double sec_tolerance { 1e-6 };
-        static constexpr double day_tolerance { 1e-6 / sec_per_day };
-        static constexpr int    exp           { 6 };
+        static constexpr double sec_tolerance  { 1e-6 };
+        static constexpr double day_tolerance  { 1e-6 / sec_per_day };
+        static constexpr int    exp            { 6 };
+        static constexpr bool   is_second_type { true };
     };
 
-    typedef clock<0> seconds;
+    //typedef clock<0> seconds;
     typedef clock<3> milli_seconds;
     typedef clock<6> nano_seconds;
 }
 
-template<class C = datetime_clock::milli_seconds>
+class milliseconds;
+class nanoseconds;
+
+struct seconds {
+    static constexpr bool   is_second_type { true };
+    static constexpr long   to_sec         { 1L   };
+    long value_;
+
+    explicit constexpr seconds(long s=0) noexcept : value_(s) {};
+
+    template<class T>
+    constexpr T
+    transform_to() noexcept {}
+};
+
+struct milliseconds {
+    static constexpr bool   is_second_type { true };
+    static constexpr long   to_sec         { 1L/1000L };
+    long value_;
+    
+    explicit constexpr milliseconds(long s=0) noexcept : value_(s) {};
+    
+    template<class T>
+    constexpr T
+    transform_to() noexcept {}
+};
+
+struct nanoseconds {
+    static constexpr bool   is_second_type { true };
+    static constexpr long   to_sec         { 1L/1000000L };
+    long value_;
+
+    explicit constexpr nanoseconds(long s=0) noexcept : value_(s) {};
+    
+    template<class T>
+    constexpr T
+    transform_to() noexcept {}
+};
+
+template<>
+constexpr milliseconds
+seconds::transform_to() noexcept
+{ return milliseconds(value_ * 1000L); }
+
+template<>
+constexpr nanoseconds
+seconds::transform_to() noexcept
+{ return nanoseconds(value_ * 1000000L); }
+
+template<>
+constexpr seconds
+milliseconds::transform_to() noexcept
+{ return seconds(value_ / 1000L); }
+
+template<>
+constexpr nanoseconds
+milliseconds::transform_to() noexcept
+{ return nanoseconds(value_ * 1000L); }
+
+template<>
+constexpr seconds
+nanoseconds::transform_to() noexcept
+{ return seconds(value_ / 1000000L); }
+
+template<>
+constexpr milliseconds
+nanoseconds::transform_to() noexcept
+{ return milliseconds(value_ / 1000L); }
+
+template<typename To,
+         typename = typename std::enable_if<To::is_sec_type>::type,
+         typename From,
+         typename = typename std::enable_if<From::is_sec_type>::type
+         >
+To resolve_sec(From f) noexcept
+{ return f.transform_to<To>(); }
+
+/// Check if long is big enough to hold two days in nanoseconds.
+static_assert( 86400L  * 1000000L * 2 < std::numeric_limits<long>::max(),
+    "FUCK! Long is not big enough to hold two days in nanoseconds" );
+
+template<typename C>
+class datetime_v2 {
+public:
+    
+    explicit
+    datetime_v2(int iy, int im, int id)
+    : mjd_ ( cal2mjd(iy, im, id) ),
+      csec_(0L)
+    {}
+
+    template<typename T,
+             typename = typename std::enable_if<T::is_sec_type>::type
+             >
+    datetime_v2(int iy, int im, int id, T sec)
+    : mjd_ ( cal2mjd(iy, im, id) ),
+      csec_( resolve_sec<C,T>(sec) )
+    {}
+
+private:
+    long mjd_;
+    long csec_;
+};
+
+template<class C>
 class datetime {
 public:
 
@@ -114,7 +222,7 @@ public:
 
     template<typename T>
     void
-    add_seconds(T sec)
+    add_seconds()
     {
         //TODO
     }
@@ -183,7 +291,7 @@ datetime<C> max_date()
 noexcept
 { return datetime<C>{2500, 1, 1}; }
 
-
+/*
 template<typename C, datetime_format FORMAT>
 std::string dt_to_string(const datetime<C>& d)
 {}
@@ -193,7 +301,7 @@ std::string dt_to_string<C, datetime_format::ymd>(const datetime<C>& d)
 {
     int year, month, day;
     mjd2cal(d.mjd(), year, month, day);
-    static char str[/*4+1+2+1+2+1*/11];
+    static char str[4+1+2+1+2+1 = 11]; // TODO
     str[10] = '\0';
     std::sprintf(str, "%04i/%02i/%02i");
     return std::string( str );
@@ -206,11 +314,12 @@ std::string dt_to_string<C, datetime_format::ymdhms>(const datetime<C>& d)
     int year, month, day;
     mjd2cal(d.mjd(), year, month, day);
     fd2hms(d.fd(), C::exp, ihmsf);
-    static char str[/*4+1+2+1+2+1 +2+1+2+1+*/11];
+    static char str[]; //TODO
     str[10] = '\0';
     std::sprintf(str, "%04i/%02i/%02i");
     return std::string( str );
 }
+*/
 
 } // end namespace
 
