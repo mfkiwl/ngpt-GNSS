@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <utility>
+
+#include "cursein.hpp"
 #include "ionex.hpp"
 
 using namespace ngpt;
@@ -10,6 +12,7 @@ int main(int argc, char* argv[])
 {
     // must pass the atx file to inspect as cmd
     if ( argc != 2 ) {
+        std::cout << "\nAre you " fucking " " stupid "?";
         std::cout << "\nUsage: testIonex <inxfile>\n";
         return 1;
     }

@@ -19,7 +19,8 @@ MCXXFLAGS = \
 	-Wshadow \
 	-Winline \
 	-Wdisabled-optimization \
-	-DDEBUG
+	-DDEBUG \
+	-DCURSE_IN_GREEK
 
 testReceiver_SOURCES  = test_receiver.cpp
 testReceiver_CXXFLAGS = $(MCXXFLAGS) -I$(top_srcdir)/src -L$(top_srcdir)/src

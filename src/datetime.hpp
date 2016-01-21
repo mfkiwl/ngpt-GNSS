@@ -43,7 +43,7 @@ enum class datetime_format : char
 long cal2mjd(int, int, int);
 
 /// MJD to calendar date.
-//void mjd2cal(long, int&, int&, int&) noexcept;
+void mjd2cal(long, int&, int&, int&) noexcept;
 
 /// Convert hours, minutes, seconds into fractional days.
 double hms2fd(int, int, double) noexcept;
