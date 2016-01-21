@@ -673,13 +673,24 @@ bilinear_interpolate(float longtitude, float latitude,
  *  \param[in] interval The time step with which to extract the TEC values. If
  *                    set to '0', it will be set equal to the interval in the
  *                    IONEX file. The value denotes (integer) seconds.
+ *  \return           A vector of int vectors; for each point given, the function
+ *                    will create for a vector of tec values for each epoch in the
+ *                    epoch_vector
  * 
  * \TODO Fuck this throws in a million places. Fucking do something!
  */
-std::vector<int>
+std::vector<std::vector<int>>
 ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& points,
-                datetime_ms* ifrom, datetime_ms* ito, int interval)
+                std::vector<datetime_ms>& epoch_vector,
+                datetime_ms* ifrom,
+                datetime_ms* ito,
+                int interval)
 {
+    // clear the epoch vector
+    // TODO if possible pre-allocate this shit PLEASE !!!
+    epoch_vector.clear();
+    std::vector<std::vector<int>> tec_vals( points.size() );
+
     datetime_ms from ( ifrom ? (*ifrom) : _first_epoch );
     datetime_ms to   ( ito   ? (*ito)   : _last_epoch  );
     if (interval < 0 ) {
@@ -694,7 +705,8 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
             ("ionex::get_tec_at() -> Invalid epochs passed!");
     }
 
-    // TODO if from == to
+    // if (from == to) i'm returning bitch!
+    if ( from == to ) { return tec_vals; }
 
     if ( from < _first_epoch ) {
 #ifdef DEBUG
@@ -816,13 +828,15 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
         //TODO
         std::size_t j = 0;
         for (const auto& p : points) {
-            bilinear_interpolate(p.first, p.second, tec_map, indexes[j], 
-                                grid.x_axis_pts());
+            tec_vals[j].emplace_back( bilinear_interpolate(
+                                        p.first, p.second, tec_map, indexes[j], 
+                                        grid.x_axis_pts()) );
+            epoch_vector.emplace_back( cur_dt );
             ++j;
         }
         _istream.getline(line, MAX_HEADER_CHARS);
         ++map_num;
     }
 
-    return std::vector<int> (5,0);   
+    return tec_vals;
 }

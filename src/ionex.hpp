@@ -116,8 +116,9 @@ public:
     const noexcept
     { return this->_filename; }
 
-    std::vector<int>
-    get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& points, 
+    std::vector<std::vector<int>>
+    get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& points,
+        std::vector<datetime_ms>&,
         datetime_ms* from = nullptr, datetime_ms* to = nullptr, int every=.0f);
   
 private:

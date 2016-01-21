@@ -4,7 +4,6 @@
 #include "ionex.hpp"
 
 using namespace ngpt;
-
 typedef std::pair<float, float> point;
 
 int main(int argc, char* argv[])
@@ -16,14 +15,15 @@ int main(int argc, char* argv[])
     }
 
     // header is read during construction.
-    // this may throw in DEBUG mode; nevermind lt it BOOM
+    // this may throw in DEBUG mode; nevermind let it BOOM
     ionex inx ( argv[1] );
     std::cout << "\nIONEX header read ok!";
 
     std::vector<point> pts;
-    pts.emplace_back(-180.0, 87.0);
+    std::vector<ionex::datetime_ms> epochs;
+    pts.emplace_back(23.68, 32.14);
 
-    inx.get_tec_at( pts );
+    auto tec_vals = inx.get_tec_at( pts, epochs );
 
     std::cout << "\n";
     return 0;
