@@ -88,8 +88,8 @@ namespace datetime_clock {
     typedef clock<6> nano_seconds;
 }
 
-class milliseconds;
-class nanoseconds;
+struct milliseconds;
+struct nanoseconds;
 
 struct seconds {
     static constexpr bool   is_second_type { true };
@@ -98,9 +98,7 @@ struct seconds {
 
     explicit constexpr seconds(long s=0) noexcept : value_(s) {};
 
-    template<class T>
-    constexpr T
-    transform_to() noexcept {}
+    template<class T> constexpr T transform_to() noexcept {}
 };
 
 struct milliseconds {
@@ -110,9 +108,7 @@ struct milliseconds {
     
     explicit constexpr milliseconds(long s=0) noexcept : value_(s) {};
     
-    template<class T>
-    constexpr T
-    transform_to() noexcept {}
+    template<class T> constexpr T transform_to() noexcept {}
 };
 
 struct nanoseconds {
@@ -122,9 +118,7 @@ struct nanoseconds {
 
     explicit constexpr nanoseconds(long s=0) noexcept : value_(s) {};
     
-    template<class T>
-    constexpr T
-    transform_to() noexcept {}
+    template<class T> constexpr T transform_to() noexcept {}
 };
 
 template<>
@@ -157,13 +151,20 @@ constexpr milliseconds
 nanoseconds::transform_to() noexcept
 { return milliseconds(value_ / 1000L); }
 
+/// Check this http://stackoverflow.com/questions/3786360/confusing-template-error
 template<typename To,
          typename = typename std::enable_if<To::is_sec_type>::type,
          typename From,
          typename = typename std::enable_if<From::is_sec_type>::type
          >
 To resolve_sec(From f) noexcept
-{ return f.transform_to<To>(); }
+{ return f.template transform_to<To>(); }
+
+template<typename To,
+         typename = typename std::enable_if<To::is_sec_type>::type
+         >
+To resolve_sec(To f) noexcept
+{ return f; }
 
 /// Check if long is big enough to hold two days in nanoseconds.
 static_assert( 86400L  * 1000000L * 2 < std::numeric_limits<long>::max(),
