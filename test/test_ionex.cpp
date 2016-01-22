@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     std::vector<ionex::datetime_ms> epochs;
     pts.emplace_back(23.68, 32.14);
 
-    auto tec_vals = inx.get_tec_at( pts, epochs );
+    auto tec_vals = inx.interpolate( pts, epochs );
 
     std::cout << "\n";
     return 0;

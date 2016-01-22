@@ -116,14 +116,27 @@ public:
     const noexcept
     { return this->_filename; }
 
-    std::vector<std::vector<int>>
-    get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& points,
-        std::vector<datetime_ms>&,
-        datetime_ms* from = nullptr, datetime_ms* to = nullptr, int every=.0f);
   
+    std::vector<std::vector<int>>
+    interpolate(
+        const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& points,
+        std::vector<datetime_ms>& epochs,
+        datetime_ms* ifrom = nullptr,
+        datetime_ms* ito = nullptr,
+        int interval = 0
+    );
+
 private:
     /// Read the instance header, and assign (most of) the fields.
     int read_header();
+
+    /// Read all TEC maps and (spatial) interpolate for a given vector of
+    /// points
+    int get_tec_at(
+            const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>&,
+            std::vector<datetime_ms>&,
+            std::vector<std::vector<int>>&
+    );
 
     // Read a TEC map for a constant epoch
     int read_tec_map(std::vector<int>&);

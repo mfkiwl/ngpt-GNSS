@@ -4,6 +4,8 @@
 #include <ostream>
 #include <cstdio>
 #include <limits>
+#include <cassert>
+#include <cmath>
 #ifdef DEBUG
     #include <iostream>
 #endif
@@ -188,6 +190,15 @@ public:
       csec_( resolve_sec<C,T>(sec) )
     {}
 
+    template<typename T,
+             typename = typename std::enable_if<T::is_sec_type>::type
+            >
+    void
+    add_seconds(T sec) noexcept
+    {
+        csec_ += resolve_sec<C,T>(sec);
+    }
+
 private:
     long mjd_;
     long csec_;
@@ -221,11 +232,27 @@ public:
     long   mjd() const noexcept { return mjd_; }
     double fd()  const noexcept { return fd_;  }
 
-    template<typename T>
     void
-    add_seconds()
+    add_seconds(double sec)
+    noexcept
     {
-        //TODO
+        assert( sec >= 0.0e0 );
+        double sec_as_day = sec / sec_per_day;
+        fd_ += sec_as_day;
+        normalize();
+    }
+
+    double
+    delta_sec(const datetime<C>& d)
+    const noexcept
+    {
+        double ds (0.0e0);
+        if ( mjd_ != d.mjd_ ) 
+            ds = static_cast<double>((mjd_ - d.mjd_)*sec_per_day);
+
+        ds += ( fd_ - d.fd_ ) * sec_per_day;
+
+        return ds;
     }
 
     inline
@@ -257,7 +284,7 @@ public:
     const noexcept
     {
         return ( mjd_ < lhs.mjd_ ||
-               ( mjd_ == lhs.mjd_ && (fd_ - lhs.fd_ > C::day_tolerance) ) );
+               ( mjd_ == lhs.mjd_ && (fd_ - lhs.fd_ < C::day_tolerance) ) );
     }
     
     inline
@@ -265,7 +292,7 @@ public:
     const noexcept
     {
         return ( mjd_ < lhs.mjd_ || 
-               ( mjd_ == lhs.mjd_ && (fd_ - lhs.fd_ >= C::day_tolerance) ) );
+               ( mjd_ == lhs.mjd_ && (fd_ - lhs.fd_ <= C::day_tolerance) ) );
     }
 
     friend
@@ -276,6 +303,17 @@ public:
     }
 
 private:
+
+    void normalize() noexcept
+    {
+        if ( fd_ > 1.0e0 ) {
+            double intpart;
+            fd_ = std::modf(fd_, &intpart);
+            mjd_ += static_cast<long>(intpart);
+            return;
+        }
+    }
+
     long   mjd_;
     double fd_;
 };

@@ -679,47 +679,12 @@ bilinear_interpolate(float longtitude, float latitude,
  * 
  * \TODO Fuck this throws in a million places. Fucking do something!
  */
-std::vector<std::vector<int>>
+int
 ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& points,
                 std::vector<datetime_ms>& epoch_vector,
-                datetime_ms* ifrom,
-                datetime_ms* ito,
-                int interval)
+                std::vector<std::vector<int>>& tec_vals
+                )
 {
-    // clear the epoch vector
-    // TODO if possible pre-allocate this shit PLEASE !!!
-    epoch_vector.clear();
-    std::vector<std::vector<int>> tec_vals( points.size() );
-
-    datetime_ms from ( ifrom ? (*ifrom) : _first_epoch );
-    datetime_ms to   ( ito   ? (*ito)   : _last_epoch  );
-    if (interval < 0 ) {
-#ifdef DEBUG
-        std::cerr<<"\n[DEBUG] Fuck off setting interval to 0";
-        interval = 0;
-#endif
-    }
-
-    if ( from > to ) {
-        throw std::runtime_error
-            ("ionex::get_tec_at() -> Invalid epochs passed!");
-    }
-
-    // if (from == to) i'm returning bitch!
-    if ( from == to ) { return tec_vals; }
-
-    if ( from < _first_epoch ) {
-#ifdef DEBUG
-        std::cerr<< "\n[DEBUG] First epoch is beyond the first epoch in file; adjusted.";
-#endif
-        from = _first_epoch;
-    }
-    if ( to > _last_epoch ) {
-#ifdef DEBUG
-        std::cerr<< "\n[DEBUG] Ending epoch is beyond the last epoch in file; adjusted.";
-#endif
-        to = _last_epoch;
-    }
 
     // for every point we want, we must find an index for it (within the grid)
     // so that we can extract it's value. Let's make a 2D grid. For ease, let's
@@ -748,62 +713,39 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
     // get me a vector large enough to hold a whole map
     std::vector<int> tec_map (grid.size(), 0);
 
+    // clear the vector of epochs
+    epoch_vector.clear();
+
     // skip all maps until we find the one we are interested in
     char line[MAX_HEADER_CHARS];
     _istream.seekg(_end_of_head, std::ios::beg);
-    int map_num = 1;
+    std::size_t map_num = 0;
     char* c;
     
     if ( !_istream.getline(line, MAX_HEADER_CHARS) )
     {
 #ifdef DEBUG
         std::cerr<<"\n[DEBUG] WTF? Failed to read input line!";
+        throw std::runtime_error
+            ("ionex::get_tec_at() -> Invalid line!");
 #endif
-        throw std::runtime_error("ionex::get_tec_at() -> Invalid line!");
+        return 1;
     }
 
     datetime_ms cur_dt = _first_epoch;
-    while ( cur_dt < from ) {
-        std::cout<<"\nNeed to get to the first epoch";
-        if ( _istream && std::strncmp(line+60, "START OF TEC MAP", 16) ) {
-#ifdef DEBUG
+    
+    while ( map_num < _maps_in_file
+          && _istream 
+          && !std::strncmp(line+60, "START OF TEC MAP", 16) ) {
+/*#ifdef DEBUG
             std::cerr<<"\n[DEBUG] Expected line \"START OF TEC MAP\", found:";
             std::cerr<<"\n        "<<line;
 #endif
             throw std::runtime_error("ionex::get_tec_at() -> Invalid line!");
-        }
-        *(line+6) = '\0';
-        assert( map_num == std::strtol(line, &c, 10) );
-        if ( ! _istream.getline(line, MAX_HEADER_CHARS)
-            || std::strncmp(line+60, "EPOCH OF CURRENT MAP", 20) 
-            || _read_ionex_datetime_(line, &cur_dt) )
-        {
-#ifdef DEBUG
-            std::cerr<<"\n[DEBUG] Expected line \"EPOCH OF CURRENT MAP\", found:";
-            std::cerr<<"\n        "<<line;
-#endif
-            throw std::runtime_error("ionex::get_tec_at() -> Invalid line!");
-        }
-        // skip all the fucking shit that follow
-        if ( this->skip_tec_map() ) {  
-            throw std::runtime_error("ionex::get_tec_at() -> Invalid line!");
-        }
-        _istream.getline(line, MAX_HEADER_CHARS);
-        ++map_num;
-    }
-
-    while ( cur_dt < to ) {
-        if ( !_istream || std::strncmp(line+60, "START OF TEC MAP", 16) ) {
-#ifdef DEBUG
-            std::cerr<<"\n[DEBUG] Expected line \"START OF TEC MAP\", found:";
-            std::cerr<<"\n        "<<line;
-#endif
-            throw std::runtime_error("ionex::get_tec_at() -> Invalid line!");
-        }
-        
+*/      
         std::cout<<"\nreading map: " << line;
         *(line+6) = '\0';
-        assert( map_num == std::strtol(line, &c, 10) );
+        assert( static_cast<long>(map_num+1) == std::strtol(line, &c, 10) );
         std::cout<<"\nmap number="<<map_num;
         if ( ! _istream.getline(line, MAX_HEADER_CHARS)
             || std::strncmp(line+60, "EPOCH OF CURRENT MAP", 20) 
@@ -812,16 +754,20 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
 #ifdef DEBUG
             std::cerr<<"\n[DEBUG] Expected line \"EPOCH OF CURRENT MAP\", found:";
             std::cerr<<"\n        "<<line;
+            throw std::runtime_error
+                ("ionex::get_tec_at() -> Invalid line!");
 #endif
-            throw std::runtime_error("ionex::get_tec_at() -> Invalid line!");
+            return 1;
         }
-        
+
         // read the map into memmory
         if ( this->read_tec_map(tec_map) ) {
 #ifdef DEBUG
             std::cerr<<"\n[DEBUG] Failed reading map nr "<<map_num;
+            throw std::runtime_error
+                ("ionex::get_tec_at() -> failed reading maps.");
 #endif
-            throw std::runtime_error("ionex::get_tec_at() -> failed reading maps.");
+            return 1;
         }
 
         // ok. we got the map and we need to extract the cells for all points
@@ -838,5 +784,142 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
         ++map_num;
     }
 
-    return tec_vals;
+    return !(map_num == _maps_in_file);
+}
+
+std::vector<std::vector<int>>
+ionex::interpolate(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& points,
+                std::vector<datetime_ms>& epochs,
+                datetime_ms* ifrom,
+                datetime_ms* ito,
+                int interval
+                )
+{
+    datetime_ms from ( ifrom ? (*ifrom) : _first_epoch );
+    datetime_ms to   ( ito   ? (*ito)   : _last_epoch  );
+
+    if (interval < 0 ) {
+#ifdef DEBUG
+        std::cerr<<"\n[DEBUG] Fuck off setting interval to 0";
+#endif
+        interval = 0;
+    }
+
+    if ( from > to ) {
+        throw std::runtime_error
+            ("ionex::interpolate() -> Invalid epochs passed!");
+    }
+
+    // if (from == to) i'm returning bitch!
+    if ( from == to ) { 
+        return std::vector<std::vector<int>> ( points.size() );
+    }
+
+    if ( from < _first_epoch ) {
+#ifdef DEBUG
+        std::cerr<< "\n[DEBUG] First epoch is beyond the first epoch in file; adjusted.";
+#endif
+        from = _first_epoch;
+    }
+
+    if ( to > _last_epoch ) {
+#ifdef DEBUG
+        std::cerr<< "\n[DEBUG] Ending epoch is beyond the last epoch in file; adjusted.";
+#endif
+        to = _last_epoch;
+    }
+
+    if ( !interval ) {
+        interval = this->_interval;
+    }
+
+    // we must provide an epoch vector
+    std::vector<datetime_ms> epoch_vector_1( this->_maps_in_file );
+
+    std::vector<datetime_ms> epoch_vector_2( (interval
+                          ? static_cast<std::size_t>(to.delta_sec(from))/interval+1
+                          : this->_maps_in_file) );
+
+    // we must also provide a vector of vectors, where
+    // vec[i][j] is the tec value for station #i at epoch #j
+    std::vector<std::vector<int>> tec_vals_1 ( points.size(), std::vector<int>(epoch_vector_1.size(), 9999) );
+    std::vector<std::vector<int>> tec_vals_2 ( points.size(), std::vector<int>(epoch_vector_2.size(), 9999) );
+
+    // get the tec/epoch values that are recorded in the IONEX file, for
+    // the points in the list
+    if ( this->get_tec_at(points, epoch_vector_1, tec_vals_1) ) {
+#ifdef DEBUG
+        std::cerr<<"\n[DEBUG] Failed to read te/epochs from IONEX.";
+#endif
+        throw std::runtime_error
+            ("ionex::interpolate() -> failed to read tecs/epochs.");
+    }
+
+    // Sweet! now perform the interpolation in time.
+    std::cout <<"\nInterpolating in time!";
+    std::cout<<"\nSize of epoch vector 1 & 2: "<<epoch_vector_1.size()<<", "<<epoch_vector_2.size();
+    std::size_t i = 0;
+    std::size_t j = i+1;
+    std::size_t k = 0;
+    auto time_i   = epoch_vector_1.cbegin();
+    auto time_j   = epoch_vector_1.cbegin() + 1;
+    auto cur_time = from;
+    double coef1, coef2;
+    while ( cur_time <= to ) {
+        std::cout<<"\nGot in again cause "<<cur_time<<" <= "<<to;
+        if ( cur_time > *time_i ) {
+            ++time_i;
+            ++i;
+            if ( j < epoch_vector_1.size()-1 ) {
+                ++time_j;
+                ++j;
+            }
+        }
+        std::cout<<"\nInterpolating at: "<<*time_i<<" < "<<cur_time <<" < " <<*time_j;
+#ifdef DEBUG
+        //TODO this check fails cause of fucking accuracy!
+        //if (cur_time < *time_i || cur_time > *time_j ) {
+        // use this instead:
+        if ( (int)cur_time.delta_sec(*time_i)<0 || (int)time_j->delta_sec(cur_time)<0 ) {
+            std::cerr<<"\n[DEBUG] Fucked up in time interpolation!";
+            std::cout<<"\ni="<<i<<" and j="<<j<<"t-ti="<<cur_time.delta_sec(*time_i)<<", tj-t="<<time_j->delta_sec(cur_time);
+            throw std::runtime_error
+                ("ionex::interpolate() -> Bad interpolation limits.");
+        }
+#endif
+        // TODO handle missing values (9999) !!
+        epoch_vector_2[k] = cur_time;
+        std::cout<<"\nSet epoch["<<k<<"]";
+        if ( cur_time == *time_i ) {
+            coef1 = 1.0e0;
+            coef2 = 0.0e0;
+            std::cout<<"\nOnly using left time limit (i="<<i<<")";
+            for (std::size_t p=0; p<points.size(); ++p) {
+                tec_vals_2[p][k] = tec_vals_1[p][i];
+            }
+        } else {
+            coef1 = time_j->delta_sec(cur_time)/time_j->delta_sec(*time_i);
+            coef2 = cur_time.delta_sec(*time_i)/time_j->delta_sec(*time_i);
+            std::cout<<"\nUsing both time limits (i="<<i<<", j="<<j<<")";
+            for (std::size_t p=0; p<points.size(); ++p) {
+                tec_vals_2[p][k] = coef1*tec_vals_1[p][i] + coef2*tec_vals_1[p][j];
+            }
+        }
+        ++k;
+        if ( !interval ) {
+            std::cout<<"\nSize of epoch_vector_1="<<epoch_vector_1.size();
+            if ( k==epoch_vector_1.size() ) {
+                std::cout<<"\nAdding a whole fucking day!";
+                cur_time.add_seconds(86400.0);
+            } else {
+                cur_time = *time_j;
+            }
+        } else {
+            cur_time.add_seconds( (double)interval );
+        }
+        std::cout<<"\nEPOCH DONE! NEW INDEX:"<<k<<" NEW DATE "<<cur_time;
+    }
+
+    epochs = std::move( epoch_vector_2 );
+    return tec_vals_2;
 }
