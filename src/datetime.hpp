@@ -96,31 +96,66 @@ struct nanoseconds;
 struct seconds {
     static constexpr bool   is_second_type { true };
     static constexpr long   to_sec         { 1L   };
+    static constexpr long   one_day        { 86400L };
     long value_;
 
     explicit constexpr seconds(long s=0) noexcept : value_(s) {};
+    void operator+=(seconds l) { value_ += l.value_; }
 
     template<class T> constexpr T transform_to() noexcept {}
+    template<class T> constexpr bool is_convertible_to() const noexcept
+    { return false; }
 };
 
 struct milliseconds {
     static constexpr bool   is_second_type { true };
     static constexpr long   to_sec         { 1L/1000L };
+    static constexpr long   one_day        { 86400000L };
     long value_;
+    void operator+=(milliseconds l) { value_ += l.value_; }
     
     explicit constexpr milliseconds(long s=0) noexcept : value_(s) {};
     
     template<class T> constexpr T transform_to() noexcept {}
+    template<class T> constexpr bool is_convertible_to() const noexcept
+    { return false; }
 };
 
 struct nanoseconds {
     static constexpr bool   is_second_type { true };
     static constexpr long   to_sec         { 1L/1000000L };
+    static constexpr long   one_day        { 86400000000L };
     long value_;
+    void operator+=(nanoseconds l) { value_ += l.value_; }
 
     explicit constexpr nanoseconds(long s=0) noexcept : value_(s) {};
     
     template<class T> constexpr T transform_to() noexcept {}
+    template<class T> constexpr bool is_convertible_to() const noexcept
+    { return false; }
+};
+
+template<typename T> struct clock_traits {};
+
+template<> struct clock_traits<seconds>
+{
+    static constexpr bool is_second_type              { true  };
+    static constexpr bool is_milliseconds_convertible { false };
+    static constexpr bool is_nanoseconds_convertible  { false };
+};
+
+template<> struct clock_traits<milliseconds>
+{
+    static constexpr bool is_second_type              { true  };
+    static constexpr bool is_seconds_convertible      { true  };
+    static constexpr bool is_nanoseconds_convertible  { false };
+};
+
+template<> struct clock_traits<nanoseconds>
+{
+    static constexpr bool is_second_type              { true };
+    static constexpr bool is_seconds_convertible      { true };
+    static constexpr bool is_milliseconds_convertible { true };
 };
 
 template<>
@@ -153,6 +188,16 @@ constexpr milliseconds
 nanoseconds::transform_to() noexcept
 { return milliseconds(value_ / 1000L); }
 
+template<> constexpr bool seconds::is_convertible_to<seconds>() const noexcept { return true; }
+template<> constexpr bool seconds::is_convertible_to<milliseconds>() const noexcept { return true; }
+template<> constexpr bool seconds::is_convertible_to<nanoseconds>() const noexcept { return true; }
+template<> constexpr bool milliseconds::is_convertible_to<seconds>() const noexcept { return false; }
+template<> constexpr bool milliseconds::is_convertible_to<milliseconds>() const noexcept { return true; }
+template<> constexpr bool milliseconds::is_convertible_to<nanoseconds>() const noexcept { return true; }
+template<> constexpr bool nanoseconds::is_convertible_to<seconds>() const noexcept { return false; }
+template<> constexpr bool nanoseconds::is_convertible_to<milliseconds>() const noexcept { return false; }
+template<> constexpr bool nanoseconds::is_convertible_to<nanoseconds>() const noexcept { return true; }
+
 /// Check this http://stackoverflow.com/questions/3786360/confusing-template-error
 template<typename To,
          typename = typename std::enable_if<To::is_sec_type>::type,
@@ -175,6 +220,8 @@ static_assert( 86400L  * 1000000L * 2 < std::numeric_limits<long>::max(),
 template<typename C>
 class datetime_v2 {
 public:
+
+    datetime_v2() : mjd_(0), csec_(0) {};
     
     explicit
     datetime_v2(int iy, int im, int id)
@@ -190,13 +237,21 @@ public:
       csec_( resolve_sec<C,T>(sec) )
     {}
 
+    double
+    as_mjd() const noexcept
+    { return static_cast<double>(mjd_) + static_cast<double>(csec_/C::one_day); }
+
     template<typename T,
-             typename = typename std::enable_if<T::is_sec_type>::type
+             typename = typename std::enable_if<T::is_second_type>::type
             >
     void
     add_seconds(T sec) noexcept
     {
-        csec_ += resolve_sec<C,T>(sec);
+        csec_ += resolve_sec<C,T>(sec).value_;
+        if ( csec_ > C::one_day ) {
+            mjd_ += csec_ % C::one_day;
+            csec_ = csec_ / C::one_day;
+        }
     }
 
 private:
@@ -241,6 +296,9 @@ public:
         fd_ += sec_as_day;
         normalize();
     }
+
+    double
+    as_mjd() const noexcept { return mjd_ + fd_; }
 
     double
     delta_sec(const datetime<C>& d)
