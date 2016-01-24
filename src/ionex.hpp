@@ -15,14 +15,6 @@
  *
  * \date      Sat 16 Jan 2016 01:08:46 PM EET 
  *
- * \brief
- *
- * \details
- *
- * \note
- *
- * \todo
- *
  * \copyright Copyright © 2015 Dionysos Satellite Observatory, <br>
  *            National Technical University of Athens. <br>
  *            This work is free. You can redistribute it and/or modify it under
