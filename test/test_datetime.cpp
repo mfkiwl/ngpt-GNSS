@@ -53,6 +53,7 @@ int main()
     std::cout << "\nAdding two days in v2: " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<std::endl;
     std::cout << "\nmjd= " << mjd2;
     std::cout<<"\nDifference (in days) = " << mjd1 - mjd2 << " = " << (mjd1 - mjd2)*86400.0 << " seconds";
+    std::cout<<" = " << (mjd1 - mjd2)*86400000.0 << " milliseconds";
   
     datev2<ngpt::milliseconds> d3(ngpt::year(2015), ngpt::month(12), ngpt::day_of_month(30));
     begin = std::chrono::steady_clock::now();
@@ -64,6 +65,7 @@ int main()
     std::cout << "\nAdding two days in v2: " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<std::endl;
     std::cout << "\nmjd= " << mjd2;
     std::cout<<"\nDifference (in days) = " << mjd1 - mjd2 << " = " << (mjd1 - mjd2)*86400.0 << " seconds";
+    std::cout<<" = " << (mjd1 - mjd2)*86400000.0 << " milliseconds";
    
     datev2<ngpt::nanoseconds> d4(ngpt::year(2015), ngpt::month(12), ngpt::day_of_month(30));
     begin = std::chrono::steady_clock::now();
@@ -75,6 +77,7 @@ int main()
     std::cout << "\nAdding two days in v2: " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() <<std::endl;
     std::cout << "\nmjd= " << mjd2;
     std::cout<<"\nDifference (in days) = " << mjd1 - mjd2 << " = " << (mjd1 - mjd2)*86400.0 << " seconds";
+    std::cout<<" = " << (mjd1 - mjd2)*86400000.0 << " milliseconds";
 
     std::cout << "\n";
     return 0;   

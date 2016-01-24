@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <cmath>
 #include "datetime.hpp"
+#include "datetime_v2.hpp"
 
 /// Calendar date (i.e. year-month-day) to Modified Julian Date.
 ///
@@ -38,6 +39,15 @@ long ngpt::cal2mjd(int iy, int im, int id)
             + (367L * static_cast<long>(im - 2 - 12 * my)) / 12L
             - (3L * ((iypmy + 4900L) / 100L)) / 4L
             + static_cast<long>(id) - 2432076L;
+}
+
+ngpt::modified_julian_day
+ngpt::cal2mjd(ngpt::year y, ngpt::month m, ngpt::day_of_month d)
+{
+    long mjd (cal2mjd( y.as_underlying_type(),
+                       m.as_underlying_type(),
+                       d.as_underlying_type()) );
+    return ngpt::modified_julian_day( mjd );
 }
 
 /// Convert  hours, minutes, seconds to fractional days.
