@@ -6,6 +6,7 @@
 #include <limits>
 #include <cassert>
 #include <cmath>
+#include <tuple>
 #ifdef DEBUG
     #include <iostream>
 #endif
@@ -16,6 +17,9 @@ namespace ngpt {
 /// Check if long is big enough to hold two days in nanoseconds.
 static_assert( 86400L  * 1000000L * 2 < std::numeric_limits<long>::max(),
     "FUCK! Long is not big enough to hold two days in nanoseconds" );
+
+/// Jan 1st 1980
+constexpr long jan61980 { 44244L };
 
 /// A wrapper class for years.
 class year {
@@ -110,6 +114,24 @@ public:
     */
 };
 
+class hours {
+    int h;
+public:
+    /// Hours are represented by ints.
+    typedef int underlying_type;
+    /// Constructor
+    explicit constexpr hours(underlying_type i) noexcept : h(i) {};
+};
+
+class minutes {
+    int m;
+public:
+    /// Minutes are represented by ints
+    typedef int underlying_type;
+    /// Constructor
+    explicit constexpr minutes(underlying_type i) noexcept : m(i) {};
+};
+
 /// A wrapper class for seconds.
 class seconds {
     long s;
@@ -148,7 +170,24 @@ public:
     constexpr double fractional_days() const noexcept {
         return static_cast<double>(s)/static_cast<double>(max_in_day);
     }
-    /// Translate to hours, minutes, seconds
+    /// Cast to double (i.e. fractional seconds)
+    constexpr double to_fractional_seconds() const noexcept
+    { return static_cast<double>(s); }
+    /// Translate to hours minutes and seconds
+    constexpr std::tuple<hours, minutes, seconds> to_hms() const noexcept
+    {
+        return std::make_tuple(hours(s / 3600),
+                               minutes((s % 3600) / 60),
+                               seconds((s % 3600) % 60) );
+    }
+};
+
+class gps_datetime {
+    long   week_;
+    double sec_of_week_;
+public:
+    explicit constexpr gps_datetime(long w, double s) noexcept
+        : week_(w), sec_of_week_(s) {};
 };
 
 /// A wrapper class for milliseconds.
@@ -192,6 +231,9 @@ public:
     constexpr double fractional_days() const noexcept {
         return static_cast<double>(s)/static_cast<double>(max_in_day);
     }
+    /// Cast to fractional seconds
+    constexpr double to_fractional_seconds() const noexcept
+    { return static_cast<double>(s)*1.0e-3; }
 };
 
 /// A wrapper class for nanoseconds.
@@ -238,11 +280,19 @@ public:
     constexpr double fractional_days() const noexcept {
         return static_cast<double>(s)/static_cast<double>(max_in_day);
     }
+    /// Cast to fractional seconds
+    constexpr double to_fractional_seconds() const noexcept
+    { return static_cast<double>(s)*1.0e-6; }
 };
 
 /// Calendar date (i.e. year, momth, day) to MJDay.
 modified_julian_day
 cal2mjd(year, month, day_of_month);
+
+/// Valid output formats
+enum class datetime_output_format : char {
+    ymd, ymdhms, gps, ydoy, jd, mjd
+};
 
 /*
  * A datetime class. Holds (integral) days as MJD and fraction of day as any
@@ -278,6 +328,21 @@ public:
         return;
     }
 
+    constexpr bool operator==(const datev2& d) const noexcept
+    { return mjd_ == d.mjd_ && sect_ == d.sect; }
+
+    constexpr bool operator>(const datev2& d) const noexcept
+    { return mjd_ > d.mjd_ || (mjd_ == d.mjd_ && sect_ > d.sect); }
+    
+    constexpr bool operator>=(const datev2& d) const noexcept
+    { return mjd_ > d.mjd_ || (mjd_ == d.mjd_ && sect_ >= d.sect); }
+    
+    constexpr bool operator<(const datev2& d) const noexcept
+    { return mjd_ < d.mjd_ || (mjd_ == d.mjd_ && sect_ < d.sect); }
+    
+    constexpr bool operator<=(const datev2& d) const noexcept
+    { return mjd_ < d.mjd_ || (mjd_ == d.mjd_ && sect_ <= d.sect); }
+
     constexpr void normalize() noexcept {
         //std::cout<<"\nNORMALIZING!";
         //std::cout<<"\nMJD="<<mjd_.as_long()<<", secs="<<sect_.as_long();
@@ -287,7 +352,19 @@ public:
     }
 
     constexpr double as_mjd() const noexcept
-    { return static_cast<double>(mjd_.as_underlying_type()) + sect_.fractional_days(); }
+    {
+        return static_cast<double>(mjd_.as_underlying_type())
+                                + sect_.fractional_days();
+    }
+
+    constexpr gps_datetime as_gps_datetime() const noexcept
+    {
+        long week   = (mjd_.as_underlying_type() - jan61980)/7L;
+        double secs = sect_.as_fractional_seconds();
+        secs       += static_cast<double>(
+                    ((mjd_.as_underlying_type() - jan61980) - week*7L ) * 86400L);
+        return gps_datetime( week, secs );
+    }
         
 private:
     modified_julian_day mjd_;  ///< Modified Julian Day
