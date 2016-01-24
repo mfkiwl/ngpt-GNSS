@@ -5,11 +5,17 @@ css:
   ngpt-pd.css
 author:
 - name: Xanthos Papanikolaou
-  affiliation: National Technical University of Athens
-  mmail: xanthos[AT]mail.ntua.gr
+  email: xanthos[AT]mail.ntua.gr
+  afnum: 1
 - name: Demitris Anastasiou
-  affiliation: National Technical University of Athens
-  mmail: demanast[AT]mail.ntua.gr
+  email: demanast[AT]mail.ntua.gr
+  afnum: 1
+- name: Vangelis Zacharis
+  email: vanzach[AT]survey.ntua.gr
+  afnum: 1
+affiliation:
+- afnum: 1
+  name: National Technical University of Athens
 date: January 2014
 abstract: Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enimad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 ...
