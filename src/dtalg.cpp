@@ -8,6 +8,18 @@ constexpr static long month_day[2][13] = {
     {0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366}
 };
 
+/*
+constexpr static const char* ngpt::month::short_names[] = {
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+};
+
+constexpr static const char* ngpt::month::long_names[] = {
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+};
+*/
+
 /// Calendar date (i.e. year-month-day) to Modified Julian Date.
 ///
 /// \return    The Modified Julian Date (as \c long).

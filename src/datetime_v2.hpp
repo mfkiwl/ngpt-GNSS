@@ -2,6 +2,7 @@
 #define __DATETIME_V2_NGPT__
 
 #include <ostream>
+#include <iomanip>
 #include <cstdio>
 #include <limits>
 #include <cassert>
@@ -41,19 +42,43 @@ class year {
 public:
     /// Years are represented as integers.
     typedef int underlying_type;
+    /// how to represent (for output).
+    enum class format : char { four_digit, two_digit };
     /// Constructor.
     explicit constexpr year (underlying_type i) noexcept : y(i) {};
     /// Get the underlying int.
     constexpr underlying_type as_underlying_type() const noexcept
     { return y; }
+    /// overload operator "<<"
+    template<format f = format::four_digit>
+    friend std::ostream& operator<<(std::ostream& o, const year& yr)
+    { o << std::setw(4) << yr.y; return o; }
 };
+
+template<>/* friend */
+std::ostream&
+year::operator<<<year::format::two_digit>(std::ostream& o, const year& yr)
+{ 
+    o << std::setw(2) << ( yr.y > 2000L ? (2000L - yr.y) : (yr.y - 1900L ) );
+    return o;
+}
 
 /// A wrapper class for months.
 class month {
     int m;
+    constexpr static const char* short_names[] = {
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    };
+    constexpr static const char* long_names[] = {
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    };
 public:
     /// Months are represented as int.
     typedef int underlying_type;
+    /// how to represent (for output).
+    enum class format : char { two_digit, short_name, long_name };
     /// Constructor.
     explicit constexpr month (underlying_type i) noexcept : m(i) {};
     /// Get the underlying int.
@@ -61,7 +86,19 @@ public:
     { return m; }
     /// Access (get/set) the underlying type
     constexpr underlying_type& assign() noexcept { return m; }
+    /// overload operator "<<"
+    template<format f = format::two_digit>
+    friend std::ostream& operator<<(std::ostream& o, const month& mm)
+    { o << std::setw(2) << mm.m; return o; }
 };
+
+template<>
+std::ostream&
+operator<< <month::format::short_name>(std::ostream& o, const month& mm)
+{
+    o << month::short_names[mm.m-1];
+    return o;
+}
 
 /// A wrapper class for days (in general!).
 class day {
@@ -74,6 +111,9 @@ public:
     /// Get the underlying int.
     constexpr underlying_type as_underlying_type() const noexcept
     { return d; }
+    /// overload operator "<<"
+    friend std::ostream& operator<<(std::ostream& o, const day& dd)
+    { o << dd.d; return o; }
 };
 
 /// A wrapper class for day of month.
@@ -125,9 +165,9 @@ class julian_day {
 public:
     /// MJDs are represented as long ints.
     typedef long underlying_type;
-    /*
     explicit constexpr julian_day(long i) noexcept : j(i) {};
     constexpr long as_long() const noexcept { return j; }
+    /*
     constexpr long& assign() noexcept { return j; }
     constexpr void operator+=(const julian_day& d) noexcept
     { j += d.j; }
@@ -408,11 +448,24 @@ public:
                     ((mjd_.as_underlying_type() - jan61980) - week*7L ) * 86400L);
         return gps_datetime( week, secs );
     }
+
+    /// Overload operatoe "<<"
+    template<datetime_output_format F>
+    friend
+    std::ostream& operator<<(std::ostream&, const datev2&);
         
 private:
     modified_julian_day mjd_;  ///< Modified Julian Day
     S                   sect_; ///< Fraction of day in milli/nano/seconds
 };
+
+/*
+template<>
+std::ostream& datev2::operator<<<datetime_output_format::ymd>(std::ostream& o, const datev2& d)
+{
+    o
+}
+*/
 
 } // end namespace
 
