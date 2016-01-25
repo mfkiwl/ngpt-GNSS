@@ -18,7 +18,7 @@ To install the library, you will need:
 * a C++ compiler supporting at least C++11 (see [C++ compiler support](http://en.cppreference.com/w/cpp/compiler_support))
 * most packages of the [GNU Build System](https://en.wikipedia.org/wiki/GNU_build_system),
 including:
-    * [autoreconf](http://linuxcommand.org/man_pages/autoreconf1.html); normally you need to install the package `dh-autoreconf`
+    * ~~[autoreconf](http://linuxcommand.org/man_pages/autoreconf1.html); normally you need to install the package `dh-autoreconf`~~
     * [libtool](http://www.gnu.org/software/libtool/)
     * [automake](https://www.gnu.org/software/automake/)
     * [autoconf](http://www.gnu.org/software/autoconf/autoconf.html)
