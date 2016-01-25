@@ -55,10 +55,11 @@ Clone the repository in a local folder:
 Henceforth the `ngpt` folder will be the **root_dir**.
 
 Go to the `root_dir`. The files you will have to customize (if needed) are  [src/Makefile.am](src/Makefile.am), [test/Makefile.am](test/Makefile.am) and [bin/Makefile.am](bin/Makefile.am).
-~~But first, you have to run the `autoreconf` tool (see [[1]](#autoreconf)):
+~~But first, you have to run the `autoreconf` tool (see [[1]](#autoreconf)):~~
 ```shell
+   ##  most likely, this is **NOT** needed.
    $> autoreconf -i
-```~~
+```
 
 If you do not need the development version (with a **lot** of debugging info and no optimizations) then replace the `Makefile.am`s files with their `Makefile.am.production` counterparts (see [src/Makefile.am.production](src/Makefile.am.production) and [test/Makefile.am.production](test/Makefile.am.production)). That is:
 ```shell
