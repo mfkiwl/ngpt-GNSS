@@ -21,6 +21,20 @@ static_assert( 86400L  * 1000000L * 2 < std::numeric_limits<long>::max(),
 /// Jan 1st 1980
 constexpr long jan61980 { 44244L };
 
+constexpr long jan11901 { 15385L };
+
+/// Forward declerations
+class year;
+class month;
+class day_of_month;
+class day_of_year;
+class day;
+class modified_julian_day;
+class julian_day;
+class seconds;
+class milliseconds;
+class nanoseconds;
+
 /// A wrapper class for years.
 class year {
     int y;
@@ -45,6 +59,8 @@ public:
     /// Get the underlying int.
     constexpr underlying_type as_underlying_type() const noexcept
     { return m; }
+    /// Access (get/set) the underlying type
+    constexpr underlying_type& assign() noexcept { return m; }
 };
 
 /// A wrapper class for days (in general!).
@@ -71,6 +87,8 @@ public:
     /// Get the underlying int.
     constexpr underlying_type as_underlying_type() const noexcept
     { return d; }
+    /// Access (get/set) the underlying type
+    constexpr underlying_type& assign() noexcept { return d; }
 };
 
 /// A wrapper class for Modified Julian Days.
@@ -94,6 +112,10 @@ public:
     /// Define addition (between an MJDs and a day).
     constexpr void operator+=(const day& d) noexcept
     { m += static_cast<underlying_type>(d.as_underlying_type()); }
+    /// Cast to year, day_of_year
+    constexpr year to_ydoy(day_of_year&) const noexcept;
+    /// Cast to year, month, day_of_month
+    constexpr year to_ymd(month&, day_of_month&) const noexcept;
 };
 
 /// A wrapper class for Julian Days.
@@ -112,6 +134,19 @@ public:
     constexpr void operator+=(const day& d) noexcept
     { j += d.as_int(); }
     */
+};
+
+/// A wrapper class for day of year
+class day_of_year {
+    int d;
+public:
+    /// DOY represented by ints.
+    typedef int underlying_type;
+    /// Constructor.
+    explicit constexpr day_of_year(underlying_type i=0) noexcept : d(i) {};
+    /// Cast to underlying type
+    constexpr underlying_type as_underlying_type() const noexcept
+    { return d; }
 };
 
 class hours {
@@ -182,6 +217,8 @@ public:
     }
 };
 
+/// A wrapper class to represent a datetime in GPSTime, i.e. gps week and
+/// seconds of (gps) week.
 class gps_datetime {
     long   week_;
     double sec_of_week_;
@@ -291,7 +328,7 @@ cal2mjd(year, month, day_of_month);
 
 /// Valid output formats
 enum class datetime_output_format : char {
-    ymd, ymdhms, gps, ydoy, jd, mjd
+    ymd, ymdhms, ydhms, gps, ydoy, jd, mjd
 };
 
 /*
@@ -328,35 +365,41 @@ public:
         return;
     }
 
+    /// Overload equality operator.
     constexpr bool operator==(const datev2& d) const noexcept
     { return mjd_ == d.mjd_ && sect_ == d.sect; }
 
+    /// Overload ">" operator.
     constexpr bool operator>(const datev2& d) const noexcept
     { return mjd_ > d.mjd_ || (mjd_ == d.mjd_ && sect_ > d.sect); }
     
+    /// Overload ">=" operator.
     constexpr bool operator>=(const datev2& d) const noexcept
     { return mjd_ > d.mjd_ || (mjd_ == d.mjd_ && sect_ >= d.sect); }
     
+    /// Overload "<" operator.
     constexpr bool operator<(const datev2& d) const noexcept
     { return mjd_ < d.mjd_ || (mjd_ == d.mjd_ && sect_ < d.sect); }
     
+    /// Overload "<=" operator.
     constexpr bool operator<=(const datev2& d) const noexcept
     { return mjd_ < d.mjd_ || (mjd_ == d.mjd_ && sect_ <= d.sect); }
 
-    constexpr void normalize() noexcept {
-        //std::cout<<"\nNORMALIZING!";
-        //std::cout<<"\nMJD="<<mjd_.as_long()<<", secs="<<sect_.as_long();
+    /// Reset the seconds/milli/nano after removing whole days.
+    constexpr void normalize() noexcept
+    {
         mjd_ += sect_.remove_days();
-        //std::cout<<"\nMJD="<<mjd_.as_long()<<", secs="<<sect_.as_long();
         return;
     }
 
+    /// Cast to double Modified Julian Date.
     constexpr double as_mjd() const noexcept
     {
         return static_cast<double>(mjd_.as_underlying_type())
                                 + sect_.fractional_days();
     }
 
+    /// Cast to gps_datetime.
     constexpr gps_datetime as_gps_datetime() const noexcept
     {
         long week   = (mjd_.as_underlying_type() - jan61980)/7L;
@@ -368,7 +411,7 @@ public:
         
 private:
     modified_julian_day mjd_;  ///< Modified Julian Day
-    S                   sect_; ///< Fraction of day is milli/nano/seconds
+    S                   sect_; ///< Fraction of day in milli/nano/seconds
 };
 
 } // end namespace

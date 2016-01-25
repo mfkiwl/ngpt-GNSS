@@ -3,6 +3,11 @@
 #include "datetime.hpp"
 #include "datetime_v2.hpp"
 
+constexpr static long month_day[2][13] = {
+    {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365},
+    {0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366}
+};
+
 /// Calendar date (i.e. year-month-day) to Modified Julian Date.
 ///
 /// \return    The Modified Julian Date (as \c long).
@@ -50,6 +55,40 @@ ngpt::cal2mjd(ngpt::year y, ngpt::month m, ngpt::day_of_month d)
     return ngpt::modified_julian_day( mjd );
 }
 
+/// Cast a modified_julian_day to year, day_of_year
+constexpr ngpt::year
+ngpt::modified_julian_day::to_ydoy(day_of_year& d)
+const noexcept
+{
+    long days_fr_jan1_1901 = m - ngpt::jan11901;
+    long num_four_yrs      = days_fr_jan1_1901/1461L;
+    long years_so_far      = 1901L + 4*num_four_yrs;
+    long days_left         = days_fr_jan1_1901 - 1461*num_four_yrs;
+    long delta_yrs         = days_left/365 - days_left/1460;
+    day_of_year yday (static_cast<day_of_year::underlying_type>
+                                (days_left - 365*delta_yrs + 1));
+    d = yday;
+    return year (years_so_far + delta_yrs);
+}
+
+/// Cast a modified_julian_day to year, month, day_of_month
+constexpr ngpt::year
+ngpt::modified_julian_day::to_ymd(ngpt::month& mm, ngpt::day_of_month& dd)
+const noexcept
+{
+    ngpt::day_of_year doy;
+    auto y     = this->to_ydoy( doy );
+    long yday  = static_cast<long>( doy.as_underlying_type() );
+    long leap  = ( y.as_underlying_type()%4L == 0 );
+    long guess = yday*0.032;
+    long more  = (( yday - month_day[leap][guess+1] ) > 0);
+    mm.assign() = static_cast<ngpt::month::underlying_type>
+                                    (guess + more + 1);
+    dd.assign() = static_cast<ngpt::day_of_month::underlying_type>
+                                    (yday - month_day[leap][guess+more]);
+    return y;
+}
+
 /// Convert  hours, minutes, seconds to fractional days.
 /// \warning No check is performed for the limits of input arguments (i.e.
 ///          \c hours can be > 24).
@@ -64,40 +103,6 @@ noexcept
                              ( static_cast<double>(std::abs(m)))) +
                              std::abs(s))   / ngpt::sec_per_day;
 }
-
-/*
- * Convert Modified Julian Date to Calendar data (i.e. year, month, day)
- *
- * Reference: Source code for the Remondi Date/Time Algorithms, GPS-TOOLBOX,
- *            http://www.ngs.noaa.gov/gps-toolbox/bwr-02.htm
- */
-/*
-void
-ngpt::mjd2cal(long mjd, double fd)
-noexcept
-{
-    static long month_day[2][13] = {
-        {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365},
-        {0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366}
-    };
-
-    long days_fr_jan1_1901 = mjd - 15385L;
-    long num_four_yrs      = days_fr_jan1_1901/1461L;
-    long years_so_far      = 1901L + 4*num_four_yrs;
-    long days_left         = days_fr_jan1_1901 - 1461*num_four_yrs;
-    long delta_yrs         = days_left/365 - days_left/1460;
-
-    long year              = years_so_far + delta_yrs;
-    long yday              = days_left - 365*delta_yrs + 1;
-    long leap              = ( year%4 == 0 );
-    long guess             = yday*0.032;
-    long more              = (( yday - month_day[leap][guess+1] ) > 0);
-    
-    month = static_cast<int>(guess + more + 1);
-    mday  = static_cast<int>(yday - month_day[leap][guess+more]);
-    iyear = static_cast<int>(year);
-}
-*/
 
 template<typename T>
     inline constexpr
