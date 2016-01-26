@@ -145,7 +145,8 @@ def main():
             if arguments.pcv_grid_file is not sys.stdin \
             else sys.stdin \
         as input_stream:
-        antennae = antex_view.parse_input(input_stream)
+        antennae = antex_view.parse_antenna_stream.parse_input(
+                input_stream)
 
     for ant in antennae:
         ant.plot_antenna(kind=arguments.plot_style,

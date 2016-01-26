@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from setuptools import setup
+    from setuptools import setup, find_packages
 except ImportError:
-    from distutils.core import setup
+    from distutils.core import setup, find_packages
 
 
 def readme():
@@ -23,6 +23,7 @@ danast@mail.ntua.gr,
 vanzach@survey.ntua.gr''',
         'license': '',
         'packages': ['antex_view'],
+        'packages': find_packages(exclude=['tests*']),
         'scripts': ['bin/antex_view.py'],
         'install_requires': ['numpy', 'matplotlib'],
         'include_package_data': True}
