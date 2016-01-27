@@ -14,6 +14,9 @@ AC_CONFIG_HEADERS([config.h])
 LT_PREREQ([2.2])
 LT_INIT([dlopen])
 
+# Python
+AM_PATH_PYTHON
+
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_CXX
