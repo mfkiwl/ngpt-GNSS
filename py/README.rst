@@ -14,8 +14,9 @@ all commonly used formats, including: *png*, *pdf*, *[e]ps*, *svg*.  The
 format of the input data is strict and even slight changes may cause the
 program to exit with failure.  NOAZI PCV corrections, ie. antennas with
 no azimouth-dependent PCV corrections can (and will) be plotted if the
-``AZI`` line is: ``AZI: 0 0 0``.  An exit status other than 0 (zero),
-denotes ERROR.
+``AZI`` line is: ``AZI: 0 0 0``.  An Antenna block ends with the ``EOA``
+(End-Of-Antenna) record.  An exit status other than 0 (zero), denotes 
+ERROR.
 
 Example input data::
 
@@ -26,6 +27,7 @@ Example input data::
     ...
     ...
     ...
+    EOA
 
 See ``atxtr`` for more info.
 
