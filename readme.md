@@ -18,10 +18,10 @@ To install the library, you will need:
 * a C++ compiler supporting at least C++11 (see [C++ compiler support](http://en.cppreference.com/w/cpp/compiler_support))
 * most packages of the [GNU Build System](https://en.wikipedia.org/wiki/GNU_build_system),
 including:
-    * [autoreconf](http://linuxcommand.org/man_pages/autoreconf1.html); normally you need to install the package `dh-autoreconf`
+    * ~~[autoreconf](http://linuxcommand.org/man_pages/autoreconf1.html); normally you need to install the package `dh-autoreconf`~~
     * [libtool](http://www.gnu.org/software/libtool/)
-    * [automake](https://www.gnu.org/software/automake/)
-    * [autoconf](http://www.gnu.org/software/autoconf/autoconf.html)
+    * ~~[automake](https://www.gnu.org/software/automake/)~~
+    * ~~[autoconf](http://www.gnu.org/software/autoconf/autoconf.html)~~
 
 Most Linux distros provide grouped-packages for easy installation; e.g. for Debian see [build-essentials](https://packages.debian.org/wheezy/build-essential) and [Getting started with Autotools – GNU Build System on Debian](http://abhinavsingh.com/getting-started-with-autotools-gnu-build-system-on-debian/); for Fedora see the package "C Development Tools and Libraries"
 
@@ -55,8 +55,9 @@ Clone the repository in a local folder:
 Henceforth the `ngpt` folder will be the **root_dir**.
 
 Go to the `root_dir`. The files you will have to customize (if needed) are  [src/Makefile.am](src/Makefile.am), [test/Makefile.am](test/Makefile.am) and [bin/Makefile.am](bin/Makefile.am).
-But first, you have to run the `autoreconf` tool (see [[1]](#autoreconf)):
+~~But first, you have to run the `autoreconf` tool (see [[1]](#autoreconf)):~~
 ```shell
+   ##  most likely, this is **NOT** needed.
    $> autoreconf -i
 ```
 
