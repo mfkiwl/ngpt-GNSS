@@ -36,28 +36,48 @@ class seconds;
 class milliseconds;
 class nanoseconds;
 
+/// Format options
+namespace datetime_format_options {
+    enum class year_digits : char { two_digit, four_digit };
+}
+
+/// let's be a little more short.
+//typedef datetime_format_options::year_digits::four_digit four_digit_year;
+//typedef datetime_format_options::year_digits::two_digit  two_digit_year;
+//using four_digit_year = datetime_format_options::year_digits::four_digit;
+//using two_digit_year = datetime_format_options::year_digits::two_digit;
+
+/// Forward declare the class's '<<' operators
+template<datetime_format_options::year_digits F = datetime_format_options::year_digits::four_digit>
+std::ostream& operator<<(std::ostream&, const year&);
+
 /// A wrapper class for years.
 class year {
     int y;
 public:
     /// Years are represented as integers.
     typedef int underlying_type;
-    /// how to represent (for output).
-    enum class format : char { four_digit, two_digit };
     /// Constructor.
     explicit constexpr year (underlying_type i) noexcept : y(i) {};
     /// Get the underlying int.
     constexpr underlying_type as_underlying_type() const noexcept
     { return y; }
     /// overload operator "<<"
-    template<format f = format::four_digit>
-    friend std::ostream& operator<<(std::ostream& o, const year& yr)
-    { o << std::setw(4) << yr.y; return o; }
+    template<datetime_format_options::year_digits>
+    friend std::ostream& operator<<(std::ostream&, const year&);
 };
 
-template<>/* friend */
-std::ostream&
-year::operator<<<year::format::two_digit>(std::ostream& o, const year& yr)
+/// Define the '<<' operator(s)
+template<datetime_format_options::year_digits F>
+std::ostream& operator<<(std::ostream& o, const year& yr)
+{
+    o << std::setw(4) << yr.y;
+    return o;
+}
+
+/// Specialization of 2-digit year
+template<>
+std::ostream& operator<<<datetime_format_options::year_digits::two_digit>(std::ostream& o, const year& yr)
 { 
     o << std::setw(2) << ( yr.y > 2000L ? (2000L - yr.y) : (yr.y - 1900L ) );
     return o;
@@ -92,14 +112,6 @@ public:
     { o << std::setw(2) << mm.m; return o; }
 };
 
-template<>
-std::ostream&
-operator<< <month::format::short_name>(std::ostream& o, const month& mm)
-{
-    o << month::short_names[mm.m-1];
-    return o;
-}
-
 /// A wrapper class for days (in general!).
 class day {
     int d;
@@ -112,8 +124,8 @@ public:
     constexpr underlying_type as_underlying_type() const noexcept
     { return d; }
     /// overload operator "<<"
-    friend std::ostream& operator<<(std::ostream& o, const day& dd)
-    { o << dd.d; return o; }
+    //friend std::ostream& operator<<(std::ostream& o, const day& dd)
+    //{ o << dd.d; return o; }
 };
 
 /// A wrapper class for day of month.
