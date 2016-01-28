@@ -5,6 +5,8 @@ try:
 except ImportError:
     from distutils.core import setup, find_packages
 
+# import os
+# SRC_PATH = os.path.relpath(os.path.join(os.path.dirname(__file__), "antex_view"))
 
 def readme():
     with open('README.rst') as f:

@@ -51,6 +51,7 @@ AC_CHECK_FUNCS([floor modf pow sqrt])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile
+                 py/Makefile
                  bin/Makefile
                  test/Makefile])
 
