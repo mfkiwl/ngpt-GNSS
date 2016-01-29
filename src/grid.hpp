@@ -22,7 +22,10 @@
  *
  * \note
  *
- * \todo
+ * \todo      Provide a factor_to_int_type (template?) parameter. E.g. when
+ *            constucting a grid from 0.0 to 90.0 with step = 0.5 this could
+ *            be done a grid from 0 to 900 with step = 5 and a factor of 10.
+ *            Would that enhance efficiency ??
  *
  * \copyright Copyright © 2015 Dionysos Satellite Observatory, <br>
  *            National Technical University of Athens. <br>
@@ -167,8 +170,8 @@ public:
 #endif
     explicit tick_axis_impl(T s,  T e, T d) noexcept
         : start_{s},
-          stop_{e},
-          step_{d},
+          stop_ {e},
+          step_ {d},
           // in case (e-s)/d is negative, the cast will result in a huge (positive)
           // number; the assert (inside the con'tor body) will check for this.
           npts_{ d ? static_cast<std::size_t>((e-s)/d)+1 : 0 }
@@ -299,11 +302,19 @@ public:
 #if __cplusplus > 201103L
     constexpr
 #endif
-    explicit
-    grid_skeleton(T x1, T x2, T dx) noexcept
+    explicit grid_skeleton(T x1, T x2, T dx) noexcept
         : tick_axis_impl<T, RangeCheck>(x1, x2, dx) {}
 
     virtual ~grid_skeleton() {};
+
+    class node {
+    public:
+        explicit constexpr node(std::size_t i = 0, T val = T()) noexcept
+            : index_(i), value_(val) {};
+    private:
+        std::size_t index_;
+        T           value_;
+    };
 };
 
 template<typename T, bool RangeCheck>
@@ -328,32 +339,23 @@ public:
   
     virtual ~grid_skeleton() {};
 
-    std::size_t size() const noexcept
-    { return xaxis_.size() * yaxis_.size(); }
+    std::size_t size() const noexcept { return xaxis_.size() * yaxis_.size(); }
 
-    std::size_t x_axis_pts() const noexcept
-    { return xaxis_.size(); }
+    std::size_t x_axis_pts() const noexcept { return xaxis_.size(); }
 
-    std::size_t y_axis_pts() const noexcept
-    { return yaxis_.size(); }
+    std::size_t y_axis_pts() const noexcept { return yaxis_.size(); }
 
-    T x_axis_from() const noexcept
-    { return xaxis_.from(); }
+    T x_axis_from() const noexcept { return xaxis_.from(); }
     
-    T x_axis_to() const noexcept
-    { return xaxis_.to(); }
+    T x_axis_to() const noexcept { return xaxis_.to(); }
     
-    T x_axis_step() const noexcept
-    { return xaxis_.step(); }
+    T x_axis_step() const noexcept { return xaxis_.step(); }
     
-    T y_axis_from() const noexcept
-    { return yaxis_.from(); }
+    T y_axis_from() const noexcept { return yaxis_.from(); }
     
-    T y_axis_to() const noexcept
-    { return yaxis_.to(); }
+    T y_axis_to() const noexcept { return yaxis_.to(); }
     
-    T y_axis_step() const noexcept
-    { return yaxis_.step(); }
+    T y_axis_step() const noexcept { return yaxis_.step(); }
 
     auto nearest_neighbor(T x, T y) noexcept 
 #if __cplusplus == 201103L
