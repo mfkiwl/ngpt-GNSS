@@ -472,6 +472,8 @@ print_pcv_info(const pcv_pattern& pcv, const antenna& ant,
         }
     }
 
+    std::cout << "\nEOA";
+
     return;
 }
 
@@ -515,6 +517,7 @@ print_pcv_diff(const pcv_pattern& pcv, const antenna& ant,
                                 - pcv.azi_pcv(zen, azi, 0);
         }
     }
+    std::cout<<"\nEOA";
 
     return;
 }
@@ -537,6 +540,7 @@ print_pcv_info_noazi(const pcv_pattern& pcv, const antenna& ant,
     {
         std::cout << "\n" << pcv.no_azi_pcv(zen, 0);
     }
+    std::cout << "\nEOA";
 
     return;
 }
@@ -560,6 +564,7 @@ print_pcv_diff_noazi(const pcv_pattern& pcv, const antenna& ant,
     {
         std::cout << "\n" << ref_pcv.no_azi_pcv(zen, 0) - pcv.no_azi_pcv(zen, 0);
     }
+    std::cout << "\nEOA";
 
     return;
 }

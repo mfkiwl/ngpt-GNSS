@@ -52,6 +52,7 @@ long ngpt::cal2mjd(int iy, int im, int id)
             + static_cast<long>(id) - 2432076L;
 }
 
+/// Transform a year, month, day of month to modified_julian_day.
 ngpt::modified_julian_day
 ngpt::cal2mjd(ngpt::year y, ngpt::month m, ngpt::day_of_month d)
 {

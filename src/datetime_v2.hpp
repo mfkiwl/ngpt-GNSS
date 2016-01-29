@@ -269,6 +269,10 @@ public:
     
     /// Constructor
     explicit constexpr hours(underlying_type i) noexcept : h(i) {};
+    
+    /// Pass the underlying type
+    constexpr underlying_type as_underlying_type() const noexcept
+    { return h; }
 };
 
 class minutes {
@@ -279,6 +283,10 @@ public:
     
     /// Constructor
     explicit constexpr minutes(underlying_type i) noexcept : m(i) {};
+
+    /// Pass the underlying type
+    constexpr underlying_type as_underlying_type() const noexcept
+    { return m; }
 };
 
 /// A wrapper class for seconds.
@@ -296,6 +304,14 @@ public:
     
     /// Constructor
     explicit constexpr seconds(underlying_type i=0L) noexcept : s(i) {};
+
+    /// Constructor from hours, minutes, fractional seconds
+    explicit constexpr seconds(hours h, minutes m, double fs) noexcept
+        : s(  static_cast<long>(fs)
+            + m.as_underlying_type()*60L
+            + h.as_underlying_type()*3600L
+            )
+    {}
     
     /// Addition operator between seconds.
     constexpr void operator+=(const seconds& sc) noexcept { s+=sc.s; }
@@ -334,6 +350,13 @@ public:
     /// Cast to double (i.e. fractional seconds)
     constexpr double to_fractional_seconds() const noexcept
     { return static_cast<double>(s); }
+
+    /// Resolve to (integer) seconds and fractional seconds.
+    constexpr seconds resolve_sec(double& fraction) const noexcept
+    {
+        fraction = 0.0e0;
+        return *this;
+    }
     
     /// Translate to hours minutes and seconds
     constexpr std::tuple<hours, minutes, seconds> to_hms() const noexcept
@@ -369,6 +392,15 @@ public:
     
     /// Cinstructor.
     explicit constexpr milliseconds(underlying_type i=0L) noexcept : s(i) {};
+    
+    /// Constructor from hours, minutes, fractional seconds
+    explicit constexpr milliseconds(hours h, minutes m, double fs)
+    noexcept
+        : s(  static_cast<long>(fs*1000.0e0)
+            + (m.as_underlying_type()*60L
+            + h.as_underlying_type()*3600L) * 1000L
+            )
+    {}
     
     /// Milliseconds can be cast to seconds (with a loss of precission).
     constexpr explicit operator seconds() const { return seconds(s/1000L); }
@@ -411,6 +443,14 @@ public:
     /// Cast to fractional seconds
     constexpr double to_fractional_seconds() const noexcept
     { return static_cast<double>(s)*1.0e-3; }
+    
+    /// Resolve to (integer) seconds and fractional seconds.
+    constexpr seconds resolve_sec(double& fraction) const noexcept
+    {
+        seconds sec ( s / 1000L );
+        fraction = static_cast<double>( s % 1000L ) * 1e-3;
+        return sec;
+    }
 };
 
 /// A wrapper class for nanoseconds.
@@ -428,6 +468,15 @@ public:
     
     /// Constructor.
     explicit constexpr nanoseconds(underlying_type i=0L) noexcept : s(i) {};
+    
+    /// Constructor from hours, minutes, fractional seconds
+    explicit constexpr nanoseconds(hours h, minutes m, double fs)
+    noexcept
+        : s(  static_cast<long>(fs*1e6)
+            + (m.as_underlying_type()*60L
+            + h.as_underlying_type()*3600L) * 1000000L
+            )
+    {}
     
     /// Nanoseconds can be cast to milliseconds will a loss of accuracy.
     constexpr explicit operator milliseconds() const
@@ -499,7 +548,7 @@ public:
     /// Default (zero) constructor.
     explicit constexpr datev2() noexcept : mjd_(0), sect_(0) {};
     
-    /// Constructor from year, month, day of month anss any sec type.
+    /// Constructor from year, month, day of month and any sec type.
     explicit constexpr datev2(year y, month m, day_of_month d, S s=S())
         : mjd_ (cal2mjd(y, m, d)),
           sect_(s)
@@ -509,6 +558,12 @@ public:
     explicit datev2(year y, month m, day_of_month d, T t)
         : mjd_ (cal2mjd(y, m, d)),
           sect_(S(t))
+    {}
+
+    explicit
+    datev2(year y, month m, day_of_month d, hours hr, minutes mn, double fsecs)
+        : mjd_ ( cal2mjd(y, m, d) ),
+          sect_( hr, mn, fsecs )
     {}
 
     template<class T>
@@ -561,6 +616,26 @@ public:
         secs       += static_cast<double>(
                     ((mjd_.as_underlying_type() - jan61980) - week*7L ) * 86400L);
         return gps_datetime( week, secs );
+    }
+
+    /// Cast to year, month, day of month
+    constexpr std::tuple<year, month, day_of_month>
+    as_ymd() const noexcept
+    {
+        year y;
+        month m;
+        day_of_month d;
+        y = mjd_.to_ymd(m, d);
+        return std::make_tuple( y, m, d );
+    }
+
+    /// Cast to year, day_of_year
+    constexpr std::tuple<year, day_of_year> as_ydoy() const noexcept
+    {
+        year y;
+        day_of_year d;
+        y = mjd_.to_ydoy( d );
+        return std::make_tuple( y, d );
     }
 
     /// Overload operator "<<"
