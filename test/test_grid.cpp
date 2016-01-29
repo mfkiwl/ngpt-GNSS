@@ -8,13 +8,13 @@ int main()
 {
 
   cout << "\n==================================================================";
-  cout << "\nTESTING THE CLASS: ngpt::TickAxisImpl<>";
+  cout << "\nTESTING THE CLASS: ngpt::tick_axis_impl<>";
   cout << "\n==================================================================";
 
-  cout << "\n>>ngpt::TickAxisImpl<> in ascending order";
+  cout << "\n>>ngpt::tick_axis_impl<> in ascending order";
   // Make a grid of float values, with range check, from -10.0 to 10.0 with
   // step 2.5
-  ngpt::TickAxisImpl<float, true> gridA (-10.0f, 10.0f, 2.5f);
+  ngpt::tick_axis_impl<float, true> gridA (-10.0f, 10.0f, 2.5f);
 
   //
   float pt = -1.4f;
@@ -48,10 +48,10 @@ int main()
     cout << "\nEXCEPTION CAUGHT! Trying to compute neighbor_nodes fpr point " << pt;
   }
   
-  cout << "\n\n>>ngpt::TickAxisImpl<> in descending order";
+  cout << "\n\n>>ngpt::tick_axis_impl<> in descending order";
   // This is (pretty much) the same grid, though in descending order.
   // Let's try the same
-  ngpt::TickAxisImpl<float, true> gridB (10.0f,-10.0f, -2.5f);
+  ngpt::tick_axis_impl<float, true> gridB (10.0f,-10.0f, -2.5f);
   pt = -1.4f;
   tpl = gridB.nearest_neighbor(pt);
   cout <<"\nCalling nearest_neighbor on a TickAxis from " << gridB.from()
@@ -83,15 +83,15 @@ int main()
   }
   
   cout << "\n\n==================================================================";
-  cout << "\nTESTING THE CLASS: ngpt::GridSkeleton<>";
+  cout << "\nTESTING THE CLASS: ngpt::grid_skeleton<>";
   cout << "\n==================================================================";
 
   // Make a 2-D Grid skeleton
   float azi1 (0), azi2(360), dazi(5);
   float ele1 (0), ele2(90),  dele(2.5);
   
-  cout << "\n>>ngpt::GridSkeleton<> in ascending order";
-  ngpt::GridSkeleton<float, true, ngpt::Grid_Dimension::TwoDim>
+  cout << "\n>>ngpt::grid_skeleton<> in ascending order";
+  ngpt::grid_skeleton<float, true, ngpt::Grid_Dimension::TwoDim>
     d2grd (ele1, ele2, dele, azi1, azi2, dazi);
   std::cout <<"\nXaxis (i.e. elevation): "<<d2grd.x_axis_from()<<"/"<<d2grd.x_axis_to()<<"/"<<d2grd.x_axis_step();
   std::cout <<"\nYaxis (i.e. azimouth ): "<<d2grd.y_axis_from()<<"/"<<d2grd.y_axis_to()<<"/"<<d2grd.y_axis_step();
@@ -104,9 +104,9 @@ int main()
     << "\n\tYaxis-> index: " << std::get<2>(smth) << " with value: " << std::get<3>(smth)
     << "\n";
 
-  // Same GridSkeleton as above, but with y-axis inverted.
-  cout << "\n\n>>ngpt::GridSkeleton<> in descending order";
-  ngpt::GridSkeleton<float, true, ngpt::Grid_Dimension::TwoDim>
+  // Same grid_skeleton as above, but with y-axis inverted.
+  cout << "\n\n>>ngpt::grid_skeleton<> in descending order";
+  ngpt::grid_skeleton<float, true, ngpt::Grid_Dimension::TwoDim>
     d2grd_1 (ele1, ele2, dele, azi2, azi1, -1*dazi);
 
   smth = d2grd_1.nearest_neighbor(ptx, pty);
@@ -118,11 +118,11 @@ int main()
   
   cout << "\n";
   cout << "\n\n==================================================================";
-  cout << "\nTESTING THE CLASS: ngpt::GridSkeleton<>";
+  cout << "\nTESTING THE CLASS: ngpt::grid_skeleton<>";
   cout << "\n==================================================================";
   
-  cout << "\n>>ngpt::GridSkeleton<> in ascending order";
-  ngpt::GridSkeleton<float, true, ngpt::Grid_Dimension::TwoDim> d2grd2 (0,-4,-1,0,5,1);
+  cout << "\n>>ngpt::grid_skeleton<> in ascending order";
+  ngpt::grid_skeleton<float, true, ngpt::Grid_Dimension::TwoDim> d2grd2 (0,-4,-1,0,5,1);
   std::cout <<"\nXaxis : "<<d2grd2.x_axis_from()<<"/"<<d2grd2.x_axis_to()<<"/"<<d2grd2.x_axis_step();
   std::cout <<"\nYaxis : "<<d2grd2.y_axis_from()<<"/"<<d2grd2.y_axis_to()<<"/"<<d2grd2.y_axis_step();
   std::vector<int> ivec (d2grd2.size(), 0);

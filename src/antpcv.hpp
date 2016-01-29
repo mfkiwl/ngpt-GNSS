@@ -269,11 +269,11 @@ class antenna_pcv
 {
 
 #ifdef DEBUG
-    typedef GridSkeleton<T, true, Grid_Dimension::OneDim> dim1_grid;
-    typedef GridSkeleton<T, true, Grid_Dimension::TwoDim> dim2_grid;
+    typedef grid_skeleton<T, true, Grid_Dimension::OneDim> dim1_grid;
+    typedef grid_skeleton<T, true, Grid_Dimension::TwoDim> dim2_grid;
 #else
-    typedef GridSkeleton<T, false, Grid_Dimension::OneDim> dim1_grid;
-    typedef GridSkeleton<T, false, Grid_Dimension::TwoDim> dim2_grid;
+    typedef grid_skeleton<T, false, Grid_Dimension::OneDim> dim1_grid;
+    typedef grid_skeleton<T, false, Grid_Dimension::TwoDim> dim2_grid;
 #endif
 
 typedef std::vector<frequency_pcv<T>> fr_pcv_vec;

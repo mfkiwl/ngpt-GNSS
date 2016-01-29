@@ -607,7 +607,22 @@ ionex::read_latitude_map(std::size_t num_of_tec_lines,
     return 0;
 }
 
-/**
+/** Perform bilinear interpolation given a grid of tec values (tec_vals), to 
+ *  find tec value at a point at point (longtitude, latitude). The function
+ *  needs to know the surrounding cell of the point and the number of longtitude
+ *  points (i.e. the number of nodes in the longtitude axis).
+ *
+ *  \param[in] longtitude The longtitude of the point to interpolate at (in
+ *                        degrees).
+ *  \param[in] latitude   The latitude of the point to interpolate at (in
+ *                        degrees).
+ *  \param[in] tec_vals   The grid of tec values.
+ *  \param[in] cell       The surrounding cell (as provided by the grid_skeleton
+ *                        neighbor_nodes function).
+ *  \param[in] lon_grid_size Number of nodes in the longtitude axis (the axis
+ *                        of the corresponding grid_skeleton instance).
+ *  \return               The tec value at the given point (to get the TEC
+ *                        value you need to scale this value by the exponent).
  *
  */
 ionex_grd_type
@@ -694,13 +709,12 @@ bilinear_interpolate(float longtitude, float latitude,
  *  \param[in] tec_vals A vector of vectors of ints! For each point in points,
  *                    there will be a corresponding vector of ints in tec_vals
  *                    holding tec values at epoch_vector epochs.
- *  \return           A vector of int vectors; for each point given, the function
+ *  \returns          A vector of int vectors; for each point given, the function
  *                    will create for a vector of tec values for each epoch in the
  *                    epoch_vector
  *  \warning          All (input) vectors should be large enough to handle the
  *                    values assigned to them.
  * 
- * \TODO Fuck this throws in a million places. Fucking do something!
  */
 int
 ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& points,
@@ -715,11 +729,11 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
     // lon=23.7 will be 3750 and 2370; i.e. use of factor of 100.
     int factor (100);
 #ifdef DEBUG
-    GridSkeleton<long,  true, Grid_Dimension::TwoDim> 
+    grid_skeleton<long,  true, Grid_Dimension::TwoDim> 
         grid(_lon1*factor, _lon2*factor, _dlon*factor,
              _lat1*factor, _lat2*factor, _dlat*factor);
 #else
-    GridSkeleton<long, false, Grid_Dimension::TwoDim> 
+    grid_skeleton<long, false, Grid_Dimension::TwoDim> 
         grid(_lon1*factor, _lon2*factor, _dlon*factor,
              _lat1*factor, _lat2*factor, _dlat*factor);
 #endif
@@ -757,11 +771,11 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
     datetime_ms cur_dt = _first_epoch;
     
     while ( map_num < _maps_in_file
-          && _istream 
-          && !std::strncmp(line+60, "START OF TEC MAP", 16) ) {
+            && _istream 
+            && !std::strncmp(line+60, "START OF TEC MAP", 16) ) {
+
         *(line+6) = '\0';
         assert( static_cast<long>(map_num+1) == std::strtol(line, &c, 10) );
-        std::cout<<"\nmap number="<<map_num;
         if ( ! _istream.getline(line, MAX_HEADER_CHARS)
             || std::strncmp(line+60, "EPOCH OF CURRENT MAP", 20) 
             || _read_ionex_datetime_(line, &cur_dt) )
@@ -786,7 +800,7 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
         }
 
         // ok. we got the map and we need to extract the cells for all points
-        //TODO
+        // index; points to current point
         std::size_t j = 0;
         for (const auto& p : points) {
             tec_vals[j].emplace_back( bilinear_interpolate(
@@ -799,6 +813,7 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
         ++map_num;
     }
 
+    // if everything went as planned, we should have read all maps in file.
     return !(map_num == _maps_in_file);
 }
 
@@ -868,8 +883,10 @@ ionex::interpolate(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& 
 
     // we must also provide a vector of vectors, where
     // vec[i][j] is the tec value for station #i at epoch #j
-    std::vector<std::vector<int>> tec_vals_1 ( points.size(), std::vector<int>(epoch_vector_1.size(), 9999) );
-    std::vector<std::vector<int>> tec_vals_2 ( points.size(), std::vector<int>(epoch_vector_2.size(), 9999) );
+    std::vector<std::vector<int>> tec_vals_1 ( points.size(),
+                                std::vector<int>(epoch_vector_1.size(), 9999) );
+    std::vector<std::vector<int>> tec_vals_2 ( points.size(),
+                                std::vector<int>(epoch_vector_2.size(), 9999) );
 
     // get the tec/epoch values that are recorded in the IONEX file, for
     // the points in the list

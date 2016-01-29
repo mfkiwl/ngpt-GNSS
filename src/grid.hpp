@@ -43,7 +43,7 @@
 namespace ngpt
 {
 
-/** \class   TickAxisImpl
+/** \class   tickaxisimpl
  *
  *  \details This class is used to represent a tick axis, starting from tick
  *           with value start_, ending to tick stop_ with a step size of 
@@ -73,7 +73,7 @@ namespace ngpt
  */ 
 template<typename T,          ///< type of axis e.g. float, double, ...
          bool     RangeCheck> ///< enable range-check
-class TickAxisImpl
+class tick_axis_impl
 {
 private:
 
@@ -118,7 +118,7 @@ private:
     {
         if ( this->out_of_range(x) ) {
             throw std::out_of_range (
-            "ERROR. TickAxisImpl<>::neighbor_nodes_impl -> out_of_range !!");
+            "ERROR. tick_axis_impl<>::neighbor_nodes_impl -> out_of_range !!");
         }
 
         // find tick on the left.
@@ -128,7 +128,7 @@ private:
         std::size_t r_idx { l_idx + 1 };
         if (r_idx >= npts_) {
             throw std::out_of_range (
-            "ERROR. TickAxisImpl<>::neighbor_nodes_impl -> out_of_range !!");
+            "ERROR. tick_axis_impl<>::neighbor_nodes_impl -> out_of_range !!");
         }
 
         return std::make_tuple(
@@ -165,7 +165,7 @@ public:
 #if __cplusplus > 201103L
     constexpr
 #endif
-    explicit TickAxisImpl(T s,  T e, T d) noexcept
+    explicit tick_axis_impl(T s,  T e, T d) noexcept
         : start_{s},
           stop_{e},
           step_{d},
@@ -177,42 +177,33 @@ public:
     }
 
     /// This is designed to be a base class.
-    virtual ~TickAxisImpl() {}
+    virtual ~tick_axis_impl() {}
 
-    TickAxisImpl(const TickAxisImpl&) noexcept = default;
+    tick_axis_impl(const tick_axis_impl&) noexcept = default;
 
-    TickAxisImpl&
-    operator=(const TickAxisImpl&) noexcept = default;
+    tick_axis_impl&
+    operator=(const tick_axis_impl&) noexcept = default;
 
-    TickAxisImpl(TickAxisImpl&&) noexcept = default;
+    tick_axis_impl(tick_axis_impl&&) noexcept = default;
 
-    TickAxisImpl&
-    operator=(TickAxisImpl&&) noexcept = default;
+    tick_axis_impl&
+    operator=(tick_axis_impl&&) noexcept = default;
 
     /// Return the left-most tick.
-    constexpr T
-    from() const noexcept
-    { return start_; }
+    constexpr T from() const noexcept { return start_; }
 
     /// Return the right-most tick.
-    constexpr T 
-    to() const noexcept 
-    { return stop_; }
+    constexpr T to() const noexcept { return stop_; }
 
     /// Return the axis step size.
-    constexpr T 
-    step() const noexcept 
-    { return step_; }
+    constexpr T step() const noexcept { return step_; }
 
     /// Check if the axis is in ascending order.
-    constexpr bool 
-    is_ascending() const noexcept 
+    constexpr bool is_ascending() const noexcept 
     { return stop_ - start_ > 0; }
 
     /// Return the number of tick-points.
-    constexpr std::size_t
-    size() const noexcept 
-    { return npts_; }
+    constexpr std::size_t size() const noexcept { return npts_; }
 
     /// Check if the given input value \p x is left from start_ (i.e. if it is
     /// between the given limits on the left side).
@@ -220,8 +211,7 @@ public:
     ///         if false is returned, the input \p x value lays outside the axis
     ///         limits on the left).
     ///
-    constexpr bool
-    far_left(T x) const noexcept
+    constexpr bool far_left(T x) const noexcept
     { return this->is_ascending() ? x < start_ : x > start_ ; }
 
     /// Check if the given input value \p x is right from stop_ (i.e. if it is
@@ -230,9 +220,7 @@ public:
     ///         if false is returned, the input \p x value lays outside the axis
     ///         limits on the right).
     ///
-    constexpr
-    bool
-    far_right(T x) const noexcept
+    constexpr bool far_right(T x) const noexcept
     { return this->is_ascending() ? x > stop_ : x < stop_; }
 
     /// Check if the given input value \p x lays between the limits of the tick
@@ -247,17 +235,10 @@ public:
 #if __cplusplus > 201103L
     constexpr
 #endif
-    int
-    out_of_range(T x) const noexcept
+    int out_of_range(T x) const noexcept
     {
-        if ( this->far_left(x) ) {
-            return -1;
-        }
-
-        if ( this->far_right(x) ) {
-            return 1;
-        }
-
+        if ( this->far_left(x) ) { return -1; }
+        if ( this->far_right(x)) { return 1; }
         return 0;
     }
 
@@ -267,8 +248,7 @@ public:
 #if __cplusplus > 201103L
     constexpr
 #endif
-    auto
-    neighbor_nodes(T x) const noexcept( !RangeCheck )
+    auto neighbor_nodes(T x) const noexcept( !RangeCheck )
 #if __cplusplus == 201103L
     -> std::tuple<std::size_t, T, std::size_t, T>
 #endif
@@ -284,8 +264,7 @@ public:
 #if __cplusplus > 201103L
     constexpr
 #endif
-    auto
-    nearest_neighbor(T x) const noexcept
+    auto nearest_neighbor(T x) const noexcept
 #if __cplusplus == 201103L
     -> std::tuple<std::size_t, T>
 #endif
@@ -308,88 +287,75 @@ enum class Grid_Dimension : char { OneDim, TwoDim };
 template<typename       T,
          bool           RangeCheck,
          Grid_Dimension Dim>
-    class GridSkeleton
-{};
+class grid_skeleton {};
 
 template<typename T, bool RangeCheck>
-    class GridSkeleton<T,
-                       RangeCheck,
-                       Grid_Dimension::OneDim>
-    : public TickAxisImpl<T, RangeCheck>
+class grid_skeleton<T,
+                    RangeCheck,
+                    Grid_Dimension::OneDim>
+: public tick_axis_impl<T, RangeCheck>
 {
 public:
 #if __cplusplus > 201103L
     constexpr
 #endif
     explicit
-    GridSkeleton(T x1, T x2, T dx) noexcept
-        : TickAxisImpl<T, RangeCheck>(x1, x2, dx)
-    {}
+    grid_skeleton(T x1, T x2, T dx) noexcept
+        : tick_axis_impl<T, RangeCheck>(x1, x2, dx) {}
 
-    virtual ~GridSkeleton() {};
+    virtual ~grid_skeleton() {};
 };
 
 template<typename T, bool RangeCheck>
-    class GridSkeleton<T,
-                       RangeCheck,
-                       Grid_Dimension::TwoDim>
+class grid_skeleton<T,
+                    RangeCheck,
+                    Grid_Dimension::TwoDim>
 {
 private:
-    TickAxisImpl<T, RangeCheck> xaxis_;
-    TickAxisImpl<T, RangeCheck> yaxis_;
+    tick_axis_impl<T, RangeCheck> xaxis_;
+    tick_axis_impl<T, RangeCheck> yaxis_;
 
 public:
     /// Default constructor.
 #if __cplusplus > 201103L
     constexpr
 #endif
-    explicit
-    GridSkeleton(T x1, T x2, T dx, T y1, T y2, T dy)
+    explicit grid_skeleton(T x1, T x2, T dx, T y1, T y2, T dy)
     noexcept
         : xaxis_(x1, x2, dx),
           yaxis_(y1, y2, dy)
     {}
   
-    virtual ~GridSkeleton() {};
+    virtual ~grid_skeleton() {};
 
-    std::size_t
-    size() const noexcept 
+    std::size_t size() const noexcept
     { return xaxis_.size() * yaxis_.size(); }
 
-    std::size_t
-    x_axis_pts() const noexcept
+    std::size_t x_axis_pts() const noexcept
     { return xaxis_.size(); }
 
-    std::size_t
-    y_axis_pts() const noexcept
+    std::size_t y_axis_pts() const noexcept
     { return yaxis_.size(); }
 
-    T
-    x_axis_from() const noexcept
+    T x_axis_from() const noexcept
     { return xaxis_.from(); }
     
-    T
-    x_axis_to() const noexcept
+    T x_axis_to() const noexcept
     { return xaxis_.to(); }
     
-    T
-    x_axis_step() const noexcept
+    T x_axis_step() const noexcept
     { return xaxis_.step(); }
     
-    T
-    y_axis_from() const noexcept
+    T y_axis_from() const noexcept
     { return yaxis_.from(); }
     
-    T
-    y_axis_to() const noexcept
+    T y_axis_to() const noexcept
     { return yaxis_.to(); }
     
-    T
-    y_axis_step() const noexcept
+    T y_axis_step() const noexcept
     { return yaxis_.step(); }
 
-    auto
-    nearest_neighbor(T x, T y) noexcept 
+    auto nearest_neighbor(T x, T y) noexcept 
 #if __cplusplus == 201103L
     -> std::tuple<std::size_t, T, std::size_t, T>
 #endif
@@ -408,8 +374,7 @@ public:
     ///    |     |
     ///    v     v
     ///   x_0   x_1
-    auto
-    neighbor_nodes(T x, T y) const noexcept( !RangeCheck )
+    auto neighbor_nodes(T x, T y) const noexcept( !RangeCheck )
 #if __cplusplus == 201103L
     -> std::tuple<std::size_t, T, std::size_t, T, 
                   std::size_t, T, std::size_t, T>
@@ -421,7 +386,7 @@ public:
     };
 
     // This function will convert a tuple of (x, y) indexes, to an index.
-    // For example, if we have an instance of GridSkeleton assosicated with
+    // For example, if we have an instance of grid_skeleton assosicated with
     // a vector<...>, where: 
     // vector[0] -> (0, 0)
     // vector[1] -> (1, 0)
@@ -429,16 +394,14 @@ public:
     // and we want to find the index of the vector corresponding to the tuple
     // (x, y), then this function will compute it.
     //
-    std::size_t
-    node_to_index(const std::tuple<std::size_t,std::size_t>& t)
+    std::size_t node_to_index(const std::tuple<std::size_t,std::size_t>& t)
     const
     {
         auto x = std::get<0>( t );
         auto y = std::get<1>( t );
         return y * xaxis_.size() + x;
     }
-    std::size_t
-    node_to_index(const std::size_t x, const std::size_t y)
+    std::size_t node_to_index(const std::size_t x, const std::size_t y)
     const noexcept
     { return y * xaxis_.size() + x; }
 
@@ -461,8 +424,7 @@ public:
      * Incase the vector is storead in the A. form, use node_to_index(), else
      * (i.e. for case B.) use node_to_index_inv().
      */
-    std::size_t
-    node_to_index_inv(const std::size_t x, const std::size_t y)
+    std::size_t node_to_index_inv(const std::size_t x, const std::size_t y)
     const noexcept
     { return (yaxis_.size() - y -1) * xaxis_.size() + x; }
 
