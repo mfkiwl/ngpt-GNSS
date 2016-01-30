@@ -1,12 +1,42 @@
 #include <iostream>
 #include <vector>
-#include "grid.hpp"
+#include "grid_v2.hpp"
 
 using std::cout;
+template<class T> void ignore( const T& ) { }
 
 int main()
 {
+    ngpt::grid_skeleton<float, true, ngpt::Grid_Dimension::TwoDim>
+        d2grid (0.0, 90.0, 1, 0.0, 360.0, 5.0);
+    auto n1 = d2grid.nearest_neighbor( 32.78, 302.99 );
+    ignore(n1);
+    std::cout<<"\n------------------------1";
+    
+    auto idx = n1.node_index();
+    std::cout<<"\n------------------------2";
+    std::cout<<"\nIndexes: "<< std::get<0>(idx)<<", "<<std::get<1>(idx);
+    std::cout<<"\n------------------------3";
+    auto v1 = n1.value();
+    std::cout<<"\n------------------------4";
+    std::cout<<"\nValues:  "<< std::get<0>(v1) <<", "<<std::get<1>(v1);
+    std::cout<<"\n//---------------------------------------------------//";
 
+    auto nn1 = d2grid.neighbor_nodes( 32.78, 302.99 );
+    auto upleft = std::get<3>(nn1);
+    std::cout<<"    ("<<std::get<0>(upleft.node_index()) << "," << std::get<1>(upleft.node_index())<<")";
+    
+    upleft = std::get<2>(nn1);
+    std::cout<<"\n"<<std::get<0>(upleft.node_index()) << "," << std::get<1>(upleft.node_index())<<")";
+    
+    upleft = std::get<0>(nn1);
+    std::cout<<"\n"<<std::get<0>(upleft.node_index()) << "," << std::get<1>(upleft.node_index())<<")";
+    
+    upleft = std::get<1>(nn1);
+    std::cout<<"    ("<<std::get<0>(upleft.node_index()) << "," << std::get<1>(upleft.node_index())<<")";
+    std::cout<<"\n";
+
+/*
   cout << "\n==================================================================";
   cout << "\nTESTING THE CLASS: ngpt::tick_axis_impl<>";
   cout << "\n==================================================================";
@@ -171,6 +201,6 @@ std::cout <<"\n  |                  |";
 std::cout <<"\n  |                  |";
 std::cout <<"\n("<<x0<<", "<<y0<<")="<<f00<<" ----   ("<<x1<<", "<<y0<<")="<<f10;
 std::cout<<"\n";
-  
+ */ 
   return 0;
 }

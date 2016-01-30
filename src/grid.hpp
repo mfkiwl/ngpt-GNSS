@@ -7,20 +7,14 @@
 #include <cassert>
 
 /**
- * \file
+ * \file      grid.hpp
  *
- * \version
+ * \version   1.0.0
  *
  * \author    xanthos@mail.ntua.gr <br>
  *            danast@mail.ntua.gr
  *
  * \date      Mon 28 Dec 2015 10:33:53 AM EET 
- *
- * \brief
- *
- * \details
- *
- * \note
  *
  * \todo      Provide a factor_to_int_type (template?) parameter. E.g. when
  *            constucting a grid from 0.0 to 90.0 with step = 0.5 this could
@@ -108,7 +102,7 @@ private:
                                          tick
      \endverbatim
      *
-     */ 
+     */
 #if __cplusplus > 201103L
     constexpr
 #endif
@@ -121,11 +115,11 @@ private:
     {
         if ( this->out_of_range(x) ) {
             throw std::out_of_range (
-            "ERROR. tick_axis_impl<>::neighbor_nodes_impl -> out_of_range !!");
+            "tick_axis_impl<>::neighbor_nodes_impl -> out_of_range !!");
         }
 
         // find tick on the left.
-        std::size_t l_idx { static_cast<std::size_t>((x - start_) / step_) };
+        std::size_t l_idx (static_cast<std::size_t>((x-start_)/step_));
 
         // find tick on the right.
         std::size_t r_idx { l_idx + 1 };

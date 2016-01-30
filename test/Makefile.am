@@ -19,6 +19,7 @@ MCXXFLAGS = \
 	-Wshadow \
 	-Winline \
 	-Wdisabled-optimization \
+	-Wunused-but-set-variable \
 	-DDEBUG \
 	-DCURSE_IN_GREEK
 

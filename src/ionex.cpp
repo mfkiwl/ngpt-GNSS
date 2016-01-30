@@ -4,7 +4,8 @@
 #include <stdexcept>
 #include <cstring>
 #include "ionex.hpp"
-#include "grid.hpp"
+//#include "grid.hpp"
+#include "grid_v2.hpp"
 
 #ifdef DEBUG
     #include <iostream>
@@ -12,11 +13,6 @@
 
 using ngpt::ionex;
 using ngpt::ionex_grd_type;
-
-typedef std::tuple<std::size_t, ionex_grd_type,
-                   std::size_t, ionex_grd_type,
-                   std::size_t, ionex_grd_type,
-                   std::size_t, ionex_grd_type>  tec_cell;
 
 /// No header line can have more than 80 chars. However, there are cases when
 /// they  exceed this limit, just a bit ...
@@ -99,8 +95,7 @@ _read_ionex_datetime_(char* c, ionex::datetime_ms* d)
 
     try {
         ionex::datetime_ms newd (fields[0], fields[1], fields[2],
-                fields[3], fields[4], static_cast<double>(fields[5]));
-
+                         fields[3], fields[4], static_cast<double>(fields[5]));
         *d = newd;
         return 0;
     } catch (std::out_of_range& e) {
@@ -607,88 +602,6 @@ ionex::read_latitude_map(std::size_t num_of_tec_lines,
     return 0;
 }
 
-/** Perform bilinear interpolation given a grid of tec values (tec_vals), to 
- *  find tec value at a point at point (longtitude, latitude). The function
- *  needs to know the surrounding cell of the point and the number of longtitude
- *  points (i.e. the number of nodes in the longtitude axis).
- *
- *  \param[in] longtitude The longtitude of the point to interpolate at (in
- *                        degrees).
- *  \param[in] latitude   The latitude of the point to interpolate at (in
- *                        degrees).
- *  \param[in] tec_vals   The grid of tec values.
- *  \param[in] cell       The surrounding cell (as provided by the grid_skeleton
- *                        neighbor_nodes function).
- *  \param[in] lon_grid_size Number of nodes in the longtitude axis (the axis
- *                        of the corresponding grid_skeleton instance).
- *  \return               The tec value at the given point (to get the TEC
- *                        value you need to scale this value by the exponent).
- *
- */
-ionex_grd_type
-bilinear_interpolate(float longtitude, float latitude,
-                     std::vector<int>& tec_vals,
-                     tec_cell&         cell,
-                     std::size_t       lon_grid_size)
-{
-    // resolve the tuple
-    std::size_t x0_idx = std::get<0>( cell );
-    std::size_t y0_idx = std::get<4>( cell );
-#ifdef DEBUG
-    std::size_t x1_idx = std::get<2>( cell );
-    std::size_t y1_idx = std::get<6>( cell );
-    assert( x1_idx == x0_idx + 1 );
-    assert( y1_idx == y0_idx + 1 );
-#else
-    std::size_t x1_idx = x0_idx + 1;
-    std::size_t y1_idx = y0_idx + 1;
-#endif
-
-    // do not forget the scale factor !!
-    ionex_grd_type x0 = std::get<1>(cell)/100.0f;
-    ionex_grd_type x1 = std::get<3>(cell)/100.0f;
-    ionex_grd_type y0 = std::get<5>(cell)/100.0f;
-    ionex_grd_type y1 = std::get<7>(cell)/100.0f;
-
-    // get the tec values at the indexes we want
-    std::size_t low_left = y0_idx * lon_grid_size + x0_idx;
-#ifdef DEBUG
-    assert( low_left+1+lon_grid_size < tec_vals.size() );
-#endif
-    ionex_grd_type f00 = static_cast<ionex_grd_type>(tec_vals[low_left]);
-    ionex_grd_type f01 = static_cast<ionex_grd_type>(tec_vals[low_left+lon_grid_size]);
-    ionex_grd_type f10 = static_cast<ionex_grd_type>(tec_vals[low_left+1]);
-    ionex_grd_type f11 = static_cast<ionex_grd_type>(tec_vals[low_left+1+lon_grid_size]);
-
-#ifdef DEBUG
-//std::cout <<"\nInterpolating at: ("<<longtitude<<", "<<latitude<<")";
-//std::cout <<"\n("<<x0_idx<<", "<<y1_idx<<") ----   ("<<x1_idx<<", "<<y1_idx<<")";
-//std::cout <<"\n  |                  |";
-//std::cout <<"\n  |                  |";
-//std::cout <<"\n  |                  |";
-//std::cout <<"\n("<<x0_idx<<", "<<y0_idx<<") ----   ("<<x1_idx<<", "<<y0_idx<<")";
-//std::cout<<"\n";
-//std::cout <<"\nInterpolating at: ("<<longtitude<<", "<<latitude<<")";
-//std::cout <<"\n("<<x0<<", "<<y1<<")="<<f01<<" ----   ("<<x1<<", "<<y1<<")="<<f11;
-//std::cout <<"\n  |                  |";
-//std::cout <<"\n  |                  |";
-//std::cout <<"\n  |                  |";
-//std::cout <<"\n("<<x0<<", "<<y0<<")="<<f00<<" ----   ("<<x1<<", "<<y0<<")="<<f10;
-//std::cout<<"\n";
-#endif
-
-    // bilinear interpolation, see
-    // https://en.wikipedia.org/wiki/Bilinear_interpolation
-    ionex_grd_type x     { longtitude };
-    ionex_grd_type y     { latitude };
-    ionex_grd_type denom { (x1-x0)*(y1-y0) };
-
-    return  ((x1-x)*(y1-y)/denom)*f00
-           +((x-x0)*(y1-y)/denom)*f10
-           +((x1-x)*(y-y0)/denom)*f01
-           +((x-x0)*(y-y0)/denom)*f11;
-}
-
 /** Extract TEC values for a given list of points, for all epochs included in 
  *  the IONEX instance. For example, if points holds (p1, p2, ..., pn2), then
  *  (on exit), the tec_vals will be formed as:
@@ -722,29 +635,29 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
                 std::vector<std::vector<int>>& tec_vals
                 )
 {
-
     // for every point we want, we must find an index for it (within the grid)
     // so that we can extract it's value. Let's make a 2D grid. For ease, let's
     // set the grid points to long (instead of ints) so that e.g. lat=37.5
     // lon=23.7 will be 3750 and 2370; i.e. use of factor of 100.
     int factor (100);
 #ifdef DEBUG
-    grid_skeleton<long,  true, Grid_Dimension::TwoDim> 
-        grid(_lon1*factor, _lon2*factor, _dlon*factor,
-             _lat1*factor, _lat2*factor, _dlat*factor);
+    typedef ngpt::grid_skeleton<long, true, Grid_Dimension::TwoDim> gstype;
+    gstype grid(_lon1*factor, _lon2*factor, _dlon*factor,
+                _lat1*factor, _lat2*factor, _dlat*factor);
 #else
-    grid_skeleton<long, false, Grid_Dimension::TwoDim> 
-        grid(_lon1*factor, _lon2*factor, _dlon*factor,
-             _lat1*factor, _lat2*factor, _dlat*factor);
+    typedef grid_skeleton<long, false, Grid_Dimension::TwoDim> gstype;
+    gstype grid(_lon1*factor, _lon2*factor, _dlon*factor,
+                _lat1*factor, _lat2*factor, _dlat*factor);
 #endif
 
-    // for each point in the vector, we are going to need the indexes of the
-    // surounding nodes (so that we extract these values and interpolate).
-    std::vector<tec_cell> indexes;
-    indexes.reserve( points.size() );
+    // for each point in the vector, we are going to need the surounding nodes 
+    // (so that we extract these values and interpolate).
+    typedef gstype::node gnode;
+    typedef std::tuple<gnode, gnode, gnode, gnode> cell;
+    std::vector<cell> cells;
+    cells.reserve( points.size() );
     for ( auto const& i : points ) {
-        indexes.emplace_back(grid.neighbor_nodes( 
-                                 i.first*factor, i.second*factor ));
+        cells.push_back(grid.neighbor_nodes(i.first*factor, i.second*factor));
     }
 
     // get me a vector large enough to hold a whole map
@@ -803,9 +716,8 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
         // index; points to current point
         std::size_t j = 0;
         for (const auto& p : points) {
-            tec_vals[j].emplace_back( bilinear_interpolate(
-                                        p.first, p.second, tec_map, indexes[j], 
-                                        grid.x_axis_pts()) );
+            tec_vals[j].push_back(grid.bilinear_interpolation<int>(p.first,
+                                  p.second, cells[j], tec_map.data()) );
             epoch_vector.emplace_back( cur_dt );
             ++j;
         }

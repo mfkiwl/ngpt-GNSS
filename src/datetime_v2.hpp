@@ -59,7 +59,7 @@ public:
     typedef int underlying_type;
 
     /// Constructor.
-    explicit constexpr year (underlying_type i) noexcept : y(i) {};
+    explicit constexpr year (underlying_type i=0) noexcept : y(i) {};
 
     /// Get the underlying int.
     constexpr underlying_type as_underlying_type() const noexcept
@@ -109,7 +109,7 @@ public:
     typedef int underlying_type;
 
     /// Constructor.
-    explicit constexpr month (underlying_type i) noexcept : m(i) {};
+    explicit constexpr month (underlying_type i=1) noexcept : m(i) {};
 
     /// Get the underlying int.
     constexpr underlying_type as_underlying_type() const noexcept
@@ -154,7 +154,7 @@ public:
     typedef int underlying_type;
     
     /// Constructor.
-    explicit constexpr day(underlying_type i) noexcept : d(i) {};
+    explicit constexpr day(underlying_type i=0) noexcept : d(i) {};
     
     /// Get the underlying int.
     constexpr underlying_type as_underlying_type() const noexcept
@@ -169,7 +169,7 @@ public:
     typedef int underlying_type;
     
     /// Constructor.
-    explicit constexpr day_of_month(underlying_type i) noexcept : d(i) {};
+    explicit constexpr day_of_month(underlying_type i=0) noexcept : d(i) {};
     
     /// Get the underlying int.
     constexpr underlying_type as_underlying_type() const noexcept
@@ -191,7 +191,7 @@ public:
     typedef long underlying_type;
     
     /// Constructor.
-    explicit constexpr modified_julian_day(underlying_type i) noexcept
+    explicit constexpr modified_julian_day(underlying_type i=0) noexcept
         : m(i) 
     {};
     
@@ -230,7 +230,7 @@ public:
     /// MJDs are represented as long ints.
     typedef long underlying_type;
     
-    explicit constexpr julian_day(long i) noexcept : j(i) {};
+    explicit constexpr julian_day(long i=0) noexcept : j(i) {};
     
     constexpr long as_long() const noexcept { return j; }
     /*
