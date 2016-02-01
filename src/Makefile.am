@@ -21,7 +21,7 @@ dist_include_HEADERS = \
 	datetime.hpp \
 	satsys.hpp \
 	obstype.hpp \
-	grid_v2.hpp \
+	grid.hpp \
 	antpcv.hpp \
 	antex.hpp \
 	ionex.hpp \

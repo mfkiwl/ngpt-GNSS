@@ -3,7 +3,7 @@
 
 #include <fstream>
 #include <vector>
-#include "datetime.hpp"
+#include "datetime_v2.hpp"
 
 /**
  * \file
@@ -78,7 +78,7 @@ class ionex
 
 public:
     /// This is the datetime resolution for ionex dates
-    typedef ngpt::datetime<datetime_clock::milli_seconds> datetime_ms;
+    typedef ngpt::datev2<ngpt::milliseconds> datetime_ms;
 
     /// Valid IONEX versions.
     enum class ionex_version : char { v10 };
@@ -148,7 +148,7 @@ private:
     std::ifstream    _istream;       ///< The infput (file) stream.
     ionex_version    _version;       ///< Ionex  version (1.0).
     pos_type         _end_of_head;   ///< Mark the 'END OF HEADER' field.
-    ngpt::time_scale _time_scale;    ///< The timescale
+    //ngpt::time_scale _time_scale;    ///< The timescale
     datetime_ms      _first_epoch;   ///< Epoch of first TEC map (UT)
     datetime_ms      _last_epoch;    ///< Epoch of first TEC map (UT)
     int              _interval;      ///< Time interval between maps in integer

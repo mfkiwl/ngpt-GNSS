@@ -1,10 +1,16 @@
-#ifndef __NGPT_GRID_HPP__
-#define __NGPT_GRID_HPP__
+#ifndef __NGPT_GRID_HPP__V2__
+#define __NGPT_GRID_HPP__V2__
 
 #include <tuple>
 #include <limits>
 #include <cstring>
 #include <cassert>
+#include <vector>
+#ifdef DEBUG
+    #include <iostream>
+#endif
+
+#define GRID_VERSION 2
 
 /**
  * \file      grid.hpp
@@ -72,6 +78,75 @@ template<typename T,          ///< type of axis e.g. float, double, ...
          bool     RangeCheck> ///< enable range-check
 class tick_axis_impl
 {
+public:
+    
+    /// A class to represent a node
+    class node {
+    public:
+        explicit constexpr
+        node(std::size_t i = 0, const tick_axis_impl* t = nullptr)
+        noexcept
+            : index_ (i), axis_ (t) {}
+
+        constexpr node(const node& n) noexcept
+            : index_(n.index_), axis_(n.axis_) {}
+
+        constexpr node(node&& n) noexcept
+            : index_(std::move(n.index_)), axis_ (std::move(n.axis_)) {}
+
+        constexpr node& operator=(const node& n) noexcept
+        {
+            if (this != &n) {
+                index_ = n.index_;
+                axis_  = n.axis_;
+            }
+            return *this;
+        }
+
+        constexpr node& operator=(node&& n) noexcept
+        {
+            index_ = std::move(n.index_);
+            axis_  = std::move(n.axis_);
+            return *this;
+        }
+
+        /// Move forward (preincrement), i.e. to the next node.
+        constexpr node& operator++() noexcept
+        {
+            ++index_;
+            return *this;
+        }
+
+        constexpr node next() const noexcept
+        { return node(this->index_+1, this->axis_); }
+
+        /// Move forward (postincrement), i.e. to the next node.
+        constexpr node operator++(int) noexcept
+        {
+            node nd (*this);
+            this->operator++();
+            return nd;
+        }
+
+        /// Return the index.
+        constexpr std::size_t index() const noexcept { return index_; }
+
+        /// Return the underlying axis
+        constexpr const tick_axis_impl* axis() const noexcept { return axis_; }
+
+        /// Return the value of the node
+        constexpr T value() const noexcept
+        { return axis_->start_ + axis_->step_ * index_; }
+
+#ifdef DEBUG
+        void print_address() const { if ( axis_) {std::cout<<axis_;} else {std::cout<<"null";} }
+#endif
+
+    private:
+        std::size_t           index_;
+        const tick_axis_impl* axis_;
+    };
+
 private:
 
     T           start_; ///< left-most tick point.
@@ -104,13 +179,13 @@ private:
      *
      */
 #if __cplusplus > 201103L
-    constexpr
+    //constexpr
 #endif
     auto
     neighbor_nodes_impl(T x, std::true_type)
     const noexcept( !do_range_check::value )
 #if __cplusplus == 201103L
-    -> std::tuple<std::size_t, T, std::size_t, T>
+    -> std::tuple<node, node>
 #endif
     {
         if ( this->out_of_range(x) ) {
@@ -119,18 +194,16 @@ private:
         }
 
         // find tick on the left.
-        std::size_t l_idx (static_cast<std::size_t>((x-start_)/step_));
+        node left (static_cast<std::size_t>((x-start_)/step_), this);
 
         // find tick on the right.
-        std::size_t r_idx { l_idx + 1 };
-        if (r_idx >= npts_) {
+        node right ( left.next() );
+        if ( right.index() >= npts_ ) {
             throw std::out_of_range (
-            "ERROR. tick_axis_impl<>::neighbor_nodes_impl -> out_of_range !!");
+            "tick_axis_impl<>::neighbor_nodes_impl -> out_of_range !!");
         }
 
-        return std::make_tuple(
-                l_idx, l_idx*step_ + start_, 
-                r_idx, r_idx*step_ + start_);
+        return std::make_tuple( left, right );
     }
 
     /// Does exactly the same as neighbor_nodes_impl(T x, std::true_type) but
@@ -142,18 +215,12 @@ private:
     neighbor_nodes_impl(T x, std::false_type)
     const noexcept( !do_range_check::value )
 #if __cplusplus == 201103L
-    -> std::tuple<std::size_t, T, std::size_t, T>
+    -> std::tuple<node, node>
 #endif
     {
-        // find tick on the left.
-        std::size_t l_idx { static_cast<std::size_t>((x - start_) / step_) };
-
-        // find tick on the right.
-        std::size_t r_idx { l_idx + 1 };
-
-        return std::make_tuple(
-                l_idx, l_idx*step_ + start_,
-                r_idx, r_idx*step_ + start_);
+        node left (static_cast<std::size_t>((x - start_) / step_));
+        node right = left + 1;
+        return std::make_tuple(left, right);
     }
 
 public:
@@ -247,7 +314,7 @@ public:
 #endif
     auto neighbor_nodes(T x) const noexcept( !RangeCheck )
 #if __cplusplus == 201103L
-    -> std::tuple<std::size_t, T, std::size_t, T>
+    -> std::tuple<node, node>
 #endif
     { return neighbor_nodes_impl(x, do_range_check{}); }
 
@@ -263,17 +330,16 @@ public:
 #endif
     auto nearest_neighbor(T x) const noexcept
 #if __cplusplus == 201103L
-    -> std::tuple<std::size_t, T>
+    -> node
 #endif
     {
         if ( this->far_left(x) ) {
-            return std::make_tuple((std::size_t)0, start_);
+            return node(0, this); 
         } else if ( this->far_right(x) ) {
-            return std::make_tuple(npts_-1, stop_);
+            return node(npts_-1, this);
         }
-        std::size_t idx { static_cast<std::size_t>
-                          ((x+(step_/(T)2)-start_)/step_) };
-        return std::make_tuple(idx, idx*step_+start_);
+        return node(static_cast<std::size_t>((x+(step_/(T)2)-start_)/step_),
+                    this);
     }
 
 };
@@ -300,15 +366,21 @@ public:
         : tick_axis_impl<T, RangeCheck>(x1, x2, dx) {}
 
     virtual ~grid_skeleton() {};
-
-    class node {
-    public:
-        explicit constexpr node(std::size_t i = 0, T val = T()) noexcept
-            : index_(i), value_(val) {};
-    private:
-        std::size_t index_;
-        T           value_;
-    };
+ 
+    template<typename S>
+    constexpr S linear_interpolation(T x, const std::vector<S>& vec) const
+    { return this->linear_interpolation(x, vec.data()); }
+    
+    template<typename S>
+    constexpr S linear_interpolation(T x, const S* data) const
+    {
+        auto nodes ( this->neighbor_nodes(x) );
+        S x0 ( static_cast<S>(std::get<0>(nodes).value()) );
+        S x1 ( static_cast<S>(std::get<1>(nodes).value()) );
+        S y0 ( data[std::get<0>(nodes).index()] );
+        S y1 ( data[std::get<1>(nodes).index()] );
+        return y0 + (y1-y0)*(x-x0)/(x1-x0);
+    }
 };
 
 template<typename T, bool RangeCheck>
@@ -321,6 +393,89 @@ private:
     tick_axis_impl<T, RangeCheck> yaxis_;
 
 public:
+
+    class node {
+    private:
+        typename tick_axis_impl<T, RangeCheck>::node xnode_;
+        typename tick_axis_impl<T, RangeCheck>::node ynode_;
+    public:
+        explicit constexpr node(std::size_t xindex, std::size_t yindex,
+                                const grid_skeleton* grid = nullptr)
+        noexcept
+            : xnode_(xindex, grid ? &(grid->xaxis_) : nullptr),
+              ynode_(yindex, grid ? &(grid->yaxis_) : nullptr)
+        { if (xnode_.axis()==nullptr) std::cout<<"\nMan! WTF??"; }
+
+        explicit constexpr node(typename tick_axis_impl<T, RangeCheck>::node& xnode,
+                                typename tick_axis_impl<T, RangeCheck>::node& ynode)
+        noexcept
+            : xnode_(xnode), ynode_(ynode)
+        { if (xnode_.axis()==nullptr) std::cout<<"\nMan! WTF??"; }
+        
+        constexpr node(typename tick_axis_impl<T, RangeCheck>::node&& xnode,
+                       typename tick_axis_impl<T, RangeCheck>::node&& ynode)
+        noexcept
+            : xnode_(std::move(xnode)), ynode_(std::move(ynode))
+        { if (xnode_.axis()==nullptr) std::cout<<"\nMan! WTF??"; }
+
+        constexpr node(const node& n) noexcept
+            : xnode_(n.xnode_), ynode_(n.ynode_)
+        { if (xnode_.axis()==nullptr) std::cout<<"\nMan! WTF??"; }
+
+        constexpr node(node&& n) noexcept
+            : xnode_(std::move(n.xnode_)), ynode_(std::move(n.ynode_))
+        { if (xnode_.axis()==nullptr) std::cout<<"\nMan! WTF??"; }
+
+        constexpr node& operator=(const node& n) noexcept
+        {
+            if (this != &n) {
+                xnode_ = n.xnode_;
+                ynode_ = n.ynode_;
+            }
+        if (xnode_.axis()==nullptr) std::cout<<"\nMan! WTF??";
+            return *this;
+        }
+
+        constexpr node& operator=(node&& n) noexcept
+        {
+            xnode_ = std::move(n.xnode_);
+            ynode_ = std::move(n.ynode_);
+        if (xnode_.axis()==nullptr) std::cout<<"\nMan! WTF??";
+            return *this;
+        }
+
+        constexpr std::size_t data_index() const noexcept
+        { return ynode_.index() * xnode_.axis()->size() + xnode_.index(); }
+        
+        constexpr std::size_t data_index_inv() const noexcept 
+        { return (ynode_.axis()->size()-ynode_.index()-1)*
+                 xnode_.axis()->size()+xnode_.index(); }
+
+        /// Return the indexes
+        constexpr std::tuple<std::size_t, std::size_t> node_index() const noexcept
+        { return std::make_tuple( xnode_.index(), ynode_.index() ); }
+
+        /// Return the x-index
+        constexpr std::size_t index_x() const noexcept
+        { return xnode_.node_index(); }
+        
+        /// Return the y-index
+        constexpr std::size_t index_y() const noexcept
+        { return ynode_.node_index(); }
+        
+        /// Return the values at the index(es).
+        constexpr std::tuple<T, T> value() const noexcept
+        { return std::make_tuple( xnode_.value(), ynode_.value() ); }
+        
+        /// Return the x-index value
+        constexpr std::size_t x_value() const noexcept
+        { return xnode_.value(); }
+        
+        /// Return the y-index value
+        constexpr std::size_t y_value() const noexcept
+        { return ynode_.value(); }
+    };
+
     /// Default constructor.
 #if __cplusplus > 201103L
     constexpr
@@ -331,55 +486,124 @@ public:
           yaxis_(y1, y2, dy)
     {}
   
+    /// Destructor
     virtual ~grid_skeleton() {};
 
+    /// Number of nodes.
+    constexpr
     std::size_t size() const noexcept { return xaxis_.size() * yaxis_.size(); }
-
+    
+    /// Number of nodes on the x-axis.
+    constexpr
     std::size_t x_axis_pts() const noexcept { return xaxis_.size(); }
-
+    
+    /// Number of nodes on the y-axis.
+    constexpr
     std::size_t y_axis_pts() const noexcept { return yaxis_.size(); }
 
+    /// Starting node on x-axis.
+    constexpr
     T x_axis_from() const noexcept { return xaxis_.from(); }
     
+    /// Ending node on x-axis.
+    constexpr
     T x_axis_to() const noexcept { return xaxis_.to(); }
     
+    /// Step of x-axis.
+    constexpr
     T x_axis_step() const noexcept { return xaxis_.step(); }
     
+    /// Starting node on y-axis.
+    constexpr
     T y_axis_from() const noexcept { return yaxis_.from(); }
     
+    /// Ending node on y-axis.
+    constexpr
     T y_axis_to() const noexcept { return yaxis_.to(); }
     
+    /// Step on y-axis.
+    constexpr
     T y_axis_step() const noexcept { return yaxis_.step(); }
 
-    auto nearest_neighbor(T x, T y) noexcept 
-#if __cplusplus == 201103L
-    -> std::tuple<std::size_t, T, std::size_t, T>
-#endif
+    constexpr auto nearest_neighbor(T x, T y) const noexcept -> node
     {
         auto t1 ( xaxis_.nearest_neighbor(x) );
         auto t2 ( yaxis_.nearest_neighbor(y) );
-        return std::tuple_cat(t1, t2);
+        return node( std::move(t1), std::move(t2) );
     }
 
-    ///   [1]    [2]
+    ///   [3]    [2]
     /// ...+-----+...  -> y_1
     ///    |     |
     ///    |   p |
     /// ...+-----+...  -> y_0
-    ///   [0]    [3]
+    ///   [0]    [1]
     ///    |     |
     ///    v     v
     ///   x_0   x_1
-    auto neighbor_nodes(T x, T y) const noexcept( !RangeCheck )
-#if __cplusplus == 201103L
-    -> std::tuple<std::size_t, T, std::size_t, T, 
-                  std::size_t, T, std::size_t, T>
-#endif
+    constexpr auto neighbor_nodes(T x, T y) const noexcept( !RangeCheck )
+    -> std::tuple<node, node, node, node>
     {
         auto t1 ( xaxis_.neighbor_nodes(x) );
         auto t2 ( yaxis_.neighbor_nodes(y) );
-        return std::tuple_cat(t1, t2);
+        return std::make_tuple( node(std::get<0>(t1), std::get<0>(t2)),
+                                node(std::get<1>(t1), std::get<0>(t2)),
+                                node(std::get<1>(t1), std::get<1>(t2)),
+                                node(std::get<0>(t1), std::get<1>(t2))
+                              );
     };
+    
+    ///
+    template<typename S>
+    constexpr S bilinear_interpolation(S x, S y,
+                                    const std::vector<S>& vec)
+    { return this->bilinear_interpolation(x, y, vec.data()); }
+
+    template<typename S>
+    constexpr S bilinear_interpolation(S x, S y, 
+                                    std::tuple<node, node, node, node>& nodes,
+                                    const S* vals)
+    const noexcept( !RangeCheck )
+    {
+        S x0 (static_cast<S>(std::get<0>(nodes).x_value()));
+        S x1 (static_cast<S>(std::get<1>(nodes).x_value()));
+        S y0 (static_cast<S>(std::get<0>(nodes).y_value()));
+        S y1 (static_cast<S>(std::get<2>(nodes).y_value()));
+        S f00 ( vals[std::get<0>(nodes).data_index()] );
+        S f10 ( vals[std::get<1>(nodes).data_index()] );
+        S f11 ( vals[std::get<2>(nodes).data_index()] );
+        S f01 ( vals[std::get<3>(nodes).data_index()] );
+        S denom ( (x1-x0)*(y1-y0) );
+        return ((x1-x)*(y1-y)/denom)*f00
+              +((x-x0)*(y1-y)/denom)*f10
+              +((x1-x)*(y-y0)/denom)*f01
+              +((x-x0)*(y-y0)/denom)*f11;                                                                   
+    }
+
+    template<typename S>
+    constexpr S bilinear_interpolation(S x, S y, const S* vals)
+    const noexcept( !RangeCheck )
+    {
+        auto t1 ( xaxis_.neighbor_nodes(x) );
+        auto t2 ( yaxis_.neighbor_nodes(y) );
+        S x0 (static_cast<S>(std::get<0>(t1).value()));
+        S x1 (static_cast<S>(std::get<1>(t1).value()));
+        S y0 (static_cast<S>(std::get<0>(t2).value()));
+        S y1 (static_cast<S>(std::get<1>(t2).value()));
+        node n00 (std::get<0>(t1), std::get<0>(t2));
+        node n10 (std::get<1>(t1), std::get<0>(t2));
+        node n11 (std::get<1>(t1), std::get<1>(t2));
+        node n01 (std::get<0>(t1), std::get<1>(t2));
+        S f00 ( vals[n00.data_index()] );
+        S f10 ( vals[n10.data_index()] );
+        S f11 ( vals[n11.data_index()] );
+        S f01 ( vals[n01.data_index()] );
+        S denom ( (x1-x0)*(y1-y0) );
+        return ((x1-x)*(y1-y)/denom)*f00
+              +((x-x0)*(y1-y)/denom)*f10
+              +((x1-x)*(y-y0)/denom)*f01
+              +((x-x0)*(y-y0)/denom)*f11;                                                                   
+    }
 
     // This function will convert a tuple of (x, y) indexes, to an index.
     // For example, if we have an instance of grid_skeleton assosicated with

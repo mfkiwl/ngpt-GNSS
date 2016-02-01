@@ -209,6 +209,14 @@ public:
     /// Define addition (between an MJDs and a day).
     constexpr void operator+=(const day& d) noexcept
     { m += static_cast<underlying_type>(d.as_underlying_type()); }
+
+    /// Overload - operator
+    constexpr modified_julian_day operator-(const modified_julian_day& mjd) const noexcept
+    { return modified_julian_day(m-mjd.m); }
+
+    /// Trasnform to sec_type
+    template<typename S>
+    S to_sec_type() const noexcept { return S(m*S::max_in_day); }
     
     /// Cast to year, day_of_year
     constexpr year to_ydoy(day_of_year&) const noexcept;
@@ -316,9 +324,13 @@ public:
     /// Addition operator between seconds.
     constexpr void operator+=(const seconds& sc) noexcept { s+=sc.s; }
     
-    /// Division operator between seconds.
-    //constexpr seconds operator/(const seconds& sc) noexcept
-    //{ return seconds(s/sc.s); }
+    /// Overload '-' operator
+    constexpr seconds operator-(const seconds& n) const noexcept
+    { return seconds(s - n.s); }
+
+    /// Overload operator '/'
+    constexpr seconds operator/(const seconds& n) const noexcept
+    { return seconds(s/n.s); }
     
     /// Do the secods sum up to more than one day?
     constexpr bool more_than_day() const noexcept { return s>max_in_day; }
@@ -365,6 +377,9 @@ public:
                                minutes((s % 3600) / 60),
                                seconds((s % 3600) % 60) );
     }
+
+    /// Cast to double.
+    
 };
 
 /// A wrapper class to represent a datetime in GPSTime, i.e. gps week and
@@ -408,9 +423,13 @@ public:
     /// Overload operator "+=" between milliseconds.
     constexpr void operator+=(const milliseconds& ms) noexcept { s+=ms.s; }
     
+    /// Overload '-' operator
+    constexpr milliseconds operator-(const milliseconds& n) const noexcept
+    { return milliseconds(s - n.s); }
+    
     /// Overload operator "/" between milliseconds.
-    //constexpr milliseconds operator/(const milliseconds& sc) noexcept
-    //{ return milliseconds(s/sc.s); }
+    constexpr milliseconds operator/(const milliseconds& sc) noexcept
+    { return milliseconds(s/sc.s); }
     
     /// Do the milliseconds sum up to more than one day ?
     constexpr bool more_than_day() const noexcept { return s>max_in_day; }
@@ -487,10 +506,14 @@ public:
     
     /// Overload operatpr "+=" between nanoseconds.
     constexpr void operator+=(const nanoseconds& ns) noexcept { s+=ns.s; }
+
+    /// Overload '-' operator
+    constexpr nanoseconds operator-(const nanoseconds& n) const noexcept
+    { return nanoseconds(s - n.s); }
     
     /// Overload operatpr "/" between nanoseconds.
-    //constexpr nanoseconds operator/(const nanoseconds& sc) noexcept
-    //{ return nanoseconds(s/sc.s); }
+    constexpr nanoseconds operator/(const nanoseconds& sc) noexcept
+    { return nanoseconds(s/sc.s); }
     
     /// Do the nanoseconds sum up to more than one day?
     constexpr bool more_than_day() const noexcept { return s>max_in_day; }
@@ -573,6 +596,9 @@ public:
         if ( sect_.more_than_day() ) this->normalize();
         return;
     }
+
+    constexpr S delta_sec(const datev2& d) const noexcept
+    { return (sect_ - d.sect_) + to_sec_type(mjd_ - d.mjd); }
 
     /// Overload equality operator.
     constexpr bool operator==(const datev2& d) const noexcept

@@ -1,6 +1,6 @@
 #include <iostream>
 #include <vector>
-#include "grid_v2.hpp"
+#include "grid.hpp"
 
 using std::cout;
 template<class T> void ignore( const T& ) { }

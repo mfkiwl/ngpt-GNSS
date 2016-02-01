@@ -2,8 +2,7 @@
 #define __ANTPCV_HPP__
 
 #include <array>
-//#include "grid.hpp"
-#include "grid_v2.hpp"
+#include "grid.hpp"
 #include "obstype.hpp"
 
 #ifdef DEBUG
