@@ -3,6 +3,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <cstring>
+#include <algorithm>
 #include "ionex.hpp"
 #include "grid.hpp"
 
@@ -94,12 +95,14 @@ _read_ionex_datetime_(char* c, ionex::datetime_ms* d)
     }
 
     try {
-        ionex::datetime_ms newd (ngpt::year(fields[0]),
-                                 ngpt::month(fields[1]),
-                                 ngpt::day_of_month(fields[2]),
-                                 ngpt::hours(fields[3]),
-                                 ngpt::minutes(fields[4]),
-                                 ngpt::milliseconds(1000L*fields[5]));
+        ionex::datetime_ms newd (ngpt::year{fields[0]},
+                                 ngpt::month{fields[1]},
+                                 ngpt::day_of_month{fields[2]},
+                                 ngpt::milliseconds{
+                                  (  fields[3]*60L*60L
+                                   + fields[4]*60L
+                                   + fields[5]) *1000L}
+                                 );
         *d = newd;
         return 0;
     } catch (std::out_of_range& e) {
@@ -688,6 +691,11 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
 #endif
         return 1;
     }
+#ifdef DEBUG
+    std::cout<<"\nGoing to read TEC maps ...:";
+    for (const auto& i : tec_vals) { std::cout<<" "<<i.size(); }
+    std::cout<<" values";
+#endif
 
     datetime_ms cur_dt = _first_epoch;
     
@@ -722,16 +730,21 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
 
         // ok. we got the map and we need to extract the cells for all points
         // index; points to current point
-        std::size_t j = 0;
+        std::size_t j = 0; // point index
         for (const auto& p : points) {
-            tec_vals[j].push_back(grid.bilinear_interpolation<int>(p.first,
-                                  p.second, cells[j], tec_map.data()) );
-            epoch_vector.emplace_back( cur_dt );
+            tec_vals[j][map_num]  = grid.bilinear_interpolation<int>(p.first,
+                                  p.second, cells[j], tec_map.data());
+            epoch_vector[map_num] = cur_dt;
             ++j;
         }
         _istream.getline(line, MAX_HEADER_CHARS);
         ++map_num;
     }
+#ifdef DEBUG
+    std::cout<<"\nOk- exiting function";
+    for (const auto& i : tec_vals) { std::cout<<" "<<i.size(); }
+    std::cout<<" values";
+#endif
 
     // if everything went as planned, we should have read all maps in file.
     return !(map_num == _maps_in_file);
@@ -763,12 +776,18 @@ ionex::parse_epoch_arguments(std::vector<datetime_ms>& epochs,
                              int& interval)
 {
     if ( epochs.empty() ) {
-        if ( !from ) { *from = this->_first_epoch; }
-        if ( !to   ) { *to   = this->_last_epoch;  }
+#ifdef DEBUG
+        std::cout<<"\n[DEBUG] Epochs vector is empty!";
+#endif
+        if ( !from ) { from = &this->_first_epoch; }
+        if ( !to   ) { to   = &this->_last_epoch;  }
         if ( interval > 0 ) {
             for (datetime_ms tmp = *from; tmp <= *to;
                                     tmp.add_seconds( interval*1000L ) ) {
                 epochs.push_back( tmp );
+#ifdef DEBUG
+                std::cout<<"\nadding epoch: "<<tmp;
+#endif
             }
         } else if ( interval == 0 ) {
             return -1;
@@ -776,10 +795,13 @@ ionex::parse_epoch_arguments(std::vector<datetime_ms>& epochs,
             return 1;
         }
     } else {
-        *from = epochs[0];
-        *to   = epochs[0];
+#ifdef DEBUG
+        std::cout<<"\n[DEBUG] Epochs already specified; nothing to do.";
+#endif
+        from = &epochs[0];
+        to   = &epochs[epochs.size()-1];
     }
-    return
+    return 0;
 }
 
 /**
@@ -801,63 +823,18 @@ ionex::interpolate(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& 
                 int interval
                 )
 {
-    /*
-    datetime_ms from ( ifrom ? (*ifrom) : _first_epoch );
-    datetime_ms to   ( ito   ? (*ito)   : _last_epoch  );
-
-    if (interval < 0 ) {
+    int status = this->parse_epoch_arguments(epochs, ifrom, ito, interval);
+    if ( status > 0 ) {
 #ifdef DEBUG
-        std::cerr<<"\n[DEBUG] Fuck off; setting interval to 0";
+        std::cerr<<"\n[DEBUG] Failed to resolve interpolation epochs.";
 #endif
-        interval = 0;
-    }
-
-    if ( from > to ) {
         throw std::runtime_error
-            ("ionex::interpolate() -> Invalid epochs passed!");
+            ("ionex::interpolate() -> failed to resolve epochs.");
     }
-
-    // if (from == to) i'm returning bitch!
-    if ( from == to ) { 
-        return std::vector<std::vector<int>> ( points.size() );
-    }
-
-    if ( from < _first_epoch ) {
-#ifdef DEBUG
-        std::cerr<< "\n[DEBUG] First epoch is beyond the first epoch in file; adjusted.";
-#endif
-        from = _first_epoch;
-    }
-
-    if ( to > _last_epoch ) {
-#ifdef DEBUG
-        std::cerr<< "\n[DEBUG] Ending epoch is beyond the last epoch in file; adjusted.";
-#endif
-        to = _last_epoch;
-    }
-
-    if ( !interval ) {
-        interval = this->_interval;
-    }
-    */
-
-   int status = this->parse_epoch_arguments(epochs, from, to, interval);
-   if ( status > 0 ) {
-#ifdef DEBUG
-       std::cerr<<"\n[DEBUG] Failed to resolve interpolation epochs.";
-#endif
-       throw std::runtime_error
-        ("ionex::interpolate() -> failed to resolve epochs.");
-   }
-
 
     // we must provide an epoch vector
     // this vector, will hold all epochs recorded in the IONEX file.
     std::vector<datetime_ms> epoch_vector_1( this->_maps_in_file );
-    // this one, will hold all epochs that are wanted.
-    //if ( status < 0 ) {
-    //    epochs.reserve( this->_maps_in_file );
-    //}
 
     // we must also provide a vector of vectors, where
     // vec[i][j] is the tec value for station #i at epoch #j
@@ -873,12 +850,29 @@ ionex::interpolate(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& 
         throw std::runtime_error
             ("ionex::interpolate() -> failed to read tecs/epochs.");
     }
+#ifdef DEBUG
+    std::cout<<"\nTEC maps read; vectors are: "<< epoch_vector_1.size()<<" and " << tec_vals_1.size();
+    std::cout<<"\nFor each element in TEC vector, we have:";
+    for (const auto& i : tec_vals_1) { std::cout<<" "<<i.size(); }
+    std::cout<<" values";
+#endif
 
     // Sweet! now perform the interpolation in time IF we are interested in
     // different epochs than collected.
     if ( status < 0 ) {
         epochs = std::move( epoch_vector_1 );
-        return tec_vals_1;
+        std::vector<std::vector<double>> tecs (tec_vals_1.size(),
+                                    std::vector<double>(tec_vals_1[0].size()));
+        for (std::size_t i=0; i<tecs.size(); ++i) {
+            std::transform(tec_vals_1[i].cbegin(),
+                           tec_vals_1[i].cend(),
+                           tecs[i].begin(),
+                           [&](int t){ return static_cast<double>(t) *
+                                static_cast<double>(std::pow(1, this->_exp)); }
+                          );
+
+        }
+        return tecs;
     }
     
     std::vector<std::vector<double>> tec_vals_2 ( points.size(),
@@ -886,80 +880,32 @@ ionex::interpolate(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& 
 
     auto time_prev = epoch_vector_1.cbegin();
     auto time_next = epoch_vector_1.cbegin() + 1;
-    auto cur_time  = epochs.cbegin();
-    std::size_t i,j,k;
-    double      coefi, coefj = 0.0;
+    std::size_t i(0), j(0), k(0);
+    ngpt::milliseconds coefi, coefj;
 
     for (auto cur_time  = epochs.cbegin(); cur_time < epochs.cend(); ++cur_time ) {
         k = std::distance(epochs.cbegin(), cur_time);
         if ( *cur_time > *time_next ) {
             ++time_prev;
             ++time_next;
+            if ( time_next == epoch_vector_1.cend() ) {
+                time_next = epoch_vector_1.cend() - 1;
+            }
             i = std::distance(epoch_vector_1.cbegin(), time_prev);
             j = std::distance(epoch_vector_1.cbegin(), time_next);
         }
-        coefi = time_next.delta_sec(cur_time)/time_next.delta_sec(time_prev);
-        coefj = cur_time.delta_sec(time_prev)/time_next.delta_sec(time_prev);  
+        if ( time_prev != time_next ) {
+            coefi = time_next->delta_sec(*cur_time)/time_next->delta_sec(*time_prev);
+            coefj = cur_time->delta_sec(*time_prev)/time_next->delta_sec(*time_prev);
+        } else {
+            coefi = ngpt::milliseconds(1);
+            coefj = ngpt::milliseconds(0);
+        }
         for ( std::size_t point=0 ; point<points.size() ; ++point ) {
-            tec_vals_2[point][k] = coefi*tec_vals_1[point][i] + coefj*tec_vals_1[point][j];
+            tec_vals_2[point][k] = coefi.cast_to<double>()*tec_vals_1[point][i] 
+                                 + coefj.cast_to<double>()*tec_vals_1[point][j];
         }
     }
 
-/*
-    std::size_t i = 0;
-    std::size_t j = i+1;
-    std::size_t k = 0;
-    auto time_i   = epoch_vector_1.cbegin();
-    auto time_j   = epoch_vector_1.cbegin() + 1;
-    auto cur_time = from;
-    double coef1, coef2;
-    while ( cur_time <= to ) {
-        if ( cur_time > *time_i ) {
-            ++time_i;
-            ++i;
-            if ( j < epoch_vector_1.size()-1 ) {
-                ++time_j;
-                ++j;
-            }
-        }
-#ifdef DEBUG
-        //TODO this check fails cause of fucking accuracy!
-        //if (cur_time < *time_i || cur_time > *time_j ) {
-        // use this instead:
-        if ( (int)cur_time.delta_sec(*time_i)<0 || (int)time_j->delta_sec(cur_time)<0 ) {
-            std::cerr<<"\n[DEBUG] Fucked up in time interpolation!";
-            std::cout<<"\ni="<<i<<" and j="<<j<<"t-ti="<<cur_time.delta_sec(*time_i)<<", tj-t="<<time_j->delta_sec(cur_time);
-            throw std::runtime_error
-                ("ionex::interpolate() -> Bad interpolation limits.");
-        }
-#endif
-        // TODO handle missing values (9999) !!
-        epoch_vector_2[k] = cur_time;
-        if ( cur_time == *time_i ) {
-            coef1 = 1.0e0;
-            coef2 = 0.0e0;
-            for (std::size_t p=0; p<points.size(); ++p) {
-                tec_vals_2[p][k] = tec_vals_1[p][i];
-            }
-        } else {
-            coef1 = time_j->delta_sec(cur_time)/time_j->delta_sec(*time_i);
-            coef2 = cur_time.delta_sec(*time_i)/time_j->delta_sec(*time_i);
-            for (std::size_t p=0; p<points.size(); ++p) {
-                tec_vals_2[p][k] = coef1*tec_vals_1[p][i] + coef2*tec_vals_1[p][j];
-            }
-        }
-        ++k;
-        if ( !interval ) {
-            if ( k==epoch_vector_1.size() ) {
-                cur_time.add_seconds(86400.0);
-            } else {
-                cur_time = *time_j;
-            }
-        } else {
-            cur_time.add_seconds( (double)interval );
-        }
-    }
-*/
-    epochs = std::move( epoch_vector_2 );
     return tec_vals_2;
 }

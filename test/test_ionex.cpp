@@ -27,6 +27,9 @@ int main(int argc, char* argv[])
     pts.emplace_back(23.68, 32.14);
 
     auto tec_vals = inx.interpolate( pts, epochs );
+    for (std::size_t i=0; i<tec_vals[0].size(); ++i) {
+        std::cout << "\n" << epochs[i] << " " << tec_vals[0][i];
+    }
 
     std::cout << "\n";
     return 0;

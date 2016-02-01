@@ -18,7 +18,7 @@ libngpt_la_CXXFLAGS = \
 dist_include_HEADERS = \
 	receiver.hpp \
 	antenna.hpp \
-	datetime.hpp \
+	datetime_v2.hpp \
 	satsys.hpp \
 	obstype.hpp \
 	grid.hpp \

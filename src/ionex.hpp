@@ -100,8 +100,8 @@ public:
       /*noexcept(std::is_nothrow_move_constructible<std::ifstream>::value)*/ = default;
 
     /// Move assignment operator.
-    ionex& operator=(ionex&& a) 
-    noexcept(std::is_nothrow_move_assignable<std::ifstream>::value) = default;
+    ionex& operator=(ionex&& a) //TODO glang++ does not accept this!
+    /*noexcept(std::is_nothrow_move_assignable<std::ifstream>::value)*/ = default;
 
     std::string
     filename()
@@ -109,7 +109,7 @@ public:
     { return this->_filename; }
 
   
-    std::vector<std::vector<int>>
+    std::vector<std::vector<double>>
     interpolate(
         const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& points,
         std::vector<datetime_ms>& epochs,
@@ -129,6 +129,11 @@ private:
             std::vector<datetime_ms>&,
             std::vector<std::vector<int>>&
     );
+
+    /// This is a help function for parsing datetime arguments to the
+    /// interpolation function.
+    int parse_epoch_arguments(std::vector<datetime_ms>&,
+                              datetime_ms*, datetime_ms*, int&);
 
     // Read a TEC map for a constant epoch
     int read_tec_map(std::vector<int>&);
