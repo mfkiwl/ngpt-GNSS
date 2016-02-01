@@ -1,5 +1,5 @@
-#ifndef __DATETIME_V2_NGPT__
-#define __DATETIME_V2_NGPT__
+#ifndef __DATETIME_NGPT__HPP__
+#define __DATETIME_NGPT__HPP__
 
 #include <ostream>
 #include <iomanip>
@@ -64,6 +64,7 @@ void fd2hms(double, int, int ihmsf[4]);
 /// Return true if given year is leap.
 inline bool is_leap(int iy) noexcept
 { return !(iy%4) && (iy%100 || !(iy%400)); }
+
 /// Forward declerations
 class year;
 class month;
@@ -82,15 +83,6 @@ namespace datetime_format_options {
     enum class month_format : char { two_digit, short_name, long_name };
 }
 
-/// Forward declare the class's '<<' operators
-template<datetime_format_options::year_digits F =
-         datetime_format_options::year_digits::four_digit>
-std::ostream& operator<<(std::ostream&, const year&);
-
-template<datetime_format_options::month_format F =
-         datetime_format_options::month_format::two_digit>
-std::ostream& operator<<(std::ostream&, const month&);
-
 /// A wrapper class for years.
 class year {
     int y;
@@ -106,26 +98,18 @@ public:
     { return y; }
 
     /// overload operator "<<"
-    template<datetime_format_options::year_digits>
+    template<datetime_format_options::year_digits F>
     friend std::ostream& operator<<(std::ostream&, const year&);
 };
 
-/// Define the '<<' operator(s)
+/// Declare the '<<' operator(s) (definition in .cpp)
 template<datetime_format_options::year_digits F>
-std::ostream& operator<<(std::ostream& o, const year& yr)
-{
-    o << std::setw(4) << yr.y;
-    return o;
-}
+std::ostream& operator<<(std::ostream&, const year&);
 
 /// Specialization of 2-digit year
-/*template<>
+template<>
 std::ostream& operator<<<datetime_format_options::year_digits::two_digit>
-(std::ostream& o, const year& yr)
-{ 
-    o << std::setw(2) << ( yr.y > 2000L ? (2000L - yr.y) : (yr.y - 1900L ) );
-    return o;
-}*/
+(std::ostream&, const year&);
 
 /// A wrapper class for months.
 class month {
@@ -157,6 +141,9 @@ public:
 
     /// Access (get/set) the underlying type
     constexpr underlying_type& assign() noexcept { return m; }
+
+    const char* short_name() const noexcept { return short_names[m-1]; }
+    const char* long_name()  const noexcept { return long_names[m-1];  }
     
     /// overload operator "<<"
     template<datetime_format_options::month_format F>
@@ -164,27 +151,15 @@ public:
 };
 
 template<datetime_format_options::month_format F>
-std::ostream& operator<<(std::ostream& o, const month& mm)
-{
-    o << std::setw(2) << mm.m;
-    return o;
-}
+std::ostream& operator<<(std::ostream& o, const month& mm);
 
-/*template<>
+template<>
 std::ostream& operator<<<datetime_format_options::month_format::short_name>
-(std::ostream& o, const month& mm)
-{
-    o << month::short_names[mm.m-1];
-    return o;
-}
+(std::ostream& o, const month& mm);
 
 template<>
 std::ostream& operator<<<datetime_format_options::month_format::long_name>
-(std::ostream& o, const month& mm)
-{
-    o << month::long_names[mm.m-1];
-    return o;
-}*/
+(std::ostream& o, const month& mm);
 
 /// A wrapper class for days (in general!).
 class day {

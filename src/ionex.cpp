@@ -395,9 +395,6 @@ ionex::skip_tec_map()
 #endif
             return 1;
         } else {
-#ifdef DEBUG
-//            std::cout<<"\n[DEBUG] Reading and ignoring map for lat = "<<ltmp;
-#endif
         }
 
         // ok, now we should read these fucking TEC vals; format: I5 max 16 values
@@ -691,11 +688,6 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
 #endif
         return 1;
     }
-#ifdef DEBUG
-    std::cout<<"\nGoing to read TEC maps ...:";
-    for (const auto& i : tec_vals) { std::cout<<" "<<i.size(); }
-    std::cout<<" values";
-#endif
 
     datetime_ms cur_dt = _first_epoch;
     
@@ -740,11 +732,6 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
         _istream.getline(line, MAX_HEADER_CHARS);
         ++map_num;
     }
-#ifdef DEBUG
-    std::cout<<"\nOk- exiting function";
-    for (const auto& i : tec_vals) { std::cout<<" "<<i.size(); }
-    std::cout<<" values";
-#endif
 
     // if everything went as planned, we should have read all maps in file.
     return !(map_num == _maps_in_file);
@@ -776,18 +763,12 @@ ionex::parse_epoch_arguments(std::vector<datetime_ms>& epochs,
                              int& interval)
 {
     if ( epochs.empty() ) {
-#ifdef DEBUG
-        std::cout<<"\n[DEBUG] Epochs vector is empty!";
-#endif
         if ( !from ) { from = &this->_first_epoch; }
         if ( !to   ) { to   = &this->_last_epoch;  }
         if ( interval > 0 ) {
             for (datetime_ms tmp = *from; tmp <= *to;
                                     tmp.add_seconds( interval*1000L ) ) {
                 epochs.push_back( tmp );
-#ifdef DEBUG
-                std::cout<<"\nadding epoch: "<<tmp;
-#endif
             }
         } else if ( interval == 0 ) {
             return -1;
@@ -795,9 +776,6 @@ ionex::parse_epoch_arguments(std::vector<datetime_ms>& epochs,
             return 1;
         }
     } else {
-#ifdef DEBUG
-        std::cout<<"\n[DEBUG] Epochs already specified; nothing to do.";
-#endif
         from = &epochs[0];
         to   = &epochs[epochs.size()-1];
     }
@@ -850,12 +828,6 @@ ionex::interpolate(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& 
         throw std::runtime_error
             ("ionex::interpolate() -> failed to read tecs/epochs.");
     }
-#ifdef DEBUG
-    std::cout<<"\nTEC maps read; vectors are: "<< epoch_vector_1.size()<<" and " << tec_vals_1.size();
-    std::cout<<"\nFor each element in TEC vector, we have:";
-    for (const auto& i : tec_vals_1) { std::cout<<" "<<i.size(); }
-    std::cout<<" values";
-#endif
 
     // Sweet! now perform the interpolation in time IF we are interested in
     // different epochs than collected.
@@ -874,7 +846,8 @@ ionex::interpolate(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& 
         }
         return tecs;
     }
-    
+ 
+    // a new vector of vectors to hold the interpolated TEC values (per station)   
     std::vector<std::vector<double>> tec_vals_2 ( points.size(),
                                   std::vector<double>(epochs.capacity(), 9999) );
 

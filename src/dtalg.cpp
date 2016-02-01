@@ -185,3 +185,44 @@ ngpt::fd2hms(double days, int ndp, int ihmsf[4])
     ihmsf[2] = static_cast<int>( as );
     ihmsf[3] = static_cast<int>( af );
 }
+
+/// Define the '<<' operator(s)
+template<ngpt::datetime_format_options::year_digits>
+std::ostream& operator<<(std::ostream& o, const ngpt::year& yr)
+{
+    o << std::setw(4) << yr.y;
+    return o;
+}
+
+/// Specialization of 2-digit year
+template<>
+std::ostream& operator<<<ngpt::datetime_format_options::year_digits::two_digit>
+(std::ostream& o, const ngpt::year& yr)
+{ 
+    ngpt::year::underlying_type y { yr.as_underlying_type() };
+    o << std::setw(2) << ( y > 2000L ? (2000L - y) : (y - 1900L ) );
+    return o;
+}
+
+template<ngpt::datetime_format_options::month_format>
+std::ostream& operator<<(std::ostream& o, const ngpt::month& mm)
+{
+    o << std::setw(2) << mm.m;
+    return o;
+}
+
+template<>
+std::ostream& operator<<<ngpt::datetime_format_options::month_format::short_name>
+(std::ostream& o, const ngpt::month& mm)
+{
+    o << mm.short_name();
+    return o;
+}
+
+template<>
+std::ostream& operator<<<ngpt::datetime_format_options::month_format::long_name>
+(std::ostream& o, const ngpt::month& mm)
+{
+    o << mm.long_name();
+    return o;
+}
