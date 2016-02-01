@@ -11,9 +11,9 @@ def readme():
         return f.read()
 
 
-config = {'name': 'antex_view',
+config = {'name': 'ngpt',
         'version': '0.1',
-        'description': 'Python module to plot antex files.',
+        'description': 'Python module to manage ngpt C++ output.',
         'long_description': readme(),
         'url': 'https://github.com/xanthospap/ngpt',
         'download_url': '',
@@ -21,10 +21,9 @@ config = {'name': 'antex_view',
         'author_email': '''xanthos@mail.ntua.gr,
 danast@mail.ntua.gr,
 vanzach@survey.ntua.gr''',
-        'license': '',
-        'packages': ['antex_view'],
+        'license': 'WTFPL',
         'packages': find_packages(exclude=['tests*']),
-        'scripts': ['bin/antex_view.py'],
+        'scripts': ['bin/ngpt.py'],
         'install_requires': ['numpy', 'matplotlib'],
         'include_package_data': True}
 
