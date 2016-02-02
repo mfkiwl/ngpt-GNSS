@@ -8,15 +8,16 @@
 #include <cassert>
 #include <cmath>
 #include <tuple>
+#include <string>
 #ifdef DEBUG
     #include <iostream>
 #endif
 
 namespace ngpt {
 
-/// Check if long is big enough to hold two days in nanoseconds.
+/// Check if long is big enough to hold two days in microseconds.
 static_assert( 86400L  * 1000000L * 2 < std::numeric_limits<long>::max(),
-    "FUCK! Long is not big enough to hold two days in nanoseconds" );
+    "FUCK! Long is not big enough to hold two days in microseconds" );
 
 /// Jan 1st 1980
 constexpr long jan61980 { 44244L };
@@ -43,6 +44,13 @@ constexpr double mjd0_jd             { 2400000.5e0 };
 
 /// TT minus TAI (s)
 constexpr double tt_minus_tai        { 32.184e0 };
+
+/*
+constexpr static long month_day[2][13] = {
+    {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365},
+    {0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366}
+};
+*/
 
 /// Time-Scales
 enum class time_scale : char
@@ -75,13 +83,25 @@ class modified_julian_day;
 class julian_day;
 class seconds;
 class milliseconds;
-class nanoseconds;
+class microseconds;
 
 /// Format options
 namespace datetime_format_options {
     enum class year_digits  : char  { two_digit, four_digit };
     enum class month_format : char { two_digit, short_name, long_name };
 }
+
+/// Forward declare cout operator for year ...
+/*
+template<datetime_format_options::year_digits F = datetime_format_options::year_digits::four_digit>
+std::ostream& operator<<(std::ostream&, const year&);
+*/
+
+/// ... and month
+/*
+template<datetime_format_options::month_format F = datetime_format_options::month_format::two_digit>
+std::ostream& operator<<(std::ostream&, const month&);
+*/
 
 /// A wrapper class for years.
 class year {
@@ -98,18 +118,24 @@ public:
     { return y; }
 
     /// overload operator "<<"
+    /*
     template<datetime_format_options::year_digits F>
     friend std::ostream& operator<<(std::ostream&, const year&);
+    */
 };
 
 /// Declare the '<<' operator(s) (definition in .cpp)
+/*
 template<datetime_format_options::year_digits F>
 std::ostream& operator<<(std::ostream&, const year&);
+*/
 
 /// Specialization of 2-digit year
+/*
 template<>
 std::ostream& operator<<<datetime_format_options::year_digits::two_digit>
 (std::ostream&, const year&);
+*/
 
 /// A wrapper class for months.
 class month {
@@ -146,10 +172,13 @@ public:
     const char* long_name()  const noexcept { return long_names[m-1];  }
     
     /// overload operator "<<"
+    /*
     template<datetime_format_options::month_format F>
     friend std::ostream& operator<<(std::ostream&, const month&);
+    */
 };
 
+/*
 template<datetime_format_options::month_format F>
 std::ostream& operator<<(std::ostream& o, const month& mm);
 
@@ -160,6 +189,7 @@ std::ostream& operator<<<datetime_format_options::month_format::short_name>
 template<>
 std::ostream& operator<<<datetime_format_options::month_format::long_name>
 (std::ostream& o, const month& mm);
+*/
 
 /// A wrapper class for days (in general!).
 class day {
@@ -245,11 +275,10 @@ public:
     { return m <= d.m; }
 
     /// Cast to year, day_of_year
-    constexpr year to_ydoy(day_of_year&) const noexcept;
+    /*constexpr*/ year to_ydoy(day_of_year&) const noexcept;
     
     /// Cast to year, month, day_of_month
-    // TODO this does not work if placed in the .cpp file !!??!!
-    constexpr year to_ymd(month&, day_of_month&) const noexcept;
+    /*constexpr*/ year to_ymd(month&, day_of_month&) const noexcept;
     
     /// overload operator <<
     friend std::ostream&
@@ -432,12 +461,13 @@ public:
         return *this;
     }
     
-    /// Translate to hours minutes and seconds
-    constexpr std::tuple<hours, minutes, seconds> to_hms() const noexcept
+    /// Translate to hours, minutes, seconds and fractional seconds
+    constexpr std::tuple<hours, minutes, seconds, long> to_hms() const noexcept
     {
-        return std::make_tuple(hours(s / 3600),
-                               minutes((s % 3600) / 60),
-                               seconds((s % 3600) % 60) );
+        return std::make_tuple(hours  {static_cast<int>(s / 3600L)},
+                               minutes{static_cast<int>((s % 3600L) / 60L)},
+                               seconds{(s % 3600) % 60},
+                               0L );
     }
 
     /// Cast to any arithmetic type.
@@ -446,6 +476,12 @@ public:
              >
     constexpr T cast_to() const noexcept
     { return static_cast<T>( s ); }
+
+    friend std::ostream& operator<<(std::ostream& o, const seconds& sec)
+    {
+        o << sec.s << "sec";
+        return o;
+    }
 };
 
 /// A wrapper class to represent a datetime in GPSTime, i.e. gps week and
@@ -562,18 +598,26 @@ public:
     constexpr T cast_to() const noexcept
     { return static_cast<T>( s ); }
     
-    /// Translate to hours minutes and seconds
-    constexpr std::tuple<hours, minutes, seconds> to_hms() const noexcept
+    /// Translate to hours minutes and fractional seconds
+    constexpr std::tuple<hours, minutes, seconds, long> to_hms() const noexcept
     {
-        return std::make_tuple(hours(s / 3600000L),
-                               minutes((s % 3600000L) / 60000L),
-                               seconds((s % 3600000L) % 60000L) );
+        return std::make_tuple(hours  {static_cast<int>(s / 3600000L)},
+                               minutes{static_cast<int>((s % 3600000L) / 60000L)},
+                               seconds{((s % 3600000L) % 60000L)/1000},
+                               ((s % 3600000L) % 60000L)/1000L - 1000L
+                               );
+    }
+
+    friend std::ostream& operator<<(std::ostream& o, const milliseconds& ms)
+    {
+        o << ms.s << "millisec";
+        return o;
     }
     
 };
 
-/// A wrapper class for nanoseconds.
-class nanoseconds {
+/// A wrapper class for microseconds.
+class microseconds {
     long s;
 public:
     /// Nanoseconds are represented as long integers.
@@ -582,14 +626,14 @@ public:
     /// Nanoseconds is a subdivision of seconds.
     static constexpr bool is_of_sec_type { true };
     
-    /// Max nanoseconds in day.
+    /// Max microseconds in day.
     static constexpr long max_in_day { 86400L * 1000000L };
     
     /// Constructor.
-    explicit constexpr nanoseconds(underlying_type i=0L) noexcept : s(i) {};
+    explicit constexpr microseconds(underlying_type i=0L) noexcept : s(i) {};
     
     /// Constructor from hours, minutes, fractional seconds
-    /*explicit constexpr nanoseconds(hours h, minutes m, double fs)
+    /*explicit constexpr microseconds(hours h, minutes m, double fs)
     noexcept
         : s(  static_cast<long>(fs*1e6)
             + (m.as_underlying_type()*60L
@@ -604,36 +648,36 @@ public:
     /// Nanoseconds can be cast to seconds will a loss of accuracy.
     constexpr explicit operator seconds() const { return seconds(s/1000000L); }
     
-    /// Overload operatpr "+=" between nanoseconds.
-    constexpr void operator+=(const nanoseconds& ns) noexcept { s+=ns.s; }
+    /// Overload operatpr "+=" between microseconds.
+    constexpr void operator+=(const microseconds& ns) noexcept { s+=ns.s; }
 
-    constexpr nanoseconds operator+(const nanoseconds& sec) const noexcept
-    { return nanoseconds(s+sec.s); }
+    constexpr microseconds operator+(const microseconds& sec) const noexcept
+    { return microseconds(s+sec.s); }
 
     /// Overload '-' operator
-    constexpr nanoseconds operator-(const nanoseconds& n) const noexcept
-    { return nanoseconds(s - n.s); }
+    constexpr microseconds operator-(const microseconds& n) const noexcept
+    { return microseconds(s - n.s); }
     
-    /// Overload operatpr "/" between nanoseconds.
-    constexpr nanoseconds operator/(const nanoseconds& sc) noexcept
-    { return nanoseconds(s/sc.s); }
+    /// Overload operatpr "/" between microseconds.
+    constexpr microseconds operator/(const microseconds& sc) noexcept
+    { return microseconds(s/sc.s); }
     
-    constexpr bool operator==(const nanoseconds& d) const noexcept
+    constexpr bool operator==(const microseconds& d) const noexcept
     { return s == d.s; }
 
-    constexpr bool operator>(const nanoseconds& d) const noexcept
+    constexpr bool operator>(const microseconds& d) const noexcept
     { return s > d.s; }
 
-    constexpr bool operator>=(const nanoseconds& d) const noexcept
+    constexpr bool operator>=(const microseconds& d) const noexcept
     { return s >= d.s; }
 
-    constexpr bool operator<(const nanoseconds& d) const noexcept
+    constexpr bool operator<(const microseconds& d) const noexcept
     { return s < d.s; }
 
-    constexpr bool operator<=(const nanoseconds& d) const noexcept
+    constexpr bool operator<=(const microseconds& d) const noexcept
     { return s <= d.s; }
     
-    /// Do the nanoseconds sum up to more than one day?
+    /// Do the microseconds sum up to more than one day?
     constexpr bool more_than_day() const noexcept { return s>max_in_day; }
     
     /// Cast to underlying type.
@@ -642,8 +686,8 @@ public:
     /// Access (set/get) the underlying type.
     constexpr underlying_type& assign() noexcept { return s; }
     
-    /// If the nanoseconds sum up to more (or equal to) one day, remove the
-    /// integral days (and return them); reset the nanoseconds to nanoseconds
+    /// If the microseconds sum up to more (or equal to) one day, remove the
+    /// integral days (and return them); reset the microseconds to microseconds
     /// of the new day.
     constexpr day remove_days() noexcept {
         day d ( static_cast<int>(s/max_in_day) );
@@ -672,12 +716,14 @@ public:
     constexpr T cast_to() const noexcept
     { return static_cast<T>( s ); }
     
-    /// Translate to hours minutes and seconds
-    constexpr std::tuple<hours, minutes, seconds> to_hms() const noexcept
+    /// Translate to hours minutes and fractional seconds
+    constexpr std::tuple<hours, minutes, seconds, long> to_hms() const noexcept
     {
-        return std::make_tuple(hours(s / 3600000000),
-                               minutes((s % 3600000000L) / 60000000L),
-                               seconds((s % 3600000000L) % 60000000L) );
+        return std::make_tuple(hours  {static_cast<int>(s / 3600000000L)},
+                               minutes{static_cast<int>((s % 3600000000L) / 60000000L)},
+                               seconds{((s % 3600000000L) % 60000000L)/1000000},
+                               ((s % 3600000000L) % 60000000L)/1000000L - 1000000L
+                               );
     }
 };
 
@@ -778,7 +824,7 @@ public:
     }
 
     /// Cast to year, month, day of month
-    constexpr std::tuple<year, month, day_of_month>
+    /*constexpr*/ std::tuple<year, month, day_of_month>
     as_ymd() const noexcept
     {
         year y;
@@ -789,7 +835,7 @@ public:
     }
 
     /// Cast to year, day_of_year
-    constexpr std::tuple<year, day_of_year> as_ydoy() const noexcept
+    /*constexpr*/ std::tuple<year, day_of_year> as_ydoy() const noexcept
     {
         year y;
         day_of_year d;
@@ -797,24 +843,76 @@ public:
         return std::make_tuple( y, d );
     }
 
+    /// Convert the *seconds to hours, minutes, seconds and fractional seconds
+    /*constexpr*/ std::tuple<hours, minutes, seconds, long>
+    as_hms() const noexcept
+    { return sect_.to_hms(); }
+
+    std::string stringify() const
+    {
+        auto ymd { this->as_ymd() };
+        auto hms { this->as_hms() };
+        return 
+        std::string {  std::to_string( std::get<0>(ymd).as_underlying_type() )
+                     + "/" + std::to_string( std::get<1>(ymd).as_underlying_type()  )
+                     + "/" + std::to_string( std::get<2>(ymd).as_underlying_type()  )
+                     + " " + std::to_string( std::get<0>(hms).as_underlying_type()  )
+                     + ":" + std::to_string( std::get<1>(hms).as_underlying_type()  )
+                     + ":" + std::to_string( std::get<2>(hms).as_underlying_type()  )
+                     + "." + std::to_string( std::get<3>(hms) )
+        };
+    }
+
     /// Overload operator "<<" TODO
-    template<typename T>
-    friend std::ostream& operator<<(std::ostream&, const datev2<T>&);
+    /*
+    friend std::ostream& operator<<(std::ostream& o, const datev2& d)
+    {
+        o << d.stringify();
+        return o;
+    }
+    */
 
 private:
     modified_julian_day mjd_;  ///< Modified Julian Day
     S                   sect_; ///< Fraction of day in milli/nano/seconds
 };
 
-template<typename S>
-std::ostream& operator<<(std::ostream& o, const datev2<S>& d)
+
+/*
+/// Cast a modified_julian_day to year, day_of_year
+constexpr ngpt::year
+ngpt::modified_julian_day::to_ydoy(day_of_year& d)
+const noexcept
 {
-    //auto ymd = d.as_ymd();
-    //o << std::get<0>(ymd) << "/" << std::get<1>(ymd) << "/" << std::get<2>(ymd);
-    //o << "T" << d.sect_.as_underlying_type();
-    o << d.as_mjd();
-    return o;
+    long days_fr_jan1_1901 = m - ngpt::jan11901;
+    long num_four_yrs      = days_fr_jan1_1901/1461L;
+    long years_so_far      = 1901L + 4*num_four_yrs;
+    long days_left         = days_fr_jan1_1901 - 1461*num_four_yrs;
+    long delta_yrs         = days_left/365 - days_left/1460;
+    day_of_year yday (static_cast<day_of_year::underlying_type>
+                                (days_left - 365*delta_yrs + 1));
+    d = yday;
+    return year (years_so_far + delta_yrs);
 }
+*/
+/*
+constexpr ngpt::year
+ngpt::modified_julian_day::to_ymd(ngpt::month& mm, ngpt::day_of_month& dd)
+const noexcept
+{
+    ngpt::day_of_year doy;
+    auto y     = this->to_ydoy( doy );
+    long yday  = static_cast<long>( doy.as_underlying_type() );
+    long leap  = ( y.as_underlying_type()%4L == 0 );
+    long guess = yday*0.032;
+    long more  = (( yday - month_day[leap][guess+1] ) > 0);
+    mm.assign() = static_cast<ngpt::month::underlying_type>
+                                    (guess + more + 1);
+    dd.assign() = static_cast<ngpt::day_of_month::underlying_type>
+                                    (yday - month_day[leap][guess+more]);
+    return y;
+}
+*/
 
 } // end namespace
 

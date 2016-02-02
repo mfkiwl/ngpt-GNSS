@@ -62,7 +62,7 @@ ngpt::cal2mjd(ngpt::year y, ngpt::month m, ngpt::day_of_month d)
 }
 
 /// Cast a modified_julian_day to year, day_of_year
-constexpr ngpt::year
+ngpt::year
 ngpt::modified_julian_day::to_ydoy(day_of_year& d)
 const noexcept
 {
@@ -78,7 +78,7 @@ const noexcept
 }
 
 /// Cast a modified_julian_day to year, month, day_of_month
-constexpr ngpt::year
+ngpt::year
 ngpt::modified_julian_day::to_ymd(ngpt::month& mm, ngpt::day_of_month& dd)
 const noexcept
 {
@@ -184,8 +184,9 @@ ngpt::fd2hms(double days, int ndp, int ihmsf[4])
     ihmsf[1] = static_cast<int>( am );
     ihmsf[2] = static_cast<int>( as );
     ihmsf[3] = static_cast<int>( af );
-}
+} 
 
+/*
 /// Define the '<<' operator(s)
 template<ngpt::datetime_format_options::year_digits>
 std::ostream& operator<<(std::ostream& o, const ngpt::year& yr)
@@ -226,3 +227,4 @@ std::ostream& operator<<<ngpt::datetime_format_options::month_format::long_name>
     o << mm.long_name();
     return o;
 }
+*/

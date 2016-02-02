@@ -28,7 +28,8 @@ int main(int argc, char* argv[])
 
     auto tec_vals = inx.interpolate( pts, epochs );
     for (std::size_t i=0; i<tec_vals[0].size(); ++i) {
-        std::cout << "\n" << epochs[i] << " " << tec_vals[0][i];
+        std::string str_eph = epochs[i].stringify();
+        std::cout << "\n" << str_eph << " " << tec_vals[0][i];
     }
 
     std::cout << "\n";

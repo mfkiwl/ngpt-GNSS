@@ -14,12 +14,12 @@ int main()
     // nice, the following won't compile
     //datev2<ngpt::year> d3(ngpt::year(2015), ngpt::month(12), ngpt::day_of_month(30));
  
-    // this is fine; nanoseconds to seconds is allowed
+    // this is fine; microseconds to seconds is allowed
     datev2<ngpt::seconds> d24(ngpt::year(2015), ngpt::month(12),
-        ngpt::day_of_month(30), ngpt::nanoseconds(100));
+        ngpt::day_of_month(30), ngpt::microseconds(100));
 
     // the opposite however id not allowed!
-    //datev2<ngpt::nanoseconds> d5(ngpt::year(2015), ngpt::month(12),
+    //datev2<ngpt::microseconds> d5(ngpt::year(2015), ngpt::month(12),
     //    ngpt::day_of_month(30), ngpt::seconds(100));
             
     // std::cout<<"\nSize of v1 class: "<< sizeof(d1);
@@ -67,10 +67,10 @@ int main()
     std::cout<<"\nDifference (in days) = " << mjd1 - mjd2 << " = " << (mjd1 - mjd2)*86400.0 << " seconds";
     std::cout<<" = " << (mjd1 - mjd2)*86400000.0 << " milliseconds";
    
-    datev2<ngpt::nanoseconds> d4(ngpt::year(2015), ngpt::month(12), ngpt::day_of_month(30));
+    datev2<ngpt::microseconds> d4(ngpt::year(2015), ngpt::month(12), ngpt::day_of_month(30));
     begin = std::chrono::steady_clock::now();
     for (int i=0; i<86400 * 2.5; ++i) {
-        d4.add_seconds( ngpt::nanoseconds(1000000L) );
+        d4.add_seconds( ngpt::microseconds(1000000L) );
         mjd2 = d4.as_mjd();
     }
     end = std::chrono::steady_clock::now();
