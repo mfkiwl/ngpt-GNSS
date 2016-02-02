@@ -275,7 +275,7 @@ epilog()
     "This work is free. You can redistribute it and/or modify it under the\n"
     "terms of the Do What The Fuck You Want To Public License, Version 2,\n"
     "as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.\n"
-    "\nSend bugs to: xanthos[AT]mail.ntua.gr, demanast[AT]mail.ntua.gr";
+    "\nSend bugs to: \nxanthos[AT]mail.ntua.gr, \ndemanast[AT]mail.ntua.gr \nvanzach[AT]survey.ntua.gr";
     return;
 }
 
