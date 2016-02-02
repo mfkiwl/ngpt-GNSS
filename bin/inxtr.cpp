@@ -7,6 +7,20 @@ void help();
 void usage();
 void epilog();
 
+typedef ngpt::datev2<ngpt::milliseconds> epoch;
+
+template<typename T>
+struct range {
+    T from, to, step;
+    range(T f=T(), T t=T(), T step=T())
+        : from(f), to(t), step(s)
+    {};
+    bool empty() const noexcept
+    {
+        return from == to && (to == step && step == T());
+    }
+};
+
 typedef std::map<std::string, std::string> str_str_map;
 
 int main(int argv, char* argc[])
@@ -19,10 +33,10 @@ int main(int argv, char* argc[])
     arg_dict["list" ] = std::string( "N"   );
     arg_dict["diff" ] = std::string( "N"   );
     
-    // default axis limits
-    pcv_type zen_start, zen_stop, zen_step;
-    pcv_type azi_start, azi_stop, azi_step;
-    zen_start = zen_stop = azi_start = azi_stop = -99999;
+    // axis/epoch limits
+    range<float> lat_range;
+    range<float> lon_range;
+    range<epoch> epoch_range;
 
     // get cmd arguments into the dictionary
     int status = cmd_parse(argv, argc, arg_dict);
@@ -31,11 +45,95 @@ int main(int argv, char* argc[])
         std::cerr << "\n\nWrong cmds. Stop.\n";
         return 1;
     }
-    else if ( status < 0 ) // -h or -l
+    else if ( status < 0 ) // -h
     {
         std::cout << "\n";
         return 0;
     }
+}
+
+int
+cmd_parse(int argv, char* argc[], str_str_map& smap)
+{
+    if ( argv == 1 )
+    {
+            help();
+            std::cout << "\n";
+            usage();
+            std::cout << "\n";
+            epilog();
+            return 1;
+    }
+
+    for (int i = 1; i < argv; i++)
+    {
+        if (   !std::strcmp(argc[i], "-h") 
+            || !std::strcmp(argc[i], "--help") )
+        {
+            help();
+            std::cout << "\n";
+            usage();
+            std::cout << "\n";
+            epilog();
+            return -1;
+        }
+        else if ( !std::strcmp(argc[i], "-l")
+               || !std::strcmp(argc[i], "--list") )
+        {
+            smap["list"] = std::string("Y");
+        }
+        else if ( !std::strcmp(argc[i], "-diff") )
+        {
+            smap["diff"] = std::string("Y");
+        }
+        else if ( !std::strcmp(argc[i], "-i") )
+        {
+            if ( i+1 >= argv ) { return 1; }
+            smap["ionex"] = std::string( argc[i+1] );
+            ++i;
+        } 
+        else if ( !std::strcmp(argc[i], "-m") )
+        {
+            if ( i+1 >= argv ) { return 1; }
+            smap["antennas"] = std::string( argc[i+1] );
+            ++i;
+        }
+        else if ( !std::strcmp(argc[i], "-o") )
+        {
+            if ( i+1 >= argv ) { return 1; }
+            smap["types"] = std::string( argc[i+1] );
+            ++i;
+        }
+        else if ( !std::strcmp(argc[i], "-dzen") )
+        {
+            if ( i+1 >= argv ) { return 1; }
+            smap["dzen"] = std::string( argc[i+1] );
+            ++i;
+        }
+        else if ( !std::strcmp(argc[i], "-dazi") )
+        {
+            if ( i+1 >= argv ) { return 1; }
+            smap["dazi"] = std::string( argc[i+1] );
+            ++i;
+        }
+        else if ( !std::strcmp(argc[i], "-zen") )
+        {
+            if ( i+1 >= argv ) { return 1; }
+            smap["zen"] = std::string( argc[i+1] );
+            ++i;
+        }
+        else if ( !std::strcmp(argc[i], "-azi") )
+        {
+            if ( i+1 >= argv ) { return 1; }
+            smap["azi"] = std::string( argc[i+1] );
+            ++i;
+        }
+        else
+        {
+            std::cerr << "\nIrrelevant cmd: " << argc[i];
+        }
+    }
+    return 0;
 }
 
 void
