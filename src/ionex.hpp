@@ -103,10 +103,11 @@ public:
     ionex& operator=(ionex&& a) //TODO glang++ does not accept this!
     /*noexcept(std::is_nothrow_move_assignable<std::ifstream>::value)*/ = default;
 
-    std::string
-    filename()
-    const noexcept
-    { return this->_filename; }
+    std::string filename() const noexcept { return this->_filename; }
+
+    datetime_ms first_epoch() const noexcept { return this->_first_epoch; }
+    
+    datetime_ms last_epoch() const noexcept { return this->_last_epoch; }
 
   
     std::vector<std::vector<double>>

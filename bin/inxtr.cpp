@@ -1,5 +1,7 @@
 #include <iostream>
 #include <map>
+#include <cstring>
+#include <algorithm>
 #include "datetime_v2.hpp"
 #include "ionex.hpp"
 
@@ -7,12 +9,10 @@ void help();
 void usage();
 void epilog();
 
-typedef ngpt::datev2<ngpt::milliseconds> epoch;
-
 template<typename T>
 struct range {
     T from, to, step;
-    range(T f=T(), T t=T(), T step=T())
+    range(T f=T(), T t=T(), T s=T())
         : from(f), to(t), step(s)
     {};
     bool empty() const noexcept
@@ -22,21 +22,24 @@ struct range {
 };
 
 typedef std::map<std::string, std::string> str_str_map;
+typedef ngpt::datev2<ngpt::milliseconds>   epoch;
+
+/// Parse command line arguments.
+int
+cmd_parse(int, char* [], str_str_map&);
 
 int main(int argv, char* argc[])
 {
     // a dictionary with any default options
     str_str_map arg_dict;
-    arg_dict["dzen" ] = std::string( "1.0" );
-    arg_dict["dazi" ] = std::string( "1.0" );
-    arg_dict["types"] = std::string( "G01" );
-    arg_dict["list" ] = std::string( "N"   );
-    arg_dict["diff" ] = std::string( "N"   );
+    arg_dict["list" ] = std::string( "N" );
+    arg_dict["diff" ] = std::string( "N" );
     
     // axis/epoch limits
     range<float> lat_range;
     range<float> lon_range;
     range<epoch> epoch_range;
+    long time_step; // in seconds
 
     // get cmd arguments into the dictionary
     int status = cmd_parse(argv, argc, arg_dict);
@@ -50,6 +53,42 @@ int main(int argv, char* argc[])
         std::cout << "\n";
         return 0;
     }
+    
+    // this may throw in non-debug mode
+    auto it = arg_dict.find("ionex");
+    if ( it == arg_dict.end() )
+    {
+        std::cerr << "\nMust provide name of ionex file.\n";
+        return 1;
+    }
+    ngpt::ionex inx ( it->second.c_str() );
+
+    // set the start date
+    if ( (auto sit = arg_dict.find("start")) == arg_dict.end() ) {
+        // not provided; set from ionex file
+        epoch_range.from = inx.first_epoch();
+    } else {
+        if ( resolve_str_date(sit->second, epoch_range.from) ) {
+            std::cerr << "\nERROR. Failed to resolve start epoch from string:";
+            std::cerr << " \"" << sit->second << "\"\n";
+            return 1;
+        }
+        // it might be that the user only provided time (not date)
+        
+    }
+    
+    // set the stop date
+    if ( (auto sit = arg_dict.find("stop")) == arg_dict.end() ) {
+        // not provided; set from ionex file
+        epoch_range.to = inx.last_epoch();
+    } else {
+        if ( resolve_str_date(sit->second, epoch_range.to) ) {
+            std::cerr << "\nERROR. Failed to resolve start epoch from string:";
+            std::cerr << " \"" << sit->second << "\"\n";
+            return 1;
+        }
+    }
+
 }
 
 int
@@ -92,40 +131,28 @@ cmd_parse(int argv, char* argc[], str_str_map& smap)
             smap["ionex"] = std::string( argc[i+1] );
             ++i;
         } 
-        else if ( !std::strcmp(argc[i], "-m") )
+        else if ( !std::strcmp(argc[i], "-start") )
         {
             if ( i+1 >= argv ) { return 1; }
-            smap["antennas"] = std::string( argc[i+1] );
+            smap["start"] = std::string( argc[i+1] );
             ++i;
         }
-        else if ( !std::strcmp(argc[i], "-o") )
+        else if ( !std::strcmp(argc[i], "-stop") )
         {
             if ( i+1 >= argv ) { return 1; }
-            smap["types"] = std::string( argc[i+1] );
+            smap["stop"] = std::string( argc[i+1] );
             ++i;
         }
-        else if ( !std::strcmp(argc[i], "-dzen") )
+        else if ( !std::strcmp(argc[i], "-lat") )
         {
             if ( i+1 >= argv ) { return 1; }
-            smap["dzen"] = std::string( argc[i+1] );
+            smap["lat"] = std::string( argc[i+1] );
             ++i;
         }
-        else if ( !std::strcmp(argc[i], "-dazi") )
+        else if ( !std::strcmp(argc[i], "-lon") )
         {
             if ( i+1 >= argv ) { return 1; }
-            smap["dazi"] = std::string( argc[i+1] );
-            ++i;
-        }
-        else if ( !std::strcmp(argc[i], "-zen") )
-        {
-            if ( i+1 >= argv ) { return 1; }
-            smap["zen"] = std::string( argc[i+1] );
-            ++i;
-        }
-        else if ( !std::strcmp(argc[i], "-azi") )
-        {
-            if ( i+1 >= argv ) { return 1; }
-            smap["azi"] = std::string( argc[i+1] );
+            smap["lon"] = std::string( argc[i+1] );
             ++i;
         }
         else
@@ -134,6 +161,58 @@ cmd_parse(int argv, char* argc[], str_str_map& smap)
         }
     }
     return 0;
+}
+
+// Resolve Datetime or Time. This function can resolve a epoch string of type:
+// YYYY/MM/DDTHH:MM:SS , or
+// HH:MM:SS
+// In the second case, the MJDay of the epoch will be set to 0.
+int
+resolve_str_date(std::string str, epoch& eph)
+{
+    int num_tokens = 0;
+    const char* p = str.c_str();
+    char* end;
+    std::vector<long> vec_tokens;
+
+    if (auto (it = std::find(std::begin(str), std::end(str), "/"))
+    // only time (2nd case)
+                == std::end(str) ) {
+        for (long i = std::strtol(p, &end, 10);
+             p != end;
+             ++p, i = std::strtol(p, &end, 10))
+        {
+            p = end;
+            if (errno == ERANGE || num_tokens++ > 2) { return 1; }
+            vec_tokens.emplace_back( i );
+        }
+        eph = epoch( ngpt::year(0),
+                     ngpt::month(0),
+                     ngpt::day_of_month(0),
+                     ngpt::hours((int)vec_tokens[0]),
+                     ngpt::minutes((int)vec_tokens[1]),
+                     ngpt::milliseconds(vec_tokens[2]*1000L)
+                   );
+        return 0;
+    } else {
+    // normal datetime (1st case)
+        for (long i = std::strtol(p, &end, 10);
+             p != end;
+             ++p, i = std::strtol(p, &end, 10))
+        {
+            p = end;
+            if (errno == ERANGE || num_tokens++ > 5) { return 1; }
+            vec_tokens.emplace_back( i );
+        }
+        *eph = epoch( ngpt::year((int)vec_tokens[0]),
+                      ngpt::month((int)vec_tokens[1]),
+                      ngpt::day_of_month((int)vec_tokens[2]),
+                      ngpt::hours((int)vec_tokens[3]),
+                      ngpt::minutes((int)vec_tokens[4]),
+                      ngpt::milliseconds(vec_tokens[5]*1000L)
+                     );
+        return 0;
+    }
 }
 
 void
