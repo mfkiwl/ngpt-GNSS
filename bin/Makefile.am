@@ -1,4 +1,5 @@
-bin_PROGRAMS = atxtr
+bin_PROGRAMS = atxtr \
+		inxtr
 
 MCXXFLAGS = \
 	-std=c++14 \
@@ -17,3 +18,7 @@ MCXXFLAGS = \
 atxtr_SOURCES     = atxtr.cpp
 atxtr_CXXFLAGS    = $(MCXXFLAGS) -I$(top_srcdir)/src -L$(top_srcdir)/src
 atxtr_LDADD       = $(top_srcdir)/src/libngpt.la
+
+inxtr_SOURCES     = inxtr.cpp
+inxtr_CXXFLAGS    = $(MCXXFLAGS) -I$(top_srcdir)/src -L$(top_srcdir)/src
+inxtr_LDADD       = $(top_srcdir)/src/libngpt.la

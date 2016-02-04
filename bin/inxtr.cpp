@@ -28,6 +28,12 @@ typedef ngpt::datev2<ngpt::milliseconds>   epoch;
 int
 cmd_parse(int, char* [], str_str_map&);
 
+int
+resolve_geo_range(std::string, range<float>&);
+
+int
+resolve_str_date(std::string, epoch&);
+
 int main(int argv, char* argc[])
 {
     // a dictionary with any default options
@@ -55,16 +61,16 @@ int main(int argv, char* argc[])
     }
     
     // this may throw in non-debug mode
-    auto it = arg_dict.find("ionex");
-    if ( it == arg_dict.end() )
+    auto sit = arg_dict.find("ionex");
+    if ( sit == arg_dict.end() )
     {
         std::cerr << "\nMust provide name of ionex file.\n";
         return 1;
     }
-    ngpt::ionex inx ( it->second.c_str() );
+    ngpt::ionex inx ( sit->second.c_str() );
 
     // set the start date
-    if ( (auto sit = arg_dict.find("start")) == arg_dict.end() ) {
+    if ( (sit = arg_dict.find("start")) == arg_dict.end() ) {
         // not provided; set from ionex file
         epoch_range.from = inx.first_epoch();
     } else {
@@ -73,29 +79,130 @@ int main(int argv, char* argc[])
             std::cerr << " \"" << sit->second << "\"\n";
             return 1;
         }
-        // it might be that the user only provided time (not date)
-        
     }
     
     // set the stop date
-    if ( (auto sit = arg_dict.find("stop")) == arg_dict.end() ) {
+    if ( (sit = arg_dict.find("stop")) == arg_dict.end() ) {
         // not provided; set from ionex file
         epoch_range.to = inx.last_epoch();
     } else {
         if ( resolve_str_date(sit->second, epoch_range.to) ) {
-            std::cerr << "\nERROR. Failed to resolve start epoch from string:";
+            std::cerr << "\nERROR. Failed to resolve ending epoch from string:";
             std::cerr << " \"" << sit->second << "\"\n";
             return 1;
         }
     }
 
+    // set the interval
+    if ( (sit = arg_dict.find("rate")) == arg_dict.end() ) {
+        // not provided; set to 0
+        time_step = 0L;
+    } else {
+        try {
+            time_step = std::stol( sit->second );
+        } catch (std::invalid_argument& e) {
+            std::cerr << "\nERROR. Failed to resolve time interval from:";
+            std::cerr << " \"" << sit->second <<"\'.";
+            return 1;
+        }
+        if ( time_step < 0 ) {
+            std::cerr << "\nERROR. Invalid time interval (<0).";
+            return 1;
+        }
+    }
+   
+    // set the latitude range
+    if ( (sit = arg_dict.find("lat")) == arg_dict.end() ) {
+        auto latt = inx.latitude_grid();
+        lat_range.from = std::get<0>(latt);
+        lat_range.to   = std::get<1>(latt);
+        lat_range.step = std::get<2>(latt);
+    } else {
+        if ( resolve_geo_range(sit->second, lat_range) ) {
+            std::cerr << "\nERROR. Failed to resolve latitude range from:";
+            std::cerr << " \"" << sit->second << "\"";
+            return 1;
+        }
+    }
+   
+    // set the longtitude range
+    if ( (sit = arg_dict.find("lon")) == arg_dict.end() ) {
+        auto lont = inx.longtitude_grid();
+        lon_range.from = std::get<0>(lont);
+        lon_range.to   = std::get<1>(lont);
+        lon_range.step = std::get<2>(lont);
+    } else {
+        if ( resolve_geo_range(sit->second, lon_range) ) {
+            std::cerr << "\nERROR. Failed to resolve longtitude range from:";
+            std::cerr << " \"" << sit->second << "\"";
+            return 1;
+        }
+    }
+   
+    // set (if specified) the latitude interval
+    if ( (sit = arg_dict.find("dlat")) != arg_dict.end() ) {
+        try {
+            lat_range.step = std::stof(sit->second);
+        } catch (std::invalid_argument&) {
+            std::cerr << "\nERROR. Failed to resolve latitude step from:";
+            std::cerr << " \"" << sit->second << "\"";
+            return 1;
+        }
+    }
+   
+    // set (if specified) the longtitude interval
+    if ( (sit = arg_dict.find("dlon")) != arg_dict.end() ) {
+        try {
+            lon_range.step = std::stof(sit->second);
+        } catch (std::invalid_argument&) {
+            std::cerr << "\nERROR. Failed to resolve latitude step from:";
+            std::cerr << " \"" << sit->second << "\"";
+            return 1;
+        }
+    }
+    return 0;
+}
+
+// Resolve a lat/lon interval of type "from/to/step"
+int
+resolve_geo_range(std::string str, range<float>& rng)
+{
+    // tokenize the string using '/' as delimeter
+    float  lary[3] = {-9999, -9999, -9999};
+    int j = 0;
+    
+    std::size_t i = 0;
+    std::string::size_type pos = str.find_first_of('/', i);
+    try
+    {
+        while (pos != std::string::npos)
+        {
+            lary[j] = std::stod( str.substr(i, pos-i) );
+            ++j;
+            i = pos + 1;
+            pos = str.find_first_of('/', i);
+        }
+        lary[j] = std::stod( str.substr(i, pos-i) );
+    }
+    catch (std::invalid_argument& e)
+    {
+        return 1;
+    }
+
+    // see that all values and no more are assigned.
+    if ( j!=2 ) { return 1; }
+
+    rng.from = lary[0];
+    rng.to   = lary[1];
+    rng.step = lary[2];
+
+    return 0;   
 }
 
 int
 cmd_parse(int argv, char* argc[], str_str_map& smap)
 {
-    if ( argv == 1 )
-    {
+    if ( argv == 1 ) {
             help();
             std::cout << "\n";
             usage();
@@ -104,8 +211,7 @@ cmd_parse(int argv, char* argc[], str_str_map& smap)
             return 1;
     }
 
-    for (int i = 1; i < argv; i++)
-    {
+    for (int i = 1; i < argv; i++) {
         if (   !std::strcmp(argc[i], "-h") 
             || !std::strcmp(argc[i], "--help") )
         {
@@ -120,7 +226,7 @@ cmd_parse(int argv, char* argc[], str_str_map& smap)
                || !std::strcmp(argc[i], "--list") )
         {
             smap["list"] = std::string("Y");
-        }
+        } 
         else if ( !std::strcmp(argc[i], "-diff") )
         {
             smap["diff"] = std::string("Y");
@@ -143,6 +249,12 @@ cmd_parse(int argv, char* argc[], str_str_map& smap)
             smap["stop"] = std::string( argc[i+1] );
             ++i;
         }
+        else if ( !std::strcmp(argc[i], "-interval") )
+        {
+            if ( i+1 >= argv ) { return 1; }
+            smap["rate"] = std::string( argc[i+1] );
+            ++i;
+        }
         else if ( !std::strcmp(argc[i], "-lat") )
         {
             if ( i+1 >= argv ) { return 1; }
@@ -153,6 +265,18 @@ cmd_parse(int argv, char* argc[], str_str_map& smap)
         {
             if ( i+1 >= argv ) { return 1; }
             smap["lon"] = std::string( argc[i+1] );
+            ++i;
+        }
+        else if ( !std::strcmp(argc[i], "-dlat") )
+        {
+            if ( i+1 >= argv ) { return 1; }
+            smap["dlat"] = std::string( argc[i+1] );
+            ++i;
+        }
+        else if ( !std::strcmp(argc[i], "-dlon") )
+        {
+            if ( i+1 >= argv ) { return 1; }
+            smap["dlon"] = std::string( argc[i+1] );
             ++i;
         }
         else
@@ -175,9 +299,9 @@ resolve_str_date(std::string str, epoch& eph)
     char* end;
     std::vector<long> vec_tokens;
 
-    if (auto (it = std::find(std::begin(str), std::end(str), "/"))
+    auto it = std::find(std::begin(str), std::end(str), '/');
+    if ( it == std::end(str) ) {
     // only time (2nd case)
-                == std::end(str) ) {
         for (long i = std::strtol(p, &end, 10);
              p != end;
              ++p, i = std::strtol(p, &end, 10))
@@ -186,9 +310,7 @@ resolve_str_date(std::string str, epoch& eph)
             if (errno == ERANGE || num_tokens++ > 2) { return 1; }
             vec_tokens.emplace_back( i );
         }
-        eph = epoch( ngpt::year(0),
-                     ngpt::month(0),
-                     ngpt::day_of_month(0),
+        eph = epoch( ngpt::modified_julian_day(0),
                      ngpt::hours((int)vec_tokens[0]),
                      ngpt::minutes((int)vec_tokens[1]),
                      ngpt::milliseconds(vec_tokens[2]*1000L)
@@ -204,12 +326,12 @@ resolve_str_date(std::string str, epoch& eph)
             if (errno == ERANGE || num_tokens++ > 5) { return 1; }
             vec_tokens.emplace_back( i );
         }
-        *eph = epoch( ngpt::year((int)vec_tokens[0]),
-                      ngpt::month((int)vec_tokens[1]),
-                      ngpt::day_of_month((int)vec_tokens[2]),
-                      ngpt::hours((int)vec_tokens[3]),
-                      ngpt::minutes((int)vec_tokens[4]),
-                      ngpt::milliseconds(vec_tokens[5]*1000L)
+        eph = epoch ( ngpt::year{(int)vec_tokens[0]},
+                      ngpt::month{(int)vec_tokens[1]},
+                      ngpt::day_of_month{(int)vec_tokens[2]},
+                      ngpt::hours{(int)vec_tokens[3]},
+                      ngpt::minutes{(int)vec_tokens[4]},
+                      ngpt::milliseconds{vec_tokens[5]*1000L}
                      );
         return 0;
     }

@@ -45,13 +45,6 @@ constexpr double mjd0_jd             { 2400000.5e0 };
 /// TT minus TAI (s)
 constexpr double tt_minus_tai        { 32.184e0 };
 
-/*
-constexpr static long month_day[2][13] = {
-    {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365},
-    {0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366}
-};
-*/
-
 /// Time-Scales
 enum class time_scale : char
 { tai, tt, utc, ut1 };
@@ -87,7 +80,7 @@ class microseconds;
 
 /// Format options
 namespace datetime_format_options {
-    enum class year_digits  : char  { two_digit, four_digit };
+    enum class year_digits  : char { two_digit, four_digit };
     enum class month_format : char { two_digit, short_name, long_name };
 }
 
@@ -337,7 +330,7 @@ public:
     typedef int underlying_type;
     
     /// Constructor
-    explicit constexpr hours(underlying_type i) noexcept : h(i) {};
+    explicit constexpr hours(underlying_type i=0) noexcept : h(i) {};
     
     /// Pass the underlying type
     constexpr underlying_type as_underlying_type() const noexcept
@@ -357,7 +350,7 @@ public:
     typedef int underlying_type;
     
     /// Constructor
-    explicit constexpr minutes(underlying_type i) noexcept : m(i) {};
+    explicit constexpr minutes(underlying_type i=0) noexcept : m(i) {};
 
     /// Pass the underlying type
     constexpr underlying_type as_underlying_type() const noexcept
@@ -385,6 +378,13 @@ public:
     
     /// Constructor
     explicit constexpr seconds(underlying_type i=0L) noexcept : s(i) {};
+
+    /// Constructor from hours, minutes, seconds
+    explicit constexpr seconds(hours h, minutes m, seconds c) noexcept
+        : s {  c.as_underlying_type()
+             + m.as_underlying_type()*60L
+             + h.as_underlying_type()*3600L}
+    {}
 
     /// Constructor from hours, minutes, fractional seconds
     explicit constexpr seconds(hours h, minutes m, double fs) noexcept
@@ -510,6 +510,12 @@ public:
     /// Cinstructor.
     explicit constexpr milliseconds(underlying_type i=0L) noexcept : s(i) {};
     
+    explicit constexpr milliseconds(hours h, minutes m, milliseconds c) noexcept
+        : s { c.as_underlying_type()
+            + m.as_underlying_type()*60L  *1000L
+            + h.as_underlying_type()*3600L*1000L}
+    {}
+    
     /// Constructor from hours, minutes, fractional seconds
     explicit constexpr milliseconds(hours h, minutes m, double fs)
     noexcept
@@ -632,6 +638,12 @@ public:
     /// Constructor.
     explicit constexpr microseconds(underlying_type i=0L) noexcept : s(i) {};
     
+    explicit constexpr microseconds(hours h, minutes m, microseconds c) noexcept
+        : s { c.as_underlying_type()
+            + m.as_underlying_type()*60L   *1000L * 1000L
+            + h.as_underlying_type()*3600L *1000L * 1000L}
+    {}
+    
     /// Constructor from hours, minutes, fractional seconds
     /*explicit constexpr microseconds(hours h, minutes m, double fs)
     noexcept
@@ -751,7 +763,7 @@ public:
     explicit constexpr datev2() noexcept : mjd_(0), sect_(0) {};
     
     /// Constructor from year, month, day of month and any sec type.
-    explicit constexpr datev2(year y, month m, day_of_month d, S s=S())
+    explicit constexpr datev2(year y, month m, day_of_month d, S s)
         : mjd_ (cal2mjd(y, m, d)),
           sect_(s)
         {}
@@ -766,6 +778,19 @@ public:
     datev2(year y, month m, day_of_month d, hours hr, minutes mn, double fsecs)
         : mjd_ ( cal2mjd(y, m, d) ),
           sect_( hr, mn, fsecs )
+    {}
+
+    explicit
+    datev2(modified_julian_day mjd, hours hr=hours(), minutes mn=minutes(), S sec=S())
+        : mjd_ {mjd}, 
+          sect_{hr, mn, sec}
+    {}
+    
+    explicit
+    datev2(year y, month m, day_of_month d,
+           hours hr=hours(), minutes mn=minutes(), S sec=S())
+        : mjd_ {cal2mjd(y, m, d)}, 
+          sect_{hr, mn, sec}
     {}
 
     template<class T>

@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <vector>
+#include <tuple>
 #include "datetime_v2.hpp"
 
 /**
@@ -109,6 +110,13 @@ public:
     
     datetime_ms last_epoch() const noexcept { return this->_last_epoch; }
 
+    std::tuple<ionex_grd_type, ionex_grd_type, ionex_grd_type> latitude_grid()
+    const noexcept
+    { return std::make_tuple(_lat1, _lat2, _dlat); }
+    
+    std::tuple<ionex_grd_type, ionex_grd_type, ionex_grd_type> longtitude_grid()
+    const noexcept
+    { return std::make_tuple(_lon1, _lon2, _dlon); }
   
     std::vector<std::vector<double>>
     interpolate(
