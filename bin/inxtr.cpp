@@ -15,12 +15,16 @@ struct range {
     range(T f=T(), T t=T(), T s=T())
         : from(f), to(t), step(s)
     {};
+    float start() const { return from;}
+    bool less(float f) const { return to >= from ? f<= to : f>= from; }
+    void increment(float& f) const { f+=step; }
     bool empty() const noexcept
     {
         return from == to && (to == step && step == T());
     }
 };
 
+typedef std::pair<float, float>            _point_;
 typedef std::map<std::string, std::string> str_str_map;
 typedef ngpt::datev2<ngpt::milliseconds>   epoch;
 
@@ -160,6 +164,30 @@ int main(int argv, char* argc[])
             return 1;
         }
     }
+
+    // construct the vector of points for which we want the TEC values
+    std::vector<_point_> points;
+    for (float lat = lat_range.from; lat_range.less(lat); lat_range.increment(lat)) {
+        for (float lon = lon_range.from; lon_range.less(lon); lon_range.increment(lon)) {
+            points.emplace_back( lon, lat );
+        }
+    }
+
+#ifdef DEBUG
+    std::cout<<"\nIONEX file: "<<inx.filename();
+    std::cout<<"\nInterpolating in lat: "<<lat_range.from<<"/"<<lat_range.to<<"/"<<lat_range.step;
+    std::cout<<"\nInterpolating in lon: "<<lon_range.from<<"/"<<lon_range.to<<"/"<<lon_range.step;
+    std::cout<<"\nInterpolating in time "<<epoch_range.from.stringify()<<"/"<<epoch_range.to.stringify()<<"/"<<time_step;
+    std::cout<<"\nNumber of points to interpolate at: "<<points.size();
+#endif
+    
+
+
+    // let's do this!
+    std::vector<epoch> epochs;
+    int i_time_step (time_step);
+    auto tec_results = inx.interpolate(points, epochs,
+                        &epoch_range.from, &epoch_range.to, i_time_step);
     return 0;
 }
 

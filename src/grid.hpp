@@ -189,8 +189,13 @@ private:
 #endif
     {
         if ( this->out_of_range(x) ) {
+#ifdef DEBUG
+            std::string xstr = std::to_string(x);
             throw std::out_of_range (
-            "tick_axis_impl<>::neighbor_nodes_impl -> out_of_range !!");
+            "tick_axis_impl<>::neighbor_nodes_impl -> out_of_range at " + xstr);
+#endif
+            throw std::out_of_range (
+            "tick_axis_impl<>::neighbor_nodes_impl -> out_of_range");
         }
 
         // find tick on the left.
@@ -199,8 +204,13 @@ private:
         // find tick on the right.
         node right ( left.next() );
         if ( right.index() >= npts_ ) {
+#ifdef DEBUG
+            std::string xstr = std::to_string(x);
             throw std::out_of_range (
-            "tick_axis_impl<>::neighbor_nodes_impl -> out_of_range !!");
+            "tick_axis_impl<>::neighbor_nodes_impl -> out_of_range at " + xstr);
+#endif
+            throw std::out_of_range (
+            "tick_axis_impl<>::neighbor_nodes_impl -> out_of_range");
         }
 
         return std::make_tuple( left, right );

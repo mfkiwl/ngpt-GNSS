@@ -833,6 +833,9 @@ ionex::interpolate(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& 
     // different epochs than collected.
     if ( status < 0 ) {
         epochs = std::move( epoch_vector_1 );
+        // copy the vector from ints to doubles
+        std::cout<<"\nSize = " << tec_vals_1.size();
+        std::cout<<"\nInner size = " << tec_vals_1[0].size();
         std::vector<std::vector<double>> tecs (tec_vals_1.size(),
                                     std::vector<double>(tec_vals_1[0].size()));
         for (std::size_t i=0; i<tecs.size(); ++i) {
