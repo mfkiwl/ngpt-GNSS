@@ -191,9 +191,9 @@ int main(int argv, char* argc[])
     std::size_t epoch_index = 0;
     for (const auto& eph : epochs) {
         std::cout << "\n" << eph.stringify() << "\n";
-        for (const auto& p : tec_results) {
+/*        for (const auto& p : tec_results) {
             std::cout << p[epoch_index] << " ";
-        }
+        }*/
         ++epoch_index;
     }
     std::cout<<"\nEOT";

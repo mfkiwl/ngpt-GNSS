@@ -792,11 +792,11 @@ ionex::parse_epoch_arguments(std::vector<datetime_ms>& epochs,
  */
 std::vector<std::vector<double>>
 ionex::interpolate(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& points,
-                std::vector<datetime_ms>& epochs,
-                datetime_ms* ifrom,
-                datetime_ms* ito,
-                int interval
-                )
+                   std::vector<datetime_ms>& epochs,
+                   datetime_ms* ifrom,
+                   datetime_ms* ito,
+                   int interval
+                  )
 {
     int status = this->parse_epoch_arguments(epochs, ifrom, ito, interval);
     if ( status > 0 ) {
@@ -826,22 +826,31 @@ ionex::interpolate(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& 
             ("ionex::interpolate() -> failed to read tecs/epochs.");
     }
 
-    // Sweet! now perform the interpolation in time IF we are interested in
-    // different epochs than collected.
+    // Sweet! If status < 0, then no interpolation is needed, but it might be
+    // that the interval we want is not the whole interval in the IONEX file.
     if ( status < 0 ) {
-        epochs = std::move( epoch_vector_1 );
-        // copy the vector from ints to doubles
-        std::vector<std::vector<double>> tecs (tec_vals_1.size(),
-                                    std::vector<double>(tec_vals_1[0].size()));
-        for (std::size_t i=0; i<tecs.size(); ++i) {
-            std::transform(tec_vals_1[i].cbegin(),
-                           tec_vals_1[i].cend(),
-                           tecs[i].begin(),
-                           [&](int t){ return static_cast<double>(t) *
-                                static_cast<double>(std::pow(1, this->_exp)); }
-                          );
-
+        std::vector<std::vector<double>> tecs;
+        std::size_t erased = 0;
+        for (auto ev_time  = std::begin(epoch_vector_1);
+                  ev_time != std::end(epoch_vector_1);   )
+        {
+            if ( *ev_time < *ifrom || *ev_time > *ito ) {
+                ev_time = epoch_vector_1.erase( ev_time );
+                ++erased;
+            } else {
+                tecs.push_back( std::vector<double>( points.size()) );
+                std::size_t tidx = tecs.size() - 1;
+                std::size_t k    = std::distance(epoch_vector_1.begin(), ev_time) + erased;
+                std::transform(tec_vals_1[k].cbegin(),
+                               tec_vals_1[k].cend(),
+                               tecs[tidx].begin(),
+                               [&](int t){ return static_cast<double>(t) *
+                                           static_cast<double>(std::pow(1, this->_exp)); }
+                              );
+                ++ev_time;
+            }
         }
+        epochs = std::move( epoch_vector_1 );
         return tecs;
     }
  
@@ -855,6 +864,7 @@ ionex::interpolate(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& 
     ngpt::milliseconds coefi, coefj;
 
     for (auto cur_time  = epochs.cbegin(); cur_time < epochs.cend(); ++cur_time ) {
+        std::cout<<"\nLooping with current epoch: "<<cur_time->stringify();
         k = std::distance(epochs.cbegin(), cur_time);
         if ( *cur_time > *time_next ) {
             ++time_prev;
