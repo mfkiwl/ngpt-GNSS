@@ -2,6 +2,7 @@
 #include <map>
 #include <cstring>
 #include <algorithm>
+#include <limits>
 #include "datetime_v2.hpp"
 #include "ionex.hpp"
 
@@ -18,9 +19,26 @@ struct range {
     float start() const { return from;}
     bool less(float f) const { return to >= from ? f<= to : f>= to; }
     void increment(float& f) const { f+=step; }
-    bool empty() const noexcept
+    bool empty() const noexcept { return from == to; }
+    bool validate() const
     {
-        return from == to && (to == step && step == T());
+        if ( step == 0 ) {
+            if ( empty() )
+                return true;
+            else
+                return false;
+        }
+        long npts = static_cast<long>((to-from) / step);
+        if ( (npts < 0) || (npts > std::numeric_limits<int>::max()) ) {
+            return false;
+        }
+        long _if = 100*from;
+        long _it = 100*to;
+        long _is = 100*step;
+        if ( (_it-_if)%_is ) {
+            return false;
+        }
+        return true;
     }
 };
 
@@ -165,13 +183,44 @@ int main(int argv, char* argc[])
         }
     }
 
+    // validate the ranges
+    if ( !lat_range.validate() ) {
+        std::cerr<<"\nWhat the fuck ashole! Invalid latitude range.\n";
+        return 1;
+    }
+    if ( !lon_range.validate() ) {
+        std::cerr<<"\nWhat the fuck ashole! Invalid longtitude range.\n";
+        return 1;
+    }
+
     // construct the vector of points for which we want the TEC values
+    // BEWARE! If lat/lon step = 0, then we are forever looping
+    auto prev_lat_step = lat_range.step;
+    auto prev_lon_step = lon_range.step;
+    if ( lat_range.step == 0 ) {
+        if ( lat_range.empty() ) {
+            lat_range.step = 1.0f;
+        } else {
+            std::cerr <<"\nInvalid (zero) latitude step size!.\n";
+            return 1;
+        }
+    }
+    if ( lon_range.step == 0 ) {
+        if ( lon_range.empty() ) {
+            lon_range.step = 1.0f;
+        } else {
+            std::cerr <<"\nInvalid (zero) longtitude step size!.\n";
+            return 1;
+        }
+    }
     std::vector<_point_> points;
     for (float lat = lat_range.from; lat_range.less(lat); lat_range.increment(lat)) {
         for (float lon = lon_range.from; lon_range.less(lon); lon_range.increment(lon)) {
             points.emplace_back( lon, lat );
         }
     }
+    lat_range.step = prev_lat_step;
+    lon_range.step = prev_lon_step;
 #ifdef DEBUG
     std::cout<<"\n[DEBUG] Interpolating for "<< points.size() <<" points";
 #endif
@@ -190,13 +239,17 @@ int main(int argv, char* argc[])
 
     std::size_t epoch_index = 0;
     for (const auto& eph : epochs) {
+        // FIXME Plain motherfucking wrong
         std::cout << "\n" << eph.stringify() << "\n";
-/*        for (const auto& p : tec_results) {
+        for (const auto& p : tec_results) {
             std::cout << p[epoch_index] << " ";
-        }*/
+        }
         ++epoch_index;
     }
     std::cout<<"\nEOT";
+    std::cout<<"\nSize of TEC: "<<tec_results.size();
+    for (std::size_t i=0;i<tec_results.size();++i)
+        std::cout<<"\nSize["<<i<<"] = "<<tec_results[i].size();
 
     std::cout<<"\n";
     return 0;
