@@ -16,7 +16,7 @@ struct range {
         : from(f), to(t), step(s)
     {};
     float start() const { return from;}
-    bool less(float f) const { return to >= from ? f<= to : f>= from; }
+    bool less(float f) const { return to >= from ? f<= to : f>= to; }
     void increment(float& f) const { f+=step; }
     bool empty() const noexcept
     {
@@ -172,22 +172,33 @@ int main(int argv, char* argc[])
             points.emplace_back( lon, lat );
         }
     }
-
 #ifdef DEBUG
-    std::cout<<"\nIONEX file: "<<inx.filename();
-    std::cout<<"\nInterpolating in lat: "<<lat_range.from<<"/"<<lat_range.to<<"/"<<lat_range.step;
-    std::cout<<"\nInterpolating in lon: "<<lon_range.from<<"/"<<lon_range.to<<"/"<<lon_range.step;
-    std::cout<<"\nInterpolating in time "<<epoch_range.from.stringify()<<"/"<<epoch_range.to.stringify()<<"/"<<time_step;
-    std::cout<<"\nNumber of points to interpolate at: "<<points.size();
+    std::cout<<"\n[DEBUG] Interpolating for "<< points.size() <<" points";
 #endif
-    
-
 
     // let's do this!
     std::vector<epoch> epochs;
     int i_time_step (time_step);
     auto tec_results = inx.interpolate(points, epochs,
                         &epoch_range.from, &epoch_range.to, i_time_step);
+
+    // print results
+    std::cout<<"\nINX: " << inx.filename();
+    std::cout<<"\nEPH: " << epoch_range.from.stringify()<<" "<<epoch_range.to.stringify()<<" "<<time_step;
+    std::cout<<"\nLAT: " << lat_range.from<<" "<<lat_range.to<<" "<<lat_range.step;
+    std::cout<<"\nLON: " << lon_range.from<<" "<<lon_range.to<<" "<<lon_range.step;
+
+    std::size_t epoch_index = 0;
+    for (const auto& eph : epochs) {
+        std::cout << "\n" << eph.stringify() << "\n";
+        for (const auto& p : tec_results) {
+            std::cout << p[epoch_index] << " ";
+        }
+        ++epoch_index;
+    }
+    std::cout<<"\nEOT";
+
+    std::cout<<"\n";
     return 0;
 }
 
@@ -390,27 +401,44 @@ usage()
     "\tDisplay (this) help message and exit.\n"
     " -i [IONEX]\n"
     "\tSpecify the input IONEX file.\n"
-    " -azi [from/to/step]\n"
-    "\tSpecify the range for the azimouth axis. Azimouth\n"
-    "\tgrid will span the interval [from,to) with a step\n"
-    "\tsize of step degrees. Default is [0,360,1]. This\n"
-    "\twill automatically fall back to [0,0,0] if no\n"
-    "\tazimouth-dependent pcv values are available. Note\n"
-    "\tthat this option will overwrite the \'-dazi\' option.\n"
-    " -zen [from/to/step]\n"
-    "\tSpecify the range for the zenith ditance axis. The\n"
-    "\tgrid will span the interval [from,to) with a step\n"
-    "\tsize of step degrees. Default is [0,90,1]. Note\n"
-    "\tthat this option will overwrite the \'-dzen\' option.\n"
-    " -diff\n"
-    "\tInstead of printing each antenna's pcv corrections,\n"
-    "\tprint the diffrences between pcv values. The first\n"
-    "\tantenna in the list is considered as \'reference\' and\n"
-    "\tfor each antenna in the specified list the respective\n"
-    "\tdiscrepancies are computed.";
+    " -start [YYYY/MM/DDTHH:MM:SS] or [HH:MM:SS]\n"
+    "\tSpecify the first epoch to interpolate. In case only\n"
+    "\ta time argument is provided (i.e. \"HH:MM:SS\") it is\n"
+    "\tassumed that the day is the (first) day in the\n"
+    "\tIONEX file. If not prvided, it is set to the first\n"
+    "\tepoch in the file.\n"
+    " -stop [YYYY/MM/DDTHH:MM:SS] or [HH:MM:SS]\n"
+    "\tSpecify the last epoch to interpolate. In case only\n"
+    "\ta time argument is provided (i.e. \"HH:MM:SS\") it is\n"
+    "\tassumed that the day is the (last) day in the \n"
+    "\tIONEX file.If not prvided, it is set to the last\n"
+    "\tepoch in the file.\n"
+    " -interval [SECONDS]\n"
+    "\tSpecify the time step in integer seconds for the\n"
+    "\tinterpolation. If not provided, it is set to\n"
+    "\tthe value provided in the IONEX header.\n"
+    " -lat [lat1/lat2/dlat]\n"
+    "\tThe latitude interval for the interpolation. The\n"
+    "\targuments should be decimal degrees (floats).\n"
+    "\tIf not provided, it is set to the value provided\n"
+    "\tin the IONEX file. Note that you can overide the\n"
+    "\t\"dlat\" value via the \"-dlat\" option.\n"
+    " -lon [lon1/lon2/dlon]\n"
+    "\tThe longtitude interval for the interpolation. The\n"
+    "\targuments should be decimal degrees (floats).\n"
+    "\tIf not provided, it is set to the value provided\n"
+    "\tin the IONEX file. Note that you can overide the\n"
+    "\t\"dlon\" value via the \"-dlon\" option.\n"
+    " -dlat [LATITUDE STEP]\n"
+    "\tSpecify the latitude step in decimal degrees (the\n"
+    "\tmax precission is two decimal places). This will\n"
+    "\toverride the value of \"-lat\" argument (if provided).\n"
+    " -dlon [LONGTITUDE STEP]\n"
+    "\tSpecify the longtitude step in decimal degrees (the\n"
+    "\tmax precission is two decimal places). This will\n"
+    "\toverride the value of \"-lon\" argument (if provided).\n";
 
-    std ::cout << "Example usage:\n"
-    "atxtr -a igs08.atx -m \"TRM41249.00     TZGD,LEIATX1230+GNSS NONE\"";
+    std ::cout << "Example usage:\n";
     return;
 }
 

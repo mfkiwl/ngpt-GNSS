@@ -625,8 +625,17 @@ public:
     const noexcept( !RangeCheck )
     {
         if ( x == x_axis_to() ) {
-            // TODO this is completely wrong. vals is not ordered correctly
-            yaxis_.interpolate(y, vals);
+            if ( y == y_axis_to() ) {
+#ifdef DEBUG
+                std::cout<<"\n[DEBUG] This is the fucking limit! ("<<x<<","<<y<<")";
+#endif
+                return vals[size()-1];
+            }
+            S x0 (static_cast<S>(std::get<0>(nodes).y_value()));
+            S x1 (static_cast<S>(std::get<2>(nodes).y_value()));
+            S y0 ( vals[std::get<2>(nodes).data_index()] );
+            S y1 ( vals[std::get<3>(nodes).data_index()] );
+            return y0+(y1-y0)*((y-x0)/(x1-x0));
         }
 
         if ( y == y_axis_to() ) {

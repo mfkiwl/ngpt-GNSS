@@ -671,9 +671,6 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
     // get me a vector large enough to hold a whole map
     std::vector<int> tec_map (grid.size(), 0);
 
-    // clear the vector of epochs
-    epoch_vector.clear();
-
     // go to 'END OF HEADER'
     char line[MAX_HEADER_CHARS];
     _istream.seekg(_end_of_head, std::ios::beg);
@@ -726,9 +723,9 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
         for (const auto& p : points) {
             tec_vals[j][map_num]  = grid.bilinear_interpolation<int>(p.first,
                                   p.second, cells[j], tec_map.data());
-            epoch_vector[map_num] = cur_dt;
             ++j;
         }
+        epoch_vector[map_num] = cur_dt;
         _istream.getline(line, MAX_HEADER_CHARS);
         ++map_num;
     }
@@ -834,8 +831,6 @@ ionex::interpolate(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& 
     if ( status < 0 ) {
         epochs = std::move( epoch_vector_1 );
         // copy the vector from ints to doubles
-        std::cout<<"\nSize = " << tec_vals_1.size();
-        std::cout<<"\nInner size = " << tec_vals_1[0].size();
         std::vector<std::vector<double>> tecs (tec_vals_1.size(),
                                     std::vector<double>(tec_vals_1[0].size()));
         for (std::size_t i=0; i<tecs.size(); ++i) {
