@@ -82,6 +82,7 @@ public:
     
     /// A class to represent a node
     class node {
+        static constexpr std::size_t invalid_index = -1;
     public:
         explicit constexpr
         node(std::size_t i = 0, const tick_axis_impl* t = nullptr)
@@ -93,6 +94,16 @@ public:
 
         constexpr node(node&& n) noexcept
             : index_(std::move(n.index_)), axis_ (std::move(n.axis_)) {}
+
+        static constexpr node end(const tick_axis_impl* t = nullptr) noexcept
+        {
+            return node {invalid_index, t};
+        }
+
+        constexpr bool is_invalid() const noexcept
+        {
+            return this->index_ == invalid_index;
+        }
 
         constexpr node& operator=(const node& n) noexcept
         {
@@ -118,7 +129,13 @@ public:
         }
 
         constexpr node next() const noexcept
-        { return node(this->index_+1, this->axis_); }
+        {
+            if ( index_+1 < axis_->npts_ )
+                return node(index_+1, axis_);
+            else
+                return /*node::end(axis);*/ //TODO WTF this doesn't work!
+                node(invalid_index, axis_);
+        }
 
         /// Move forward (postincrement), i.e. to the next node.
         constexpr node operator++(int) noexcept
@@ -189,6 +206,8 @@ private:
 #endif
     {
         if ( this->out_of_range(x) ) {
+            return std::make_tuple( node::end(this), node::end(this) );
+/*
 #ifdef DEBUG
             std::string xstr = std::to_string(x);
             throw std::out_of_range (
@@ -196,6 +215,7 @@ private:
 #endif
             throw std::out_of_range (
             "tick_axis_impl<>::neighbor_nodes_impl -> out_of_range");
+*/
         }
 
         // find tick on the left.
@@ -203,7 +223,7 @@ private:
 
         // find tick on the right.
         node right ( left.next() );
-        if ( right.index() >= npts_ ) {
+/*        if ( right.index() >= npts_ ) {
 #ifdef DEBUG
             std::string xstr = std::to_string(x);
             throw std::out_of_range (
@@ -212,6 +232,7 @@ private:
             throw std::out_of_range (
             "tick_axis_impl<>::neighbor_nodes_impl -> out_of_range");
         }
+*/
 
         return std::make_tuple( left, right );
     }
@@ -228,6 +249,7 @@ private:
     -> std::tuple<node, node>
 #endif
     {
+        // TODO this should be implemented as in the RangeCheck case TODO
         node left (static_cast<std::size_t>((x - start_) / step_));
         node right = left + 1;
         return std::make_tuple(left, right);
@@ -352,6 +374,22 @@ public:
                     this);
     }
 
+    template<class S>
+    S interpolate(T x, const S* data) const noexcept
+    {
+        if (x <= start_ ) {
+            return data[0];
+        } else if ( x>= stop_ ) {
+            return data[npts_-1];
+        }
+        auto nodes ( neighbor_nodes( x ) );
+        S x0 = static_cast<S>(std::get<0>( nodes ).value());
+        S x1 = static_cast<S>(std::get<1>( nodes ).value());
+        S y0 = data[std::get<0>( nodes ).index()];
+        S y1 = data[std::get<1>( nodes ).index()];
+        return y0 + (y1-y0)*((x-x0)/(x1-x0));
+    }
+
 };
 
 enum class Grid_Dimension : char { OneDim, TwoDim };
@@ -386,10 +424,21 @@ public:
     {
         auto nodes ( this->neighbor_nodes(x) );
         S x0 ( static_cast<S>(std::get<0>(nodes).value()) );
-        S x1 ( static_cast<S>(std::get<1>(nodes).value()) );
-        S y0 ( data[std::get<0>(nodes).index()] );
-        S y1 ( data[std::get<1>(nodes).index()] );
-        return y0 + (y1-y0)*(x-x0)/(x1-x0);
+        if ( !std::get<1>(nodes).is_invalid() ) {
+            S x1 ( static_cast<S>(std::get<1>(nodes).value()) );
+            S y0 ( data[std::get<0>(nodes).index()] );
+            S y1 ( data[std::get<1>(nodes).index()] );
+            return y0 + (y1-y0)*(x-x0)/(x1-x0);
+        } else {
+#ifdef DEBUG
+            std::cerr<<"\nMan! i got an invalid node in linear_interpolation.";
+            std::string xstr = std::to_string(x);
+            throw std::runtime_error
+                ("grid_skeleton<>::linear_interpolation() -> out of range (" + xstr + ")" );
+#endif
+            throw std::runtime_error
+                ("grid_skeleton<>::linear_interpolation() -> out of range.");
+        }
     }
 };
 
@@ -575,6 +624,15 @@ public:
                                     const S* vals)
     const noexcept( !RangeCheck )
     {
+        if ( x == x_axis_to() ) {
+            // TODO this is completely wrong. vals is not ordered correctly
+            yaxis_.interpolate(y, vals);
+        }
+
+        if ( y == y_axis_to() ) {
+            xaxis_.interpolate(x, vals);
+        }
+
         S x0 (static_cast<S>(std::get<0>(nodes).x_value()));
         S x1 (static_cast<S>(std::get<1>(nodes).x_value()));
         S y0 (static_cast<S>(std::get<0>(nodes).y_value()));
