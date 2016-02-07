@@ -464,9 +464,9 @@ print_pcv_info(const pcv_pattern& pcv, const antenna& ant,
     std::cout <<"\nZEN: " << zen1 << " " << zen2 << " " << zen_step;
     std::cout <<"\nAZI: " << azi1 << " " << azi2 << " " << azi_step;
 
-    for ( pcv_type zen = zen1; zen < zen2; zen += zen_step )
+    for ( pcv_type zen = zen1; zen <= zen2; zen += zen_step )
     {
-        for ( pcv_type azi = azi1; azi < azi2; azi += azi_step )
+        for ( pcv_type azi = azi1; azi <= azi2; azi += azi_step )
         {
             std::cout << "\n" << pcv.azi_pcv(zen, azi, 0);
         }
@@ -509,9 +509,9 @@ print_pcv_diff(const pcv_pattern& pcv, const antenna& ant,
     std::cout <<"\nAZI: " << azi1 << " " << azi2 << " " << azi_step;
 
     //TODO make this a bit quicker
-    for ( pcv_type zen = zen1; zen < zen2; zen += zen_step )
+    for ( pcv_type zen = zen1; zen <= zen2; zen += zen_step )
     {
-        for ( pcv_type azi = azi1; azi < azi2; azi += azi_step )
+        for ( pcv_type azi = azi1; azi <= azi2; azi += azi_step )
         {
             std::cout << "\n" << ref_pcv.azi_pcv(zen, azi, 0)
                                 - pcv.azi_pcv(zen, azi, 0);
@@ -536,7 +536,7 @@ print_pcv_info_noazi(const pcv_pattern& pcv, const antenna& ant,
     std::cout <<"\nZEN: " << zen1 << " " << zen2 << " " << zen_step;
     std::cout <<"\nAZI: 0 0 0";
 
-    for ( pcv_type zen = zen1; zen < zen2; zen += zen_step )
+    for ( pcv_type zen = zen1; zen <= zen2; zen += zen_step )
     {
         std::cout << "\n" << pcv.no_azi_pcv(zen, 0);
     }
@@ -560,7 +560,7 @@ print_pcv_diff_noazi(const pcv_pattern& pcv, const antenna& ant,
     std::cout <<"\nZEN: " << zen1 << " " << zen2 << " " << zen_step;
     std::cout <<"\nAZI: 0 0 0";
 
-    for ( pcv_type zen = zen1; zen < zen2; zen += zen_step )
+    for ( pcv_type zen = zen1; zen <= zen2; zen += zen_step )
     {
         std::cout << "\n" << ref_pcv.no_azi_pcv(zen, 0) - pcv.no_azi_pcv(zen, 0);
     }
