@@ -267,6 +267,9 @@ public:
     constexpr bool operator<=(const modified_julian_day& d) const noexcept
     { return m <= d.m; }
 
+    constexpr modified_julian_day& operator--() noexcept
+    { --m; return *this; }
+
     /// Cast to year, day_of_year
     /*constexpr*/ year to_ydoy(day_of_year&) const noexcept;
     
@@ -396,6 +399,7 @@ public:
     
     /// Addition operator between seconds.
     constexpr void operator+=(const seconds& sc) noexcept { s+=sc.s; }
+    constexpr void operator-=(const seconds& sc) noexcept { s-=sc.s; }
     
     /// Overload '-' operator
     constexpr seconds operator-(const seconds& n) const noexcept
@@ -533,6 +537,7 @@ public:
     
     /// Overload operator "+=" between milliseconds.
     constexpr void operator+=(const milliseconds& ms) noexcept { s+=ms.s; }
+    constexpr void operator-=(const milliseconds& ms) noexcept { s-=ms.s; }
     
     /// Overload '-' operator
     constexpr milliseconds operator-(const milliseconds& n) const noexcept
@@ -662,6 +667,7 @@ public:
     
     /// Overload operatpr "+=" between microseconds.
     constexpr void operator+=(const microseconds& ns) noexcept { s+=ns.s; }
+    constexpr void operator-=(const microseconds& ns) noexcept { s-=ns.s; }
 
     constexpr microseconds operator+(const microseconds& sec) const noexcept
     { return microseconds(s+sec.s); }
@@ -793,11 +799,26 @@ public:
           sect_{hr, mn, sec}
     {}
 
+    constexpr modified_julian_day mjd() const noexcept { return mjd_; }
+
     template<class T>
     constexpr void add_seconds(T t) noexcept
     { 
         sect_ += (S)t;
         if ( sect_.more_than_day() ) this->normalize();
+        return;
+    }
+    
+    template<class T>
+    constexpr void remove_seconds(T t) noexcept
+    { 
+        sect_ -= (S)t;
+        if ( sect_ < (S)0 ) {
+            while ( sect_ < (S)0 ) {
+                --mjd_;
+                sect_ += (S)S::max_in_day;
+            }
+        }
         return;
     }
 
@@ -887,7 +908,7 @@ public:
                      + "." + std::to_string( std::get<3>(hms) )
         };
     }
-
+    
     /// Overload operator "<<" TODO
     /*
     friend std::ostream& operator<<(std::ostream& o, const datev2& d)

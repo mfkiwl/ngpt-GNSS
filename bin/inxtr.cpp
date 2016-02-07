@@ -239,7 +239,6 @@ int main(int argv, char* argc[])
 
     std::size_t epoch_index = 0;
     for (const auto& eph : epochs) {
-        // FIXME Plain motherfucking wrong
         std::cout << "\n" << eph.stringify() << "\n";
         for (const auto& p : tec_results) {
             std::cout << p[epoch_index] << " ";
@@ -247,9 +246,6 @@ int main(int argv, char* argc[])
         ++epoch_index;
     }
     std::cout<<"\nEOT";
-    std::cout<<"\nSize of TEC: "<<tec_results.size();
-    for (std::size_t i=0;i<tec_results.size();++i)
-        std::cout<<"\nSize["<<i<<"] = "<<tec_results[i].size();
 
     std::cout<<"\n";
     return 0;

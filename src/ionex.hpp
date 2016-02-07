@@ -136,7 +136,9 @@ private:
     int get_tec_at(
             const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>&,
             std::vector<datetime_ms>&,
-            std::vector<std::vector<int>>&
+            std::vector<std::vector<int>>&,
+            datetime_ms *from = nullptr,
+            datetime_ms *to = nullptr
     );
 
     /// This is a help function for parsing datetime arguments to the
