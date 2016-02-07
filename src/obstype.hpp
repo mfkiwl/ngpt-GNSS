@@ -400,24 +400,24 @@ public:
 
     /// Default copy constructor.
     observation_type(const observation_type&)
-    noexcept(std::is_nothrow_copy_constructible<covec>::value) = default;
+    /*noexcept(std::is_nothrow_copy_constructible<covec>::value)*/ = default;
 
     /// Default destructor.
     ~observation_type() noexcept = default;
 
     /// Default move constructor.
     observation_type(observation_type&&) 
-    noexcept(std::is_nothrow_move_constructible<covec>::value) = default;
+    /*noexcept(std::is_nothrow_move_constructible<covec>::value)*/ = default;
 
     /// Default assignment operator.
     observation_type&
     operator=(const observation_type&) 
-    noexcept(std::is_nothrow_copy_assignable<covec>::value) = default;
+    /*noexcept(std::is_nothrow_copy_assignable<covec>::value)*/ = default;
 
     /// Default move assignment operator.
     observation_type&
     operator=(observation_type&&)
-    noexcept(std::is_nothrow_move_assignable<covec>::value) = default;
+    /*noexcept(std::is_nothrow_move_assignable<covec>::value)*/ = default;
 
     /// \brief Add an observation type. If the type already exists, then just 
     ///        alter the coefficient.

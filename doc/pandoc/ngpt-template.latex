@@ -67,9 +67,9 @@ $if(biblio-files)$
 \bibliography{$biblio-files$}
 $endif$
 $endif$
-$if(listings)$
+%$if(listings)$ Always use the listings package!
 \usepackage{listings}
-$endif$
+%$endif$
 $if(lhs)$
 \lstnewenvironment{code}{\lstset{language=Haskell,basicstyle=\small\ttfamily}}{}
 $endif$
@@ -131,12 +131,19 @@ $endif$
 $if(verbatim-in-note)$
 \VerbatimFootnotes % allows verbatim text in footnotes
 $endif$
-
+\usepackage{authblk}
 $if(title)$
 \title{$title$$if(subtitle)$\\\vspace{0.5em}{\large $subtitle$}$endif$}
 $endif$
 $if(author)$
-\author{$for(author)$$author.name$ $sep$ \and $endfor$}
+%\author{$for(author)$$author.name$ $sep$ \thanks{$author.email$} \and $endfor$}
+$for(author)$
+\author[$author.afnum$]{$author.name$\thanks{$author.email$}}
+$endfor$
+$for(affiliation)$
+\affil[$affiliation.afnum$]{$affiliation.name$}
+$endfor$
+\renewcommand\Authands{ and }
 $endif$
 \date{$date$}
 $for(header-includes)$

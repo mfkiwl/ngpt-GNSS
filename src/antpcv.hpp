@@ -76,7 +76,7 @@ public:
     frequency_pcv(std::size_t no_azi_hint = 1, std::size_t azi_hint = 1) 
     noexcept
         : type_(),
-          eccentricity_vector_( {.0e0, .0e0, .0e0} )
+          eccentricity_vector_({{.0e0, .0e0, .0e0}})
     {
       no_azi_pcv_values_.reserve(no_azi_hint);
       azi_pcv_values_.reserve(azi_hint);
@@ -131,104 +131,61 @@ public:
         )*/ = default;
 
     /// Access the north/X eccentricity component.
-    T&
-    north()
-    noexcept
-    { return eccentricity_vector_[0]; }
+    T& north() noexcept { return eccentricity_vector_[0]; }
 
     /// Access the east/Y eccentricity component.
-    T&
-    east()
-    noexcept
-    { return eccentricity_vector_[1]; }
+    T& east() noexcept { return eccentricity_vector_[1]; }
     
     /// Access the up/Z eccentricity component.
-    T&
-    up()
-    noexcept
-    { return eccentricity_vector_[2]; }
+    T& up() noexcept { return eccentricity_vector_[2]; }
     
     /// Get the north/X eccentricity component.
-    T
-    north()
-    const noexcept
-    { return eccentricity_vector_[0]; }
+    T north() const noexcept { return eccentricity_vector_[0]; }
     
     /// Get the east/Y eccentricity component.
-    T
-    east()
-    const noexcept
-    { return eccentricity_vector_[1]; }
+    T east() const noexcept { return eccentricity_vector_[1]; }
 
     /// Get the up/Z eccentricity component.
-    T
-    up()
-    const noexcept
-    { return eccentricity_vector_[2]; }
+    T up() const noexcept { return eccentricity_vector_[2]; }
 
     /// Access the observation_type this pattern belongs to.
-    ngpt::observation_type&
-    type()
-    noexcept
-    { return type_; }
+    ngpt::observation_type& type() noexcept { return type_; }
     
     /// Get the observation_type this pattern belongs to.
-    ngpt::observation_type
-    type()
-    const noexcept
-    { return type_; }
+    ngpt::observation_type type() const noexcept { return type_; }
 
     /// Return the vector of NOAZI pcv corrections for this instance.
-    fltvec&
-    no_azi_vector()
-    noexcept
-    { return no_azi_pcv_values_; }
+    fltvec& no_azi_vector() noexcept { return no_azi_pcv_values_; }
+    const fltvec& no_azi_vector_c() const noexcept { return no_azi_pcv_values_; }
     
     /// Return the vector of azimouth-dependent pcv corrections for this
     /// instance.
-    fltvec&
-    azi_vector()
-    noexcept
-    { return azi_pcv_values_; }
+    fltvec& azi_vector() noexcept { return azi_pcv_values_; }
+    const fltvec& azi_vector_c() const noexcept { return azi_pcv_values_; }
 
     /// Access the NOAZI pcv value at index \c i (i.e. the element at index 
     /// \c i of the NOAZI vector).
-    T&
-    no_azi_vector(std::size_t i)
-    { return no_azi_pcv_values_[i]; }
+    T& no_azi_vector(std::size_t i) { return no_azi_pcv_values_[i]; }
     
     /// Get the NOAZI pcv value at index \c i (i.e. the element at index 
     /// \c i of the NOAZI vector).
-    T
-    no_azi_vector(std::size_t i)
-    const
-    { return no_azi_pcv_values_[i]; }
+    T no_azi_vector(std::size_t i) const { return no_azi_pcv_values_[i]; }
     
     /// Access the AZI pcv value at index \c i (i.e. the element at index 
     /// \c i of the AZI vector).
-    T&
-    azi_vector(std::size_t i)
-    { return azi_pcv_values_[i]; }
+    T& azi_vector(std::size_t i) { return azi_pcv_values_[i]; }
     
     /// Get the AZI pcv value at index \c i (i.e. the element at index 
     /// \c i of the AZI vector).
-    T
-    azi_vector(std::size_t i)
-    const
-    { return azi_pcv_values_[i]; }
+    T azi_vector(std::size_t i) const { return azi_pcv_values_[i]; }
 
     /// Return the number of pcv values in the NOAZI (correction) vector.
-    std::size_t
-    no_azi_size()
-    const noexcept
+    std::size_t no_azi_size() const noexcept
     { return no_azi_pcv_values_.size(); }
     
     /// Return the number of pcv values in the azimouth-dependent 
     /// (correction) vector.
-    std::size_t
-    azi_size()
-    const noexcept
-    { return azi_pcv_values_.size(); }
+    std::size_t azi_size() const noexcept { return azi_pcv_values_.size(); }
 
 private:
     ngpt::observation_type type_;                 ///< Observation type
@@ -269,11 +226,11 @@ class antenna_pcv
 {
 
 #ifdef DEBUG
-    typedef GridSkeleton<T, true, Grid_Dimension::OneDim> dim1_grid;
-    typedef GridSkeleton<T, true, Grid_Dimension::TwoDim> dim2_grid;
+    typedef grid_skeleton<T, true, Grid_Dimension::OneDim> dim1_grid;
+    typedef grid_skeleton<T, true, Grid_Dimension::TwoDim> dim2_grid;
 #else
-    typedef GridSkeleton<T, false, Grid_Dimension::OneDim> dim1_grid;
-    typedef GridSkeleton<T, false, Grid_Dimension::TwoDim> dim2_grid;
+    typedef grid_skeleton<T, false, Grid_Dimension::OneDim> dim1_grid;
+    typedef grid_skeleton<T, false, Grid_Dimension::TwoDim> dim2_grid;
 #endif
 
 typedef std::vector<frequency_pcv<T>> fr_pcv_vec;
@@ -286,14 +243,10 @@ private:
 public:
 
     /// Default constructor
-    explicit antenna_pcv()
-        : no_azi_grid_(1, 1, 1),
-          azi_grid_   (nullptr)
-    {}
+    explicit antenna_pcv() : no_azi_grid_(1, 1, 1), azi_grid_(nullptr) {}
 
     /// Constructor. 
-    explicit antenna_pcv(T zen1, T zen2, T dzen,
-                         int freqs, T dazi = 0)
+    explicit antenna_pcv(T zen1, T zen2, T dzen, int freqs, T dazi = 0)
     /*noexcept*/
         : no_azi_grid_(zen1, zen2, dzen),
           azi_grid_(dazi
@@ -351,11 +304,7 @@ public:
     }
 
     /// Destructor
-    ~antenna_pcv()
-    noexcept
-    {
-        delete azi_grid_;
-    }
+    ~antenna_pcv() noexcept { delete azi_grid_; }
 
     // Return/access a fequency_pcv based on its frequency. The matching
     // (between freq_pcv.obtype and type) must be performed based on Satellite
@@ -386,62 +335,40 @@ public:
     
     // Return/access a fequency_pcv based on its index.
     frequency_pcv<T>&
-    freq_pcv_pattern( std::size_t i )
-    { return freq_pcv_[i]; }
+    freq_pcv_pattern( std::size_t i ) { return freq_pcv_[i]; }
 
     /// Get the ZEN1 value, i.e. the starting zenith angle for the correction
     /// grid.
-    T
-    zen1()
-    const noexcept
-    { return no_azi_grid_.from(); }
+    T zen1() const noexcept { return no_azi_grid_.from(); }
     
     /// Get the ZEN2 value, i.e. the ending zenith angle for the correction
     /// grid.
-    T
-    zen2()
-    const noexcept
-    { return no_azi_grid_.to();   }
+    T zen2() const noexcept { return no_azi_grid_.to();   }
     
     /// Get the DZEN value, i.e. the zenith angle step size for the correction
     /// grid.
-    T
-    dzen()
-    const noexcept
-    { return no_azi_grid_.step(); }
+    T dzen() const noexcept { return no_azi_grid_.step(); }
     
     /// Does this (correction) pattern have azimouth-dependent pcv values?
-    bool
-    has_azi_pcv()
-    const noexcept
-    { return azi_grid_ != nullptr; }
+    bool has_azi_pcv() const noexcept { return azi_grid_ != nullptr; }
     
     /// Get the AZI1 value, i.e. the starting azimouth angle for the correction
     /// grid.
     /// \warning Watch yourself bitch! can cause UB if azi_grid_ is invalid.
-    T azi1()
-    const noexcept
-    { return azi_grid_->y_axis_from(); }
+    T azi1() const noexcept { return azi_grid_->y_axis_from(); }
 
     /// Get the AZI2 value, i.e. the ending azimouth angle for the correction
     /// grid.
     /// \warning Watch yourself bitch! can cause UB if azi_grid_ is invalid.
-    T azi2()
-    const noexcept
-    { return azi_grid_->y_axis_to();   }
+    T azi2() const noexcept { return azi_grid_->y_axis_to();   }
     
     /// Get the DAZI value, i.e. the azimouth angle step size for the correction
     /// grid.
     /// \warning Watch yourself bitch! can cause UB if azi_grid_ is invalid.
-    T
-    dazi()
-    const noexcept
-    { return azi_grid_->y_axis_step(); }
+    T dazi() const noexcept { return azi_grid_->y_axis_step(); }
 
     /// Return the size (number of correction values) for the NOAZI pattern.
-    std::size_t
-    no_azi_grid_pts()
-    const noexcept
+    std::size_t no_azi_grid_pts() const noexcept
     { 
 #ifdef DEBUG
         /// make sure the size computed from the Grid is the same as the size
@@ -460,9 +387,7 @@ public:
     /// \warning This will return the (possible) number of pcv values that can 
     /// be held within the grid. The actual number of pcv values hold in the 
     /// vector can be different.
-    std::size_t
-    azi_grid_pts()
-    const noexcept 
+    std::size_t azi_grid_pts() const noexcept 
     { 
         return   azi_grid_ 
                ? azi_grid_->size()
@@ -470,82 +395,18 @@ public:
     }
 
     //TODO
-    T
-    no_azi_pcv(T zenith, std::size_t i)
-    const
+    T no_azi_pcv(T zenith, std::size_t i) const
     {
-        // TODO what if elevation == 90 ??
-        // get the left and right nodes
-        // std::tuple<std::size_t, T, std::size_t, T>
-        auto nodes ( no_azi_grid_.neighbor_nodes( zenith ) );
-        // simple, linear interpolation will do
-        std::size_t x0_idx = std::get<0>( nodes );
-#ifdef DEBUG
-        std::size_t x1_idx = std::get<2>( nodes );
-        assert ( x1_idx == x0_idx+1 );
-#else
-        std::size_t x1_idx = x0_idx + 1;
-#endif
-        T           x0     = std::get<1>( nodes );
-        T           x1     = std::get<3>( nodes );
-        T           y0     = freq_pcv_[i].no_azi_vector( x0_idx   );
-        T           y1     = freq_pcv_[i].no_azi_vector( x0_idx+1 );
-        return y0 + (y1-y0)*(zenith-x0)/(x1-x0);
+        return no_azi_grid_.linear_interpolation(zenith,
+                                 freq_pcv_[i].no_azi_vector_c());
     }
     
     //TODO
-    T
-    azi_pcv(T zenith, T azimouth, std::size_t i)
-    const
+    T azi_pcv(T zenith, T azimouth, std::size_t i) const
     {
         // TODO what if elevation == 90 ??
-        
-        // zenith values (per azimouth)
-        std::size_t azi_pts = azi_grid_->x_axis_pts();
-        
-        // get the sorounding grid
-        auto nodes ( azi_grid_->neighbor_nodes( zenith, azimouth ) );
-
-        // resolve the tuple
-        std::size_t x0_idx = std::get<0>( nodes );
-        std::size_t y0_idx = std::get<4>( nodes );
-#ifdef DEBUG
-        std::size_t x1_idx = std::get<2>( nodes );
-        std::size_t y1_idx = std::get<6>( nodes );
-        assert( x1_idx == x0_idx + 1 );
-        assert( y1_idx == y0_idx + 1 );
-#else
-        std::size_t x1_idx = x0_idx + 1;
-        std::size_t y1_idx = y0_idx + 1;
-#endif
-        T           x0     = std::get<1>( nodes );
-        T           x1     = std::get<3>( nodes );
-        T           y0     = std::get<5>( nodes );
-        T           y1     = std::get<7>( nodes );
-        std::size_t lowleft= y0_idx*azi_pts+x0_idx;
-        T           f00    = freq_pcv_[i].azi_vector( lowleft );
-        T           f01    = freq_pcv_[i].azi_vector( lowleft + azi_pts );
-        T           f10    = freq_pcv_[i].azi_vector( lowleft + 1);
-        T           f11    = freq_pcv_[i].azi_vector( lowleft + azi_pts + 1 );
-#ifdef DEBUG
-//        std::cout <<"\nInterpolating at: ("<<zenith<<", "<<azimouth<<")";
-//        std::cout <<"\n("<<x0_idx<<", "<<y1_idx<<") ----   ("<<x1_idx<<", "<<y1_idx<<")";
-//        std::cout <<"\n  |                     |";
-//        std::cout <<"\n  |                     |";
-//        std::cout <<"\n  |                     |";
-//        std::cout <<"\n("<<x0_idx<<", "<<y0_idx<<") ----   ("<<x1_idx<<", "<<y0_idx<<")";
-//        std::cout<<"\n";
-#endif
-        
-        // bilinear interpolation, see 
-        // https://en.wikipedia.org/wiki/Bilinear_interpolation
-        T x { zenith   };
-        T y { azimouth };
-        T denom { (x1-x0)*(y1-y0) };
-        return  ((x1-x)*(y1-y)/denom)*f00
-               +((x-x0)*(y1-y)/denom)*f10
-               +((x1-x)*(y-y0)/denom)*f01
-               +((x-x0)*(y-y0)/denom)*f11;
+        return azi_grid_->bilinear_interpolation( zenith, azimouth,
+                                     freq_pcv_[i].azi_vector_c() );
     }
 
 };

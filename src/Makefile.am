@@ -18,12 +18,13 @@ libngpt_la_CXXFLAGS = \
 dist_include_HEADERS = \
 	receiver.hpp \
 	antenna.hpp \
-	datetime.hpp \
+	datetime_v2.hpp \
 	satsys.hpp \
 	obstype.hpp \
 	grid.hpp \
 	antpcv.hpp \
 	antex.hpp \
+	ionex.hpp \
 	geodesy.hpp \
 	geoconst.hpp \
 	car2ell.hpp \
@@ -38,4 +39,5 @@ dist_libngpt_la_SOURCES = \
 	antenna.cpp \
 	satsys.cpp \
 	antex.cpp \
+	ionex.cpp \
 	top2daz.cpp

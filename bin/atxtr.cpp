@@ -275,7 +275,7 @@ epilog()
     "This work is free. You can redistribute it and/or modify it under the\n"
     "terms of the Do What The Fuck You Want To Public License, Version 2,\n"
     "as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.\n"
-    "\nSend bugs to: xanthos[AT]mail.ntua.gr, demanast[AT]mail.ntua.gr";
+    "\nSend bugs to: \nxanthos[AT]mail.ntua.gr, \ndemanast[AT]mail.ntua.gr \nvanzach[AT]survey.ntua.gr";
     return;
 }
 
@@ -464,13 +464,15 @@ print_pcv_info(const pcv_pattern& pcv, const antenna& ant,
     std::cout <<"\nZEN: " << zen1 << " " << zen2 << " " << zen_step;
     std::cout <<"\nAZI: " << azi1 << " " << azi2 << " " << azi_step;
 
-    for ( pcv_type zen = zen1; zen < zen2; zen += zen_step )
+    for ( pcv_type zen = zen1; zen <= zen2; zen += zen_step )
     {
-        for ( pcv_type azi = azi1; azi < azi2; azi += azi_step )
+        for ( pcv_type azi = azi1; azi <= azi2; azi += azi_step )
         {
             std::cout << "\n" << pcv.azi_pcv(zen, azi, 0);
         }
     }
+
+    std::cout << "\nEOA";
 
     return;
 }
@@ -507,14 +509,15 @@ print_pcv_diff(const pcv_pattern& pcv, const antenna& ant,
     std::cout <<"\nAZI: " << azi1 << " " << azi2 << " " << azi_step;
 
     //TODO make this a bit quicker
-    for ( pcv_type zen = zen1; zen < zen2; zen += zen_step )
+    for ( pcv_type zen = zen1; zen <= zen2; zen += zen_step )
     {
-        for ( pcv_type azi = azi1; azi < azi2; azi += azi_step )
+        for ( pcv_type azi = azi1; azi <= azi2; azi += azi_step )
         {
             std::cout << "\n" << ref_pcv.azi_pcv(zen, azi, 0)
                                 - pcv.azi_pcv(zen, azi, 0);
         }
     }
+    std::cout<<"\nEOA";
 
     return;
 }
@@ -533,10 +536,11 @@ print_pcv_info_noazi(const pcv_pattern& pcv, const antenna& ant,
     std::cout <<"\nZEN: " << zen1 << " " << zen2 << " " << zen_step;
     std::cout <<"\nAZI: 0 0 0";
 
-    for ( pcv_type zen = zen1; zen < zen2; zen += zen_step )
+    for ( pcv_type zen = zen1; zen <= zen2; zen += zen_step )
     {
         std::cout << "\n" << pcv.no_azi_pcv(zen, 0);
     }
+    std::cout << "\nEOA";
 
     return;
 }
@@ -556,10 +560,11 @@ print_pcv_diff_noazi(const pcv_pattern& pcv, const antenna& ant,
     std::cout <<"\nZEN: " << zen1 << " " << zen2 << " " << zen_step;
     std::cout <<"\nAZI: 0 0 0";
 
-    for ( pcv_type zen = zen1; zen < zen2; zen += zen_step )
+    for ( pcv_type zen = zen1; zen <= zen2; zen += zen_step )
     {
         std::cout << "\n" << ref_pcv.no_azi_pcv(zen, 0) - pcv.no_azi_pcv(zen, 0);
     }
+    std::cout << "\nEOA";
 
     return;
 }

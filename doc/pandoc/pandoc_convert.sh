@@ -1,7 +1,7 @@
 #! /bin/bash
 
 if test "$#" -ne 1 ; then
-    echo 1>&2 "Usage pandoc_convert.sh <html, pdf>"
+    echo 1>&2 "Usage pandoc_convert.sh <latex, pdf>"
     exit 1
 fi
 
@@ -53,11 +53,6 @@ else
     dt=$(date -R)
     cat ${DOC_DIR}/pandoc/meta.yaml | sed "s/date:.*/date: ${dt}/g" > ${PAND_DOC}
     echo "Meta-file \"${DOC_DIR}/pandoc/meta.yaml\" pasted to \"${PAND_DOC}\""
-    if test -f "${DOC_DIR}/pandoc/ngpt-pd.css" ; then
-        sed -i "s|  ngpt-pd.css|  ${DOC_DIR}/pandoc/ngpt-pd.css|g" ${PAND_DOC}
-    else
-        echo "${DOC_DIR}/pandoc/ngpt-pd.css not found."
-    fi
 fi
 
 # Paste readme.md to /doc
@@ -69,34 +64,39 @@ fi
 # customize the readme.md
 sed -i "s|doc/figures/sep-various-antex-example.png|${DOC_DIR}/figures/sep-various-antex-example.png|g" \
     ${PAND_DOC}
+# set the paths in ngpt-template.latex
+sed -i "s|PATH_TO_DOC|${DOC_DIR}|g" ${DOC_DIR}/pandoc/ngpt-template.latex
 
-HTML_CMDS="--html-q-tags"
+if ! pandoc ${PAND_DOC} -o ${DOC_DIR}/readme.${1} \
+        --from=markdown_github+simple_tables+table_captions+yaml_metadata_block \
+        -s \
+        --smart \
+        --normalize \
+        --standalone \
+        --table-of-contents \
+        --highlight-style=pygments \
+        --number-sections \
+        --listings \
+        --template=${DOC_DIR}/pandoc/ngpt-template.${1} ; then
+    echo 1>&2 "Failed to pandoc!"
+    exit 1
+fi
 
-# run pandoc
-if test "${1}" == "html" ; then ext=html ; fi
-if [[ "${1}" == "pdf" ]] || [[ "${1}" == "latex" ]] ; then ext=latex ; fi
-
-pandoc ${PAND_DOC} -o ${DOC_DIR}/readme.${1} \
-    --from=markdown_github+simple_tables+table_captions+yaml_metadata_block \
-    -s \
-    --smart \
-    --normalize \
-    --standalone \
-    --table-of-contents \
-    --highlight-style=pygments \
-    --number-sections \
-    --template=${DOC_DIR}/pandoc/ngpt-template.${ext}
+# refine output (if latex)
+#if test "$1" == "latex" ; then
+#    echo "Refining latex output."
+#    if ! ${DOC_DIR}/pandoc/latex-alert-tokenize.py ${DOC_DIR}/readme.${1} > .tmp; then
+#        echo 1>&2 "Failed to run \"latex-alert-tokenize.py\"."
+#    else
+#        mv .tmp ${DOC_DIR}/readme.${1}
+#    fi
+#fi
 
 # output
 if test "$?" -eq 0 ; then
-    # Run through the code-blocks.py script to change multiline source code
-    if test "${1}" == "html" ; then
-        ${DOC_DIR}/pandoc/code-blocks.py ${DOC_DIR}/readme.${1} > .tmp.htm
-        mv .tmp.htm ${DOC_DIR}/readme.${1}
-    fi
-    echo "Output file created: \"${DOC_DIR}/readme.${1}\""
+    echo "Output file created: \"${DOC_DIR}/readme.${1}\"."
     echo "All done!"
-    # rm ${PAND_DOC}
+    echo "Now run \"pdflatex ${DOC_DIR}/readme.${1}\" to compile the pdf."
 else
     echo 1>&2 "Something went wrong!"
     exit 1
