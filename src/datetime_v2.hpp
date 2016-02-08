@@ -379,6 +379,13 @@ public:
     /// Max seconds in day.
     static constexpr underlying_type max_in_day { 86400L };
     
+    template<typename T>
+    static constexpr T sec_factor() noexcept
+    { return static_cast<T>(1); }
+    template<typename T>
+    static constexpr T sec_ifactor() noexcept
+    { return static_cast<T>(1); }
+    
     /// Constructor
     explicit constexpr seconds(underlying_type i=0L) noexcept : s(i) {};
 
@@ -511,6 +518,13 @@ public:
     /// Max milliseconds in one day.
     static constexpr long max_in_day { 86400L * 1000L };
     
+    template<typename T>
+    static constexpr T sec_factor() noexcept
+    { return static_cast<T>(1000); }
+    template<typename T>
+    static constexpr T sec_ifactor() noexcept
+    { return ((static_cast<T>(1))/1000); }
+    
     /// Cinstructor.
     explicit constexpr milliseconds(underlying_type i=0L) noexcept : s(i) {};
     
@@ -609,14 +623,18 @@ public:
     constexpr T cast_to() const noexcept
     { return static_cast<T>( s ); }
     
-    /// Translate to hours minutes and fractional seconds
+    /// Translate to hours minutes and milliseconds
     constexpr std::tuple<hours, minutes, seconds, long> to_hms() const noexcept
     {
-        return std::make_tuple(hours  {static_cast<int>(s / 3600000L)},
-                               minutes{static_cast<int>((s % 3600000L) / 60000L)},
-                               seconds{((s % 3600000L) % 60000L)/1000},
-                               ((s % 3600000L) % 60000L)/1000L - 1000L
-                               );
+        long hr { s / 3600000L                           };  // hours
+        long mn { (s % 3600000L) / 60000L                };  // minutes
+        long sc { ((s % 3600000L) % 60000L) / 1000L      };  // seconds
+        long ms { s - ( hr*3600L + mn*60L + sc ) * 1000L };  // milliseconds
+        return std::make_tuple( hours  { (int)hr },
+                                minutes{ (int)mn },
+                                seconds{ sc },
+                                ms
+                              );
     }
 
     friend std::ostream& operator<<(std::ostream& o, const milliseconds& ms)
@@ -639,6 +657,13 @@ public:
     
     /// Max microseconds in day.
     static constexpr long max_in_day { 86400L * 1000000L };
+
+    template<typename T>
+    static constexpr T sec_factor() noexcept
+    { return static_cast<T>(1000000); }
+    template<typename T>
+    static constexpr T sec_ifactor() noexcept
+    { return ((static_cast<T>(1))/1000000); }
     
     /// Constructor.
     explicit constexpr microseconds(underlying_type i=0L) noexcept : s(i) {};
@@ -734,13 +759,17 @@ public:
     constexpr T cast_to() const noexcept
     { return static_cast<T>( s ); }
     
-    /// Translate to hours minutes and fractional seconds
+    /// Translate to hours minutes and nanoseconds
     constexpr std::tuple<hours, minutes, seconds, long> to_hms() const noexcept
     {
-        return std::make_tuple(hours  {static_cast<int>(s / 3600000000L)},
-                               minutes{static_cast<int>((s % 3600000000L) / 60000000L)},
-                               seconds{((s % 3600000000L) % 60000000L)/1000000},
-                               ((s % 3600000000L) % 60000000L)/1000000L - 1000000L
+        long hr { s / 3600000000L                           };  // hours
+        long mn { (s % 3600000000L) / 60000000L             };  // minutes
+        long sc { ((s % 3600000000L) % 60000000L) / 1000000L};  // seconds
+        long ns { s - ( hr*3600L + mn*60L + sc ) * 1000000L };  // nanoseconds
+        return std::make_tuple( hours  { (int)hr },
+                                minutes{ (int)mn },
+                                seconds{ sc },
+                                ns
                                );
     }
 };
@@ -898,15 +927,16 @@ public:
     {
         auto ymd { this->as_ymd() };
         auto hms { this->as_hms() };
-        return 
-        std::string {  std::to_string( std::get<0>(ymd).as_underlying_type() )
-                     + "/" + std::to_string( std::get<1>(ymd).as_underlying_type()  )
-                     + "/" + std::to_string( std::get<2>(ymd).as_underlying_type()  )
-                     + " " + std::to_string( std::get<0>(hms).as_underlying_type()  )
-                     + ":" + std::to_string( std::get<1>(hms).as_underlying_type()  )
-                     + ":" + std::to_string( std::get<2>(hms).as_underlying_type()  )
-                     + "." + std::to_string( std::get<3>(hms) )
-        };
+        /*double fsec = S::template sec_ifactor<double>() * std::get<3>(hms);*/
+        return std::string {
+                     std::to_string( std::get<0>(ymd).as_underlying_type() )
+             + "/" + std::to_string( std::get<1>(ymd).as_underlying_type() )
+             + "/" + std::to_string( std::get<2>(ymd).as_underlying_type() )
+             + " " + std::to_string( std::get<0>(hms).as_underlying_type() )
+             + ":" + std::to_string( std::get<1>(hms).as_underlying_type() )
+             + ":" + std::to_string( std::get<2>(hms).as_underlying_type() )
+             + "." + std::to_string( S::template sec_ifactor<int>() * std::get<3>(hms) )
+            };
     }
     
     /// Overload operator "<<" TODO
