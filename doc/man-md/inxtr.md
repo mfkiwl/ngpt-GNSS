@@ -7,7 +7,7 @@
 
 inxtr - read and translate IONEX files.
 
-### SYNOPSIS
+# SYNOPSIS
 
 **inxtr** -i *IONEX* 
 [**-start** *[YYYY/MM/DD ]HH:MM:SS*] 
