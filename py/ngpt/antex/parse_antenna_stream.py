@@ -19,8 +19,8 @@
 import sys
 
 # ngpt
-import ngpt
-
+#~ import ngpt
+from . import antenna
 
 
 def parse_input(stream):

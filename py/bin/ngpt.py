@@ -22,18 +22,20 @@ import textwrap
 
 # ngpt
 import ngpt
+from ngpt import antex
+
 
 
 def antex(arguments):
     '''Function to deal with 'antex' subcommand.
     '''
-    print "Inside antex"
     with \
         open(arguments.pcv_grid_file, 'r') \
             if arguments.pcv_grid_file is not sys.stdin \
             else sys.stdin \
         as input_stream:
-        antennae = ngpt.parse_antenna_stream.parse_input(input_stream)
+        antennae = antex.parse_antenna_stream.parse_input(
+                 input_stream)
 
     for ant in antennae:
         ant.plot_antenna(kind=arguments.plot_style,
@@ -106,8 +108,8 @@ def main():
 
     subparsers = parser.add_subparsers()
 
-    antex_parser = subparsers.add_parser('antex') 
-    
+    antex_parser = subparsers.add_parser('antex')
+
     antex_parser.add_argument('-f', '--file',
         action   = 'store',
         required = False,
@@ -174,7 +176,7 @@ def main():
 
     antex_parser.set_defaults(func=antex)
 
-    ionex_parser = subparsers.add_parser('ionex') 
+    ionex_parser = subparsers.add_parser('ionex')
 
 
     #  Parse command line arguments
