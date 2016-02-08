@@ -7,7 +7,7 @@
 
 atxtr - read and translate ANTEX files.
 
-### SYNOPSIS
+# SYNOPSIS
 
 **atxtr** -a *ANTEX* [**-m** *"ANTENNA_1 ANTENNA2..."*] 
 
