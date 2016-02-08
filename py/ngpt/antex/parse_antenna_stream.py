@@ -64,7 +64,7 @@ def parse_antenna_record(rec):
         if rec.split()[0] != 'ANT:':
             raise ValueError("Not an ANTENNA specification line!")
         else:
-            return ngpt.antenna.Antenna(rec[5:])
+            return antenna.Antenna(rec[5:])
     except ValueError, error:
         print("ValueError: {}".format(error[0]))
         sys.exit(-2)

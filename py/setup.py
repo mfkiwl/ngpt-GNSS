@@ -11,7 +11,7 @@ def readme():
         return f.read()
 
 
-config = {'name': 'ngpt',
+config = {'name': 'run_ngpt',
         'version': '0.1',
         'description': 'Python module to manage ngpt C++ output.',
         'long_description': readme(),
@@ -23,7 +23,7 @@ danast@mail.ntua.gr,
 vanzach@survey.ntua.gr''',
         'license': 'WTFPL',
         'packages': find_packages(exclude=['tests*']),
-        'scripts': ['bin/ngpt.py'],
+        'scripts': ['bin/run_ngpt.py'],
         'install_requires': ['numpy', 'matplotlib'],
         'include_package_data': True}
 

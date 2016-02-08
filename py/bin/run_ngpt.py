@@ -22,7 +22,7 @@ import textwrap
 
 # ngpt
 import ngpt
-from ngpt import antex
+import ngpt.antex
 
 
 
@@ -34,7 +34,7 @@ def antex(arguments):
             if arguments.pcv_grid_file is not sys.stdin \
             else sys.stdin \
         as input_stream:
-        antennae = antex.parse_antenna_stream.parse_input(
+        antennae = ngpt.antex.parse_antenna_stream.parse_input(
                  input_stream)
 
     for ant in antennae:
@@ -52,7 +52,6 @@ def ionex(arguments):
 
 
 def main():
-    print "In main"
     ''' Drive the script.
     '''
     # prepare the command-line argument parser
