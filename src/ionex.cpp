@@ -783,6 +783,16 @@ ionex::parse_epoch_arguments(std::vector<datetime_ms>& epochs,
                              datetime_ms* to,
                              int& interval)
 {
+    // sanity check
+    if ( from && *from > this->_last_epoch ) {
+        std::cerr<<"\n"<<this->filename()<<" says : Too far in the future";
+        return 1;
+    }
+    if ( to && *to < this->_first_epoch ) {
+        std::cerr<<"\n"<<this->filename()<<" says : Too far in the past";
+        return 1;
+    }
+
     if ( epochs.empty() ) {
         if ( !from ) { from = &this->_first_epoch; }
         if ( !to   ) { to   = &this->_last_epoch;  }
@@ -797,6 +807,14 @@ ionex::parse_epoch_arguments(std::vector<datetime_ms>& epochs,
             return 1;
         }
     } else {
+        if (   epochs[0]               > this->_last_epoch
+            || epochs[epochs.size()-1] < this->_first_epoch )
+        {
+            std::cerr<<"\n"<<this->filename()<<" says : Too far away";
+            std::cerr<<"\nEpoch vector contains from "<< epochs[0].stringify() <<" to " <<epochs[epochs.size()-1].stringify();
+            std::cerr<<"\nFirst epoch: "<<this->_first_epoch.stringify()<<" to "<<this->_last_epoch.stringify();
+            return 1;
+        }
         from = &epochs[0];
         to   = &epochs[epochs.size()-1];
     }
@@ -828,7 +846,7 @@ ionex::interpolate(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& 
         std::cerr<<"\n[DEBUG] Failed to resolve interpolation epochs.";
 #endif
         throw std::runtime_error
-            ("ionex::interpolate() -> failed to resolve epochs.");
+            ("ionex::interpolate() -> failed to resolve / unmatched epochs.");
     }
 
     // we must provide an epoch vector

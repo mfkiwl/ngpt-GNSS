@@ -3,6 +3,8 @@
 #include <cstring>
 #include <algorithm>
 #include <limits>
+#include <sstream>
+#include <iterator>
 #include "datetime_v2.hpp"
 #include "ionex.hpp"
 
@@ -231,7 +233,58 @@ int main(int argv, char* argc[])
     auto tec_results = inx.interpolate(points, epochs,
                         &epoch_range.from, &epoch_range.to, i_time_step);
 
-    // print results
+    // diff mode !!
+    if ( arg_dict["diff"] != "N" ) {
+        // a vector of ionex filenames
+        std::istringstream iss (arg_dict["diff"]);
+        std::vector<std::string> ionexes { std::istream_iterator<std::string>{iss},
+                                           std::istream_iterator<std::string>{}
+                                         };
+        if ( !ionexes.size() ) {
+            std::cerr<<"\nERROR. No IONEXes to compute differences provided.\n";
+            return 1;
+        }
+
+        std::vector<epoch> epochs2;/* (epochs.size()); DON'T FUCKING DO THIS!! */
+        epochs2.reserve( epochs.size() );
+        for (auto dinx : ionexes) {
+            epochs2.clear(); /* FUCKING REMEMBER THIS */
+            ngpt::ionex inx2 (dinx.c_str());
+            auto tec_results2 = inx2.interpolate(points, epochs2,
+                                                 &epoch_range.from,
+                                                 &epoch_range.to,
+                                                 i_time_step
+                                                );
+            
+            if ( epochs2.size() != epochs.size() ) {
+                std::cerr<<"\nERROR. Epoch vectors do not match! Wierd ...\n";
+                return 1;
+            }
+
+            // print results
+            std::cout<<"\nINX: " << inx.filename() << " - " << inx2.filename();
+            std::cout<<"\nEPH: " << epoch_range.from.stringify()<<" "<<epoch_range.to.stringify()<<" "<<time_step;
+            std::cout<<"\nLAT: " << lat_range.from<<" "<<lat_range.to<<" "<<lat_range.step;
+            std::cout<<"\nLON: " << lon_range.from<<" "<<lon_range.to<<" "<<lon_range.step;
+
+            std::size_t epoch_index = 0;
+            for (const auto& eph : epochs) {
+                std::cout << "\n" << eph.stringify() << "\n";
+                auto tec1     = std::begin(tec_results);
+                auto tec2     = std::begin(tec_results2);
+                auto tec1_end = std::end(tec_results);
+                for (; tec1 != tec1_end; ++tec1, ++tec2) {
+                    std::cout <<  tec1->operator[](epoch_index) 
+                                - tec2->operator[](epoch_index) << " ";
+                }
+                ++epoch_index;
+            }
+            std::cout<<"\nEOT";
+        }
+        return 0;
+    }
+
+    // print results (normal i.e. one ionex only)
     std::cout<<"\nINX: " << inx.filename();
     std::cout<<"\nEPH: " << epoch_range.from.stringify()<<" "<<epoch_range.to.stringify()<<" "<<time_step;
     std::cout<<"\nLAT: " << lat_range.from<<" "<<lat_range.to<<" "<<lat_range.step;
@@ -317,7 +370,9 @@ cmd_parse(int argv, char* argc[], str_str_map& smap)
         } 
         else if ( !std::strcmp(argc[i], "-diff") )
         {
-            smap["diff"] = std::string("Y");
+            if ( i+1 >= argv ) { return 1; }
+            smap["diff"] = std::string( argc[i+1] );
+            ++i;
         }
         else if ( !std::strcmp(argc[i], "-i") )
         {
