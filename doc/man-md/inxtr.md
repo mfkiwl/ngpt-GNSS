@@ -75,6 +75,26 @@ output is directed to **stdout**.
     max precission is two decimal places). This will
     override the value of **-lon** argument (if provided).
 
+**-diff** *["IONEX1 IONEX2 ..."]*
+:   If this switch is specified, then instead of writing
+    TEC values, the program will output TEC differences
+    (in TECU) between the "master" IONEX file (the one
+    passed with the **-i** option) and the ones given in the
+    **-diff** argument list. If you want to compare more than
+    two files, then provide a whitespace-seperated list,
+    included within quotation marks ("").
+
+
+# EXAMPLES
+
+
+Compute differences in TEC for point (lon=0, lat=0), between the files:
+*igsg0440.03i* - *codg0440.03i* and *igsg0440.03i* - *jplg0440.03i*, for all
+epochs in the (master) file:
+
+
+**inxtr** -i igsg0440.03i -diff "codg0440.03i jplg0440.03i" -lat 0/0/0 -lon 0/0/0
+
 # DIAGNOSTICS
 
 In case you have compiled the `inxtr` in **DEBUG** mode, then

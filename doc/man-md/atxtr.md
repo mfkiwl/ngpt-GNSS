@@ -71,7 +71,7 @@ to **stdout**.
 
 # EXAMPLE
 
-`atxtr` -a igs08.atx -m **"**TRM41249.00     TZGD,LEIATX1230+GNSS NONE**"**
+**atxtr** -a igs08.atx -m **"**TRM41249.00     TZGD,LEIATX1230+GNSS NONE**"**
 
 
 # DIAGNOSTICS

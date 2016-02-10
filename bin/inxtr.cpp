@@ -542,9 +542,21 @@ usage()
     " -dlon [LONGTITUDE STEP]\n"
     "\tSpecify the longtitude step in decimal degrees (the\n"
     "\tmax precission is two decimal places). This will\n"
-    "\toverride the value of \"-lon\" argument (if provided).\n";
+    "\toverride the value of \"-lon\" argument (if provided).\n"
+    " -diff \"[IONEX1 IONEX2 ...]\"\n"
+    "\tIf \"-diff\" is specified, then instead of writing\n"
+    "\tTEC values, the program will output TEC differences\n"
+    "\t(in TECU) between the \"master\" IONEX file (the one\n"
+    "\tpassed with the -i option) and the ones given in the\n"
+    "\t-diff argument list. If you want to compare more than\n"
+    "\ttwo files, then provide a whitespace-seperated list,\n"
+    "\tincluded within quotation marks (\"\").\n";
 
-    std ::cout << "Example usage:\n";
+    std::cout << "\nExample usage:\n"
+    "Compute differences in TEC for point (lon=0, lat=0), between the files:\n"
+    "igsg0440.03i - codg0440.03i and igsg0440.03i - jplg0440.03i, for all\n"
+    "epochs in the (master) file:\n"
+    "\tinxtr -i igsg0440.03i -diff \"codg0440.03i jplg0440.03i\" -lat 0/0/0 -lon 0/0/0\n";
     return;
 }
 
