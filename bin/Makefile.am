@@ -13,7 +13,8 @@ MCXXFLAGS = \
 	-Wshadow \
 	-Winline \
 	-Wdisabled-optimization \
-	-DDEBUG
+	-DDEBUG \
+	-DALLOW_JSON_OUT
 
 atxtr_SOURCES     = atxtr.cpp
 atxtr_CXXFLAGS    = $(MCXXFLAGS) -I$(top_srcdir)/src -L$(top_srcdir)/src

@@ -65,6 +65,10 @@ void help();
 void usage();
 void epilog();
 
+#ifdef ALLOW_JSON_OUT
+    bool to_json { false };
+#endif
+
 int main(int argv, char* argc[])
 {
     // a dictionary with any default options
@@ -355,6 +359,12 @@ cmd_parse(int argv, char* argc[], str_str_map& smap)
             smap["azi"] = std::string( argc[i+1] );
             ++i;
         }
+#ifdef ALLOW_JSON_OUT
+        else if (!std::strcmp(argc[i], "-json") )
+        {
+            to_json = true;
+        }
+#endif 
         else
         {
             std::cerr << "\nIrrelevant cmd: " << argc[i];
@@ -460,6 +470,32 @@ print_pcv_info(const pcv_pattern& pcv, const antenna& ant,
         azi2 = pcv.azi2();   
     }
 
+#ifdef ALLOW_JSON_OUT
+    if ( to_json ) {
+        std::cout << "\n{";
+        std::cout << "\n  \"master_antenna\": \"" << ant.to_string() << "\",";
+        std::cout << "\n  \"slave_antenna\": \"\",";
+        std::cout << "\n  \"type\": \"azi\",";
+        std::cout << "\n  \"zenith_range\": [" << zen1 << ", " << zen2 << ", " << zen_step << "],";
+        std::cout << "\n  \"azimouth_range\": [" << azi1 << ", " << azi2 << ", " << azi_step << "],";
+        std::cout << "\n  \"pcv_values\": [ ";
+        for ( pcv_type zen = zen1; zen <= zen2; zen += zen_step )
+        {
+            std::cout<<"\n[";
+            for ( pcv_type azi = azi1; azi <= azi2; azi += azi_step )
+            {
+                std::cout << pcv.azi_pcv(zen, azi, 0)
+                          << ( azi+azi_step<=azi2?", ":"" );
+            }
+            std::cout<<"]";
+            if ( zen + zen_step <= zen2 ) { std::cout << ","; }
+        }
+        std::cout << "]";
+        std::cout << "\n}";
+        return;
+    }
+#endif
+
     std::cout <<"\nANT: " << ant.to_string();
     std::cout <<"\nZEN: " << zen1 << " " << zen2 << " " << zen_step;
     std::cout <<"\nAZI: " << azi1 << " " << azi2 << " " << azi_step;
@@ -504,6 +540,33 @@ print_pcv_diff(const pcv_pattern& pcv, const antenna& ant,
         azi2 = std::min(pcv.azi2(), ref_pcv.azi2());
     }
 
+#ifdef ALLOW_JSON_OUT
+    if ( to_json ) {
+        std::cout << "\n{";
+        std::cout << "\n  \"master_antenna\": \"" << ref_ant.to_string() << "\",";
+        std::cout << "\n  \"slave_antenna\": \"" << ant.to_string() << "\",";
+        std::cout << "\n  \"type\": \"azi\",";
+        std::cout << "\n  \"zenith_range\": [" << zen1 << ", " << zen2 << ", " << zen_step << "],";
+        std::cout << "\n  \"azimouth_range\": [" << azi1 << ", " << azi2 << ", " << azi_step << "],";
+        std::cout << "\n  \"pcv_values\": [ ";
+        for ( pcv_type zen = zen1; zen <= zen2; zen += zen_step )
+        {
+            std::cout << "\n[";
+            for ( pcv_type azi = azi1; azi <= azi2; azi += azi_step )
+            {
+                std::cout << ref_pcv.azi_pcv(zen, azi, 0)
+                             - pcv.azi_pcv(zen, azi, 0) 
+                          << ( azi+azi_step<=azi2?", ":"" );
+            }
+            std::cout<<"]";
+            if ( zen + zen_step <= zen2 ) { std::cout << ","; }
+        }
+        std::cout << "]";
+        std::cout << "\n}";
+        return;
+    }
+#endif
+
     std::cout <<"\nANT: " << ref_ant.to_string() << "-" << ant.to_string();
     std::cout <<"\nZEN: " << zen1 << " " << zen2 << " " << zen_step;
     std::cout <<"\nAZI: " << azi1 << " " << azi2 << " " << azi_step;
@@ -532,6 +595,26 @@ print_pcv_info_noazi(const pcv_pattern& pcv, const antenna& ant,
         zen2 = pcv.zen2();   
     }
 
+#ifdef ALLOW_JSON_OUT
+    if ( to_json ) {
+        std::cout << "\n{";
+        std::cout << "\n  \"master_antenna\": \"" << ant.to_string() << "\",";
+        std::cout << "\n  \"slave_antenna\": \"\",";
+        std::cout << "\n  \"type\": \"noazi\",";
+        std::cout << "\n  \"zenith_range\": [" << zen1 << ", " << zen2 << ", " << zen_step << "],";
+        std::cout << "\n  \"azimouth_range\": [0.0, 0.0, 0.0],";
+        std::cout << "\n  \"pcv_values\": [ [";
+        for ( pcv_type zen = zen1; zen <= zen2; zen += zen_step )
+        {
+            std::cout << pcv.no_azi_pcv(zen, 0)
+                      << ( zen+zen_step<=zen2?", ":"" );
+        }
+        std::cout << "] ]";
+        std::cout << "\n}";
+        return;
+    }
+#endif
+
     std::cout <<"\nANT: " << ant.to_string();
     std::cout <<"\nZEN: " << zen1 << " " << zen2 << " " << zen_step;
     std::cout <<"\nAZI: 0 0 0";
@@ -555,6 +638,26 @@ print_pcv_diff_noazi(const pcv_pattern& pcv, const antenna& ant,
         zen1 = std::max(pcv.zen1(), ref_pcv.zen1());
         zen2 = std::min(pcv.zen2(), ref_pcv.zen2());
     }
+
+#ifdef ALLOW_JSON_OUT
+    if ( to_json ) {
+        std::cout << "\n{";
+        std::cout << "\n  \"master_antenna\": \"" << ref_ant.to_string() << "\",";
+        std::cout << "\n  \"slave_antenna\": \"" << ant.to_string() << "\",";
+        std::cout << "\n  \"type\": \"noazi\",";
+        std::cout << "\n  \"zenith_range\": [" << zen1 << ", " << zen2 << ", " << zen_step << "],";
+        std::cout << "\n  \"azimouth_range\": [0.0, 0.0, 0.0],";
+        std::cout << "\n  \"pcv_values\": [ [";
+        for ( pcv_type zen = zen1; zen <= zen2; zen += zen_step )
+        {
+            std::cout << ref_pcv.no_azi_pcv(zen,0)-pcv.no_azi_pcv(zen,0)
+                      << ( zen+zen_step<=zen2?", ":"" );
+        }
+        std::cout << "] ]";
+        std::cout << "\n}";
+        return;
+    }
+#endif
 
     std::cout <<"\nANT: " << ref_ant.to_string() << "-" << ant.to_string();
     std::cout <<"\nZEN: " << zen1 << " " << zen2 << " " << zen_step;
