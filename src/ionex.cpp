@@ -44,8 +44,8 @@ ngpt::ionex::ionex(const char* filename)
       _version (ionex_version::v10),
       _end_of_head(0),
       // _time_scale(ngpt::time_scale::ut1),
-      _first_epoch( /*ngpt::min_date<>()*/ ),
-      _last_epoch( /*ngpt::max_date<>()*/ ),
+      _first_epoch(),
+      _last_epoch(),
       _interval(0),
       _maps_in_file(0),
       _min_elevation(0),
@@ -58,7 +58,7 @@ ngpt::ionex::ionex(const char* filename)
 {
     if ( !_istream.is_open() ) {
         throw std::runtime_error 
-            ("Cannot open ionex file: " + std::string(filename) );
+            ("ionex::ionex() -> Cannot open ionex file: " + std::string(filename) );
     }
 #ifdef DEUG
     try {
@@ -69,16 +69,27 @@ ngpt::ionex::ionex(const char* filename)
 #endif
     if ( this->read_header() ) {
           if ( _istream.is_open() ) { _istream.close(); }
+          throw std::runtime_error
+            ("ionex::ionex() -> Failed to read IONEX header.");
     }
 }
 
-/// [Help function] Read an ionex datetime formated as:
-/// YYYY MM DD HH MM SS (all integers as 6I6)
-/// A return status other than 0 denotes an error.
+/**  [Help function] Read an ionex datetime formated as:
+ *   YYYY MM DD HH MM SS (all integers as 6I6)
+ *   A return status other than 0 denotes an error.
+ * 
+ *   \parameter[in] c a c-string holding the date string.
+ *   \parameter[in] d a datetime_ms instance where the (resolved) date is
+ *                    assigned to.
+ * 
+ *   \returns         an integer denoting the convertion status; if not zero,
+ *                    the conversion failed.
+ */
 int
 _read_ionex_datetime_(char* c, ionex::datetime_ms* d)
+noexcept
 {
-    int prev_errno = errno;
+    int prev_errno {errno};
     errno = 0;
     char* start = c;
     char* end;
@@ -101,7 +112,7 @@ _read_ionex_datetime_(char* c, ionex::datetime_ms* d)
                                  ngpt::milliseconds{
                                   (  fields[3]*60L*60L
                                    + fields[4]*60L
-                                   + fields[5]) *1000L}
+                                   + fields[5])*1000L}
                                  );
         *d = newd;
         return 0;
@@ -111,24 +122,50 @@ _read_ionex_datetime_(char* c, ionex::datetime_ms* d)
     }
 }
 
-/* Read an ionex header.
+/** Read an ionex header and assign this instance's member variables. After
+ *  the headre is (successefuly) read, the instance should have valid:
+ *
+ *  IONEX FIELD          | MEMBER VAR
+ *  ---------------------|-----------------------------
+ *  IONEX VERSION        | _version
+ *  EPOCH OF FIRST MAP   | _first_epoch
+ *  EPOCH OF LAST MAP    | _last_epoch
+ *  INTERVAL             | _interval
+ *  # OF MAPS IN FILE    | _maps_in_file
+ *  MAPPING FUNCTION     |
+ *  ELEVATION CUTOFF     | _min_elevation
+ *  OBSERVABLES USED     |
+ *  # OF STATIONS        |
+ *  # OF SATELLITES      |
+ *  BASE RADIUS          |
+ *  MAP DIMENSION        | _map_dimension
+ *  HGT1 / HGT2 / DHGT   | _hgt1, _hgt2, _dhgt
+ *  LAT1 / LAT2 / DLAT   | _lat1, _lat2, _dlat
+ *  LON1 / LON2 / DLON   | _lon1, _lon2, _dlon
+ *  EXPONENT             | _exp
+ *  START OF AUX DATA(*) |
+ *  END AUX DATA(*)      |
+ *  END OF HEADER        | _end_of_head
+ *
+ *  (*) When encountered, they are read and skipped; from "START OF AUX DATA"
+ *  until "END AUX DATA".
  *
  * \warning In DEBUG mode this will throw in case of an error.
  *
- * TODO better validate fields after reading header (are all fields read ok??)
- * should fucking know that before going on!
+ * \todo TODO better validate fields after reading header (are all fields read ok??)
+ *            should fucking know that before going on!
  */
 int
 ionex::read_header()
+#ifndef DEBUG
+noexcept
+#endif
 {
     char line    [MAX_HEADER_CHARS];
     char sysmodel[4];
     char mapfun  [5];
     char* start, *end;
-
-    // we are going to use strtol() so reset errno
-    // see http://en.cppreference.com/w/cpp/string/byte/strtol
-    errno = 0;
+    int prev_errno = errno;
 
     // The stream should be open by now!
     assert( this->_istream.is_open() );
@@ -142,7 +179,7 @@ ionex::read_header()
     // strtod will keep on reading untill a non-valid
     // char is read. Fuck this, lets split the string
     // so that it only reads the valid chars (for version).
-    *(line+8) = '\0';
+    line[8] = '\0';
     float fvers = std::strtod(line, &end);
     if (std::abs(fvers - 1.0) < .001) {
         this->_version = ionex::ionex_version::v10;
@@ -234,7 +271,8 @@ ionex::read_header()
         {
             *(line+6) = '\0';
             _map_dimension = std::strtol(line, &end, 10);
-            if ( _map_dimension != 2 ) {
+            if ( _map_dimension != 2 || errno == ERANGE ) {
+                errno = prev_errno;
 #ifdef DEBUG
                 std::cerr <<"\n[DEBUG] Oh shit! This map-dimension is not supported";
                 std::cerr <<"\n        Need to add code bitch!";
@@ -296,11 +334,10 @@ ionex::read_header()
 #ifdef DEBUG
             std::cerr << "\n[DEBUG] Failed to translate line: ";
             std::cerr << "\n        line:[" << line;
-            errno = 0;
+            errno = prev_errno;
             throw std::runtime_error
             ("[DEBUG] ionex::read_header -> Invalid IONEX line");
 #endif
-            errno = 0;
             return 1;
         }
         _istream.getline(line, MAX_HEADER_CHARS);
@@ -319,10 +356,11 @@ ionex::read_header()
     return 0;
 }
 
-/**  Compute # of maps for constant height.
+/**  Compute # of maps for constant height, i.e. how many from _lat1 to _lat2
+ *   with a step of _dlat.
  * 
  *   \warning This function uses the fact that the (latitude) grid is given
- *   with a precision of 1e-1 degrees.
+ *            with a precision of 10e-2 degrees.
  */ 
 std::size_t
 ionex::latitude_maps()
@@ -336,10 +374,10 @@ const noexcept
     return static_cast<std::size_t>( maps );
 }
 
-/**  Compute how many lines should be read off from a const-latitude map instant
+/**  Compute how many lines should be read off from a const-latitude map.
  * 
  *   \warning This function uses the fact that the (longtitude) grid is given
- *   with a precision of 1e-1 degrees.
+ *            with a precision of 10e-1 degrees.
  */ 
 std::size_t
 ionex::longtitude_lines()
@@ -354,9 +392,28 @@ const noexcept
     return static_cast<std::size_t>( rows );
 }
 
-/**  Skip a whole map. The buffer should be placed in a position such that the
- *   first line to be read is: "LAT/LON1/LON2/H". After the function has
- *   returned, the buffer should be placed after the line: "END OF TEC MAP".
+/**  Compute the number of tec values recorded for a const-epoch map.
+ *
+ *   \warning This function uses the fact that the (longtitude) grid is given
+ *            with a precision of 10e-1 degrees.
+ */
+std::size_t
+ionex::tec_vals_per_epoch()
+const noexcept
+{
+    std::size_t lat_points { this->latitude_maps() };
+    long        lon_points { (static_cast<long>(_lat2*100)
+                            - static_cast<long>(_lat1*100))
+                             /static_cast<long>(_dlat*100)+1
+                           };
+    assert( lon_points > 0 );
+    return lat_points * static_cast<std::size_t>(lon_points);
+}
+
+/**  Read and skip a whole map (const epoch) . The buffer should be placed in 
+ *   a position such that the first line to be read from the input stream is:
+ *   "LAT/LON1/LON2/H". After the function has returned, the buffer should be 
+ *   placed after the line: "END OF TEC MAP".
  *   The tec map is read, and absolutely nothing is done with it.
  *   By whole map, i mean all const-latitude maps for a given epoch.
  *
@@ -370,9 +427,11 @@ ionex::skip_tec_map()
     char* c;
     ionex_grd_type lat = _lat1;
     ionex_grd_type ltmp;
-    // number of const-latitude lines.
-    std::size_t num_of_tec_lines = this->longtitude_lines();
     bool ascending ( _lat2 > _lat1 ? true : false );
+    int prev_errno = errno;
+
+    // number of const-latitude longtitude lines.
+    std::size_t num_of_tec_lines = this->longtitude_lines();
     
     while ( _istream.getline(line, MAX_HEADER_CHARS) ) {
         // next line should be 'LAT/LON1/LON2/DLON/H'
@@ -387,14 +446,14 @@ ionex::skip_tec_map()
         }
         // read and validate the current latitude
         ltmp = std::strtof(line+2, &c);
-        if ( (int)(ltmp*100) != (int)(lat*100) ) {
+        if ( (int)(ltmp*100) != (int)(lat*100) || errno == ERANGE ) {
+            errno = prev_errno;
 #ifdef DEBUG
             std::cerr<<"\n[DEBUG]What the fuck man! Read invalid latitude.";
             std::cerr<<"\n       Expected: "<<lat<<", found: "<<ltmp;
             throw std::runtime_error("ionex::skip_tec_map() -> Invalid latitude");
 #endif
             return 1;
-        } else {
         }
 
         // ok, now we should read these fucking TEC vals; format: I5 max 16 values
@@ -433,19 +492,21 @@ ionex::skip_tec_map()
     return 0;
 }
 
-/** Read a TEC map for a given epoch. All values are going to be read into the
- *  vector tec_vals, at the order they are read. This means that the vector
- *  will be of the form (at exit):
+/**  Read a TEC map for a given epoch. All values are going to be read into the
+ *   vector tec_vals, at the order they are read. This means that the vector
+ *   will be of the form (at exit):
 \verbatim
     vec[0]   tec value at -> lat1, lon1
     vec[1]   tec value at -> lat1, lon1+dlon
     vec[2]   tec value at -> lat1, lon1+2*dlon
     ...
-    vec[n]   tec value at -> lat1+dlat,   lon1
-    vec[n+1] tec value at -> lat1+2*dlat, lon1+dlon
+    vec[n]   tec value at -> lat1+dlat, lon1
+    vec[n+1] tec value at -> lat1+dlat, lon1+dlon
     ...
 \endverbatim
- *  The function will stop after rading the line: 'END OF TEC MAP'.
+ *   It is expected that the first line to be read from the input stream is
+ *   the line "LAT/LON1/LON2/DLON/H".
+ *   The function will stop after rading the line: "END OF TEC MAP".
  *
  *  \param[in] pcv_vals An int vector of size large enough to hold all tec
  *             values to be read from the map.
@@ -453,32 +514,30 @@ ionex::skip_tec_map()
  *  \returns An integer denoting the exit status; everything other than 0,
  *           denotes an error.
  *
- *  \warning -# The buffer should be placed in a position such that the next line
- *           to be read is "LAT/LON1/LON2/DLON/H".
- *           -# The size of the vector should be large enough to hold the read
+ *  \warning -# The size of the vector should be large enough to hold the read
  *           values. The size of the vector will not be modified at any way.
  *           -# Note that the get the actual TEC values from the values stored
  *           in the vector, you will need to use the IONEX's exponent.
+ *
  */
 int
 ionex::read_tec_map(std::vector<int>& pcv_vals)
 {
     static char line[MAX_HEADER_CHARS];
-
-    // stream should definitely be open!
-    // TODO move this somewhere else. don't fucking need to always check.
-    assert( _istream.is_open() );
-    
     std::size_t index = 0;
     
     // how many consti-latitude maps should we read ?
     std::size_t lat_maps  (this->latitude_maps() );
+    
     // each const-latitude map has how many tec lines ?
     std::size_t lon_lines (this->longtitude_lines() );
 
     // reset errno
     int prev_errno = errno;
     errno = 0;
+
+    // check that the input vector is large enough
+    assert( pcv_vals.size() >= this->tec_vals_per_epoch() );
 
     for (std::size_t i=0; i<lat_maps; ++i) {
         if ( this->read_latitude_map(lon_lines, pcv_vals, index) ) {
@@ -503,28 +562,28 @@ ionex::read_tec_map(std::vector<int>& pcv_vals)
     return 0;
 }
 
-/** Read a TEC map (for a given latitude) off from the stream and store the
- *  values in the vec vector, starting at vec[index]. The function will modify
- *  the index value, such that at return it will denote the last index inserted
- *  into the vector plus one.
+/**  Read a TEC map (for a given latitude) off from the stream and store the
+ *   values in the vec vector, starting at vec[index]. The function will modify
+ *   the index value, such that at return it will denote the last index inserted
+ *   into the vector plus one (i.e. if index is J at input and the function
+ *   reads N tec values, the index value at output will be J+N). The tec values
+ *   are **not** pushed back, but inserted (via the vector::operator[]), so
+ *   make sure the input vector is large enough.
  *
- *  \param[in] num_of_tec_lines The number of lines to read off from a const
- *                              latitude map.
- *  \param[in] vec              The (int) vector where read values are stored.
- *                              This function will start storing values at
- *                              vec[index].
- *  \param[in] index            Where to start storing tec values within the
- *                              input vec vector.
- *                              At exit, this will be set to the first non-set
- *                              element (i.e. if index was 0 at input and the
- *                              function reads and assigns 10 elements, index
- *                              at output will be 10).
+ *   \param[in] num_of_tec_lines The number of lines to read off from a const
+ *                               latitude map (i.e. ionex::longtitude_lines()).
+ *   \param[in] vec              The (int) vector where read values are stored.
+ *                               This function will start storing values at
+ *                               vec[index].
+ *   \param[in] index            Where to start storing tec values within the
+ *                               input vec vector.
+ *                               At exit, this will be set to the first non-set
+ *                               element (i.e. if index was 0 at input and the
+ *                               function reads and assigns 10 elements, index
+ *                               at output will be 10).
  * 
  *  \warning -# The buffer should be placed in a position such that the next line
  *           to be read is "LAT/LON1/LON2/DLON/H".
- *           -# Also, always clear errno before calling this!
- *           -# When this function returns, errno should be what is was before
- *           the function call.
  * 
  */ 
 int
@@ -564,15 +623,21 @@ ionex::read_latitude_map(std::size_t num_of_tec_lines,
     dlon = std::strtof(start, &end);
     start += 6;
     hgt  = std::strtof(start, &end);
-#ifdef DEBUG
-    if ( lon1!=_lon1 || lon2!=_lon2 || dlon!=_dlon || hgt != _hgt1 ) {
+    if (   lon1 != _lon1
+        || lon2 != _lon2
+        || dlon != _dlon
+        || hgt  != _hgt1
+        || errno == ERANGE )
+    {
         errno = prev_errno;
+#ifdef DEBUG
         std::cerr << "\n[DEBUG] Oh Fuck! this longtitude seems corrupt!";
         std::cerr << "\n        line: " << line;
         std::string lat_str = std::to_string(lat);
         throw std::runtime_error("ionex::read_map() -> Invalid line ("+lat_str+")");
-    }
 #endif
+        return 1;
+    }
 
     // ok, now we should read these fucking TEC vals; format: I5 max 16 values
     // per line.
@@ -597,7 +662,7 @@ ionex::read_latitude_map(std::size_t num_of_tec_lines,
     }
 
     // check for transformation errors!
-    if ( errno ) {
+    if ( errno == ERANGE ) {
         errno = prev_errno;
 #ifdef DEBUG
         std::cerr<<"\n[DEBUG] Fuck! Reading tec values failed!";
@@ -611,7 +676,7 @@ ionex::read_latitude_map(std::size_t num_of_tec_lines,
 }
 
 /** Extract TEC values for a given list of points, for all epochs included in 
- *  the IONEX instance, within the interval [from, to]; or all epochs if from
+ *  the IONEX instance, within the interval [from, to]; or all epochs, if from
  *  and to are NULL. For example, if points holds (p1, p2, ..., pn2), then
  *  (on exit), the tec_vals will be formed as:
  *  tec_vals[0][0] -> tec at point p0, at epoch epoch_vector[0]
@@ -641,10 +706,10 @@ ionex::read_latitude_map(std::size_t num_of_tec_lines,
  */
 int
 ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& points,
-                std::vector<datetime_ms>& epoch_vector,
-                std::vector<std::vector<int>>& tec_vals,
-                datetime_ms* from,
-                datetime_ms* to
+                  std::vector<datetime_ms>& epoch_vector,
+                  std::vector<std::vector<int>>& tec_vals,
+                  datetime_ms* from,
+                  datetime_ms* to
                 )
 {
     // for every point we want, we must find an index for it (within the grid)

@@ -156,6 +156,9 @@ private:
     // Compute how many (const) latitude maps there exist for each height.
     std::size_t latitude_maps() const noexcept;
 
+    // Number of tec values per epoch.
+    std::size_t tec_vals_per_epoch() const noexcept;
+
     // Compute how many longtitude lienes there exist for a single const-
     // latitude map.
     std::size_t longtitude_lines() const noexcept;
