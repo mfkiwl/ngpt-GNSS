@@ -717,21 +717,16 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
     // set the grid points to long (instead of ints) so that e.g. lat=37.5
     // lon=23.7 will be 3750 and 2370; i.e. use of factor of 100.
     int factor (100);
-#ifdef DEBUG
-    typedef ngpt::grid_skeleton<long, true, Grid_Dimension::TwoDim> gstype;
+    typedef ngpt::grid_skeleton<long, ngpt::grid_dimension::two_dim> gstype;
     gstype grid(_lon1*factor, _lon2*factor, _dlon*factor,
                 _lat1*factor, _lat2*factor, _dlat*factor);
-#else
-    typedef grid_skeleton<long, false, Grid_Dimension::TwoDim> gstype;
-    gstype grid(_lon1*factor, _lon2*factor, _dlon*factor,
-                _lat1*factor, _lat2*factor, _dlat*factor);
-#endif
 
     if ( !from ) from = &this->_first_epoch;
     if ( !to   ) to   = &this->_last_epoch;
 
     // for each point in the vector, we are going to need the surounding nodes 
     // (so that we extract these values and interpolate).
+    /*
     typedef gstype::node gnode;
     typedef std::tuple<gnode, gnode, gnode, gnode> cell;
     std::vector<cell> cells;
@@ -739,6 +734,7 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
     for ( auto const& i : points ) {
         cells.push_back(grid.neighbor_nodes(i.first*factor, i.second*factor));
     }
+    */
 
     // get me a vector large enough to hold a whole map
     std::vector<int> tec_map (grid.size(), 0);
@@ -793,12 +789,12 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
 
             // ok. we got the map and we need to extract the cells for all points
             // index; points to current point
-            std::size_t j     = 0; // point index
+            std::size_t j = 0; // point index
             for (const auto& p : points) {
-                tec_vals[j].emplace_back( grid.bilinear_interpolation<int>(
+                tec_vals[j].emplace_back( grid.bilinear_interpolation(
                                             p.first,
                                             p.second,
-                                            cells[j],
+                                            /*cells[j]*/
                                             tec_map.data())
                                         );
                 ++j;

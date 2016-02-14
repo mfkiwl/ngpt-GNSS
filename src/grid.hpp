@@ -6,11 +6,11 @@
 #include <cstring>
 #include <cassert>
 #include <vector>
-#ifdef DEBUG
+#include <type_traits>
+#ifdef GRID_DEBUG
+    #include <string>
     #include <iostream>
 #endif
-
-#define GRID_VERSION 2
 
 /**
  * \file      grid.hpp
@@ -46,7 +46,12 @@
 namespace ngpt
 {
 
-/** \class   tickaxisimpl
+namespace grid_details
+{
+    constexpr std::size_t invalid_index = -1;
+}
+
+/** \class   tick_axis
  *
  *  \details This class is used to represent a tick axis, starting from tick
  *           with value start_, ending to tick stop_ with a step size of 
@@ -74,38 +79,42 @@ namespace ngpt
  *           - RangeCheck (bool): Enable/Disable range check
  *
  */ 
-template<typename T,          ///< type of axis e.g. float, double, ...
-         bool     RangeCheck> ///< enable range-check
-class tick_axis_impl
+template<typename T>          ///< type of axis e.g. float, double, ...
+class tick_axis
 {
 public:
     
     /// A class to represent a node
     class node {
+        /// Invalid node (i.e. past-the-end)
         static constexpr std::size_t invalid_index = -1;
     public:
-        explicit constexpr
-        node(std::size_t i = 0, const tick_axis_impl* t = nullptr)
+        /// Constructor
+        explicit 
+        node(std::size_t i, const tick_axis& t)
         noexcept
-            : index_ (i), axis_ (t) {}
-
-        constexpr node(const node& n) noexcept
-            : index_(n.index_), axis_(n.axis_) {}
-
-        constexpr node(node&& n) noexcept
-            : index_(std::move(n.index_)), axis_ (std::move(n.axis_)) {}
-
-        static constexpr node end(const tick_axis_impl* t = nullptr) noexcept
-        {
-            return node {invalid_index, t};
-        }
-
-        constexpr bool is_invalid() const noexcept
-        {
-            return this->index_ == invalid_index;
-        }
-
-        constexpr node& operator=(const node& n) noexcept
+        : index_ {i}, axis_{t} {};
+        /// Copy constructor.
+        node(const node& n)
+        noexcept
+            : index_{n.index_}, axis_{n.axis_} {}
+        /// Move constructor.
+        node(node&& n)
+        noexcept
+            : index_{std::move(n.index_)}, axis_ {std::move(n.axis_)} {}
+        /// Return the ending node (i.e. one past-the-end).
+        static constexpr node end(const tick_axis& t)
+        noexcept
+        { return node {invalid_index, t}; }
+        /// Return the begining node.
+        static constexpr node begin(const tick_axis& t)
+        noexcept
+        { return node{0, t}; }
+        /// Check if the node is valid.
+        bool is_valid() const noexcept
+        { return !(this->index_ == invalid_index); }
+        /// Copy assignment.
+        node& operator=(const node& n) noexcept
         {
             if (this != &n) {
                 index_ = n.index_;
@@ -113,155 +122,72 @@ public:
             }
             return *this;
         }
-
-        constexpr node& operator=(node&& n) noexcept
+        /// Move assignement.
+        node& operator=(node&& n) noexcept
         {
             index_ = std::move(n.index_);
             axis_  = std::move(n.axis_);
             return *this;
         }
-
-        /// Move forward (preincrement), i.e. to the next node.
-        constexpr node& operator++() noexcept
+        /// Move to next node. If we hit the end, return the end node.
+        node next() const noexcept
         {
-            ++index_;
+            if ( index_+1 < axis_.npts_ ) {
+                return node{index_+1, axis_};
+            } else {
+                return node{invalid_index, axis_};
+            }
+        }
+        /// Move forward (preincrement), i.e. to the next node
+        node& operator++() noexcept
+        {
+            if ( index_+1 < axis_.npts_ ) {
+                ++index_;
+            } else {
+                index_ = invalid_index;
+            }
             return *this;
         }
-
-        constexpr node next() const noexcept
-        {
-            if ( index_+1 < axis_->npts_ )
-                return node(index_+1, axis_);
-            else
-                return /*node::end(axis);*/ //TODO WTF this doesn't work!
-                node(invalid_index, axis_);
-        }
-
-        /// Move forward (postincrement), i.e. to the next node.
-        constexpr node operator++(int) noexcept
+        /// Move forward (postincrement), i.e. to the next node
+        node operator++(int) noexcept
         {
             node nd (*this);
             this->operator++();
             return nd;
         }
-
+        /// Equality operator.
+        /// \warning Only valid for nodes of the same tick_axis.
+        bool operator==(const node& n) const noexcept
+        { return this->index_ == n.index_; }
+        /// Comparisson operator.
+        /// \warning Only valid for nodes of the same tick_axis.
+        bool operator!=(const node& n) const noexcept
+        { return !(*this == n); }
         /// Return the index.
-        constexpr std::size_t index() const noexcept { return index_; }
-
+        std::size_t index() const noexcept
+        { return index_; }
         /// Return the underlying axis
-        constexpr const tick_axis_impl* axis() const noexcept { return axis_; }
-
+        const tick_axis& axis() const noexcept
+        { return axis_; }
         /// Return the value of the node
-        constexpr T value() const noexcept
-        { return axis_->start_ + axis_->step_ * index_; }
-
-#ifdef DEBUG
-        void print_address() const { if ( axis_) {std::cout<<axis_;} else {std::cout<<"null";} }
-#endif
+        T value() const noexcept
+        { return axis_.start_ + axis_.step_ * index_; }
 
     private:
-        std::size_t           index_;
-        const tick_axis_impl* axis_;
-    };
+        std::size_t      index_;
+        const tick_axis& axis_;
+    
+    }; // node
 
-private:
-
-    T           start_; ///< left-most tick point.
-    T           stop_;  ///< right-most tick point.
-    T           step_;  ///< step size.
-    std::size_t npts_;  ///< number of tick points.
 
     /// do_range_check wraps the user's choice for RangeCheck.
-    using do_range_check = std::integral_constant<bool, RangeCheck>;
+    /// using do_range_check = std::integral_constant<bool, RangeCheck>;
 
-    /** Given a point \p x lying on the TickAxis, compute the neighboring ticks
-     *  (nodes), i.e. the left and right ticks inbetween of which lays point \p x.
-     * 
-     *  \param[in] x  The point for which we want the neighboring nodes/ticks.
-     * 
-     *  \return           A tuple containing 
-     *  {left_tick_index, left_tick_value, right_tick_index, right_tick_value}
-     *  
-     *  \note This function will perform range checks to see if the point \p x
-     *        does lay between the leftmost and rightmost ticks.
-     * 
-     \verbatim
-
-       left-most              | x value
-         tick                 v
-         +-----+-----+-----+--x--+--...--+
-                                       right-most
-                                         tick
-     \endverbatim
-     *
-     */
-#if __cplusplus > 201103L
-    //constexpr
-#endif
-    auto
-    neighbor_nodes_impl(T x, std::true_type)
-    const noexcept( !do_range_check::value )
-#if __cplusplus == 201103L
-    -> std::tuple<node, node>
-#endif
-    {
-        if ( this->out_of_range(x) ) {
-            return std::make_tuple( node::end(this), node::end(this) );
-/*
-#ifdef DEBUG
-            std::string xstr = std::to_string(x);
-            throw std::out_of_range (
-            "tick_axis_impl<>::neighbor_nodes_impl -> out_of_range at " + xstr);
-#endif
-            throw std::out_of_range (
-            "tick_axis_impl<>::neighbor_nodes_impl -> out_of_range");
-*/
-        }
-
-        // find tick on the left.
-        node left (static_cast<std::size_t>((x-start_)/step_), this);
-
-        // find tick on the right.
-        node right ( left.next() );
-/*        if ( right.index() >= npts_ ) {
-#ifdef DEBUG
-            std::string xstr = std::to_string(x);
-            throw std::out_of_range (
-            "tick_axis_impl<>::neighbor_nodes_impl -> out_of_range at " + xstr);
-#endif
-            throw std::out_of_range (
-            "tick_axis_impl<>::neighbor_nodes_impl -> out_of_range");
-        }
-*/
-
-        return std::make_tuple( left, right );
-    }
-
-    /// Does exactly the same as neighbor_nodes_impl(T x, std::true_type) but
-    /// with no range checks.
-#if __cplusplus > 201103L
-    constexpr
-#endif
-    auto
-    neighbor_nodes_impl(T x, std::false_type)
-    const noexcept( !do_range_check::value )
-#if __cplusplus == 201103L
-    -> std::tuple<node, node>
-#endif
-    {
-        // TODO this should be implemented as in the RangeCheck case TODO
-        node left (static_cast<std::size_t>((x - start_) / step_));
-        node right = left + 1;
-        return std::make_tuple(left, right);
-    }
 
 public:
 
     /// Constructor.
-#if __cplusplus > 201103L
-    constexpr
-#endif
-    explicit tick_axis_impl(T s,  T e, T d) noexcept
+    explicit tick_axis(T s,  T e, T d) noexcept
         : start_{s},
           stop_ {e},
           step_ {d},
@@ -273,460 +199,488 @@ public:
     }
 
     /// This is designed to be a base class.
-    virtual ~tick_axis_impl() {}
-
-    tick_axis_impl(const tick_axis_impl&) noexcept = default;
-
-    tick_axis_impl&
-    operator=(const tick_axis_impl&) noexcept = default;
-
-    tick_axis_impl(tick_axis_impl&&) noexcept = default;
-
-    tick_axis_impl&
-    operator=(tick_axis_impl&&) noexcept = default;
-
+    virtual ~tick_axis() {}
+    /// Copy constructor.
+    tick_axis(const tick_axis&) noexcept = default;
+    /// Assignment operator
+    tick_axis&
+    operator=(const tick_axis&) noexcept = default;
+    /// Move constructor.
+    tick_axis(tick_axis&&) noexcept = default;
+    /// Move assignment.
+    tick_axis&
+    operator=(tick_axis&&) noexcept = default;
     /// Return the left-most tick.
-    constexpr T from() const noexcept { return start_; }
-
+    T from() const noexcept { return start_; }
     /// Return the right-most tick.
-    constexpr T to() const noexcept { return stop_; }
-
+    T to() const noexcept { return stop_; }
     /// Return the axis step size.
-    constexpr T step() const noexcept { return step_; }
-
+    T step() const noexcept { return step_; }
     /// Check if the axis is in ascending order.
-    constexpr bool is_ascending() const noexcept 
+    bool is_ascending() const noexcept 
     { return stop_ - start_ > 0; }
-
     /// Return the number of tick-points.
-    constexpr std::size_t size() const noexcept { return npts_; }
-
-    /// Check if the given input value \p x is left from start_ (i.e. if it is
+    std::size_t size() const noexcept { return npts_; }
+    /// Return the start (left-most) node
+    node begin() const noexcept
+    { return node::begin(*this); }
+    /// Return the (past-the-end) node
+    node end() const noexcept
+    { return node::end(*this); }
+    /// Check if the given input value x is left from start_ (i.e. if it is
     /// between the given limits on the left side).
-    /// \return \p true if \p x in on the right of start_, false otherwise (i.e.
-    ///         if false is returned, the input \p x value lays outside the axis
+    /// \return true if x in on the right of start_, false otherwise (i.e.
+    ///         if false is returned, the input x value lays outside the axis
     ///         limits on the left).
     ///
-    constexpr bool far_left(T x) const noexcept
+    bool far_left(T x) const noexcept
     { return this->is_ascending() ? x < start_ : x > start_ ; }
-
-    /// Check if the given input value \p x is right from stop_ (i.e. if it is
+    /// Check if the given input value x is right from stop_ (i.e. if it is
     /// between the given limits on the right side).
-    /// \return \p true if \p x lays on the left of stop_, false otherwise (i.e.
-    ///         if false is returned, the input \p x value lays outside the axis
+    /// \return true if x lays on the left of stop_, false otherwise (i.e.
+    ///         if false is returned, the input x value lays outside the axis
     ///         limits on the right).
     ///
-    constexpr bool far_right(T x) const noexcept
+    bool far_right(T x) const noexcept
     { return this->is_ascending() ? x > stop_ : x < stop_; }
-
-    /// Check if the given input value \p x lays between the limits of the tick
+    /// Check if the given input value x lays between the limits of the tick
     /// axis.
     /// \return An integer is returned, which can be:
     ///         Return Value | Explanation
     ///         -------------|-------------------------------------------------
-    ///                   -1 | \p x is left from the starting point (outside limits).
-    ///                    0 | \p x is inside the axis limits.
-    ///                    1 | \p x is right from the ending point (outside limits).
+    ///                   -1 | x is left from the starting point (outside limits).
+    ///                    0 | x is inside the axis limits.
+    ///                    1 | x is right from the ending point (outside limits).
     ///
-#if __cplusplus > 201103L
-    constexpr
-#endif
     int out_of_range(T x) const noexcept
     {
         if ( this->far_left(x) ) { return -1; }
         if ( this->far_right(x)) { return 1; }
         return 0;
     }
+    /** Given a point x lying on the tickaxis, compute the neighboring ticks
+     *  (nodes), i.e. the left and right ticks inbetween of which lays point x.
+     * 
+     \verbatim
 
-    ///  Return the neighbor nodes of the given input value \c x.
-    ///  \throw  Will throw an std::out_of_range only if the instance
-    ///          is contructed with a true RangeCheck parameter.
-#if __cplusplus > 201103L
-    constexpr
-#endif
-    auto neighbor_nodes(T x) const noexcept( !RangeCheck )
-#if __cplusplus == 201103L
-    -> std::tuple<node, node>
-#endif
-    { return neighbor_nodes_impl(x, do_range_check{}); }
-
-    /// Given a value \p x on the (tick) axis, compute and return the nearest
-    /// tick (on the axis), i.e. either the left or the right one.
-    /// The function will not check wether the input \p x point lays between
-    /// the leftmost-rightmost range, it doesn't care!
-    ///
-    /// \return A tuple containing {nearet_tick_index, nearest_tick_value}
-    ///
-#if __cplusplus > 201103L
-    constexpr
-#endif
-    auto nearest_neighbor(T x) const noexcept
-#if __cplusplus == 201103L
-    -> node
-#endif
+       left-most              | x value
+         tick                 v
+         +-----+-----+-----+--x--+--...--+
+                                       right-most
+                                         tick
+     \endverbatim
+     *
+     *  What happens on and/or outside the borders?
+     *  -------------------------------------------
+     *  - If the input point x, lays outside the axis (to the left of start_ or
+     *  to the right of stop_), then the returned nodes are both invalid.
+     *  - If the input point equals the left-most node (i.e. start_), then both
+     *  returned nodes are valid, and correspond to points 0 and 1.
+     *  - If the input point equals the right-most node (i.e. stop_), then
+     *  the first (of the two) returned nodes is valid and corresponds to the
+     *  last element in the axis (i.e. npts_-1); the second node is invalid.
+     */
+    std::tuple<node, node>
+    neighbor_nodes(T x) const noexcept
     {
-        if ( this->far_left(x) ) {
-            return node(0, this); 
-        } else if ( this->far_right(x) ) {
-            return node(npts_-1, this);
+        if ( this->out_of_range(x) ) {
+            return std::make_tuple( node::end(*this), node::end(*this) );
         }
-        return node(static_cast<std::size_t>((x+(step_/(T)2)-start_)/step_),
-                    this);
+        // find tick on the left.
+        node left {static_cast<std::size_t>((x-start_)/step_), *this};
+        // find tick on the right.
+        node right {left.next()};
+        return std::make_tuple( left, right );
     }
-
-    template<class S>
-    S interpolate(T x, const S* data) const noexcept
+    /// Return the index of the node to the left of the input argument. If x
+    /// falls outside the interval [start, stop] then invalid_index is
+    /// returned.
+    std::size_t left_node_idx(T x) const noexcept
     {
-        if (x <= start_ ) {
-            return data[0];
-        } else if ( x>= stop_ ) {
-            return data[npts_-1];
-        }
-        auto nodes ( neighbor_nodes( x ) );
-        S x0 = static_cast<S>(std::get<0>( nodes ).value());
-        S x1 = static_cast<S>(std::get<1>( nodes ).value());
-        S y0 = data[std::get<0>( nodes ).index()];
-        S y1 = data[std::get<1>( nodes ).index()];
-        return y0 + (y1-y0)*((x-x0)/(x1-x0));
-    }
-
-};
-
-enum class Grid_Dimension : char { OneDim, TwoDim };
-
-/// A skeleton for a generic, two-dimensional grid.
-template<typename       T,
-         bool           RangeCheck,
-         Grid_Dimension Dim>
-class grid_skeleton {};
-
-template<typename T, bool RangeCheck>
-class grid_skeleton<T,
-                    RangeCheck,
-                    Grid_Dimension::OneDim>
-: public tick_axis_impl<T, RangeCheck>
-{
-public:
-#if __cplusplus > 201103L
-    constexpr
-#endif
-    explicit grid_skeleton(T x1, T x2, T dx) noexcept
-        : tick_axis_impl<T, RangeCheck>(x1, x2, dx) {}
-
-    virtual ~grid_skeleton() {};
- 
-    template<typename S>
-    constexpr S linear_interpolation(T x, const std::vector<S>& vec) const
-    { return this->linear_interpolation(x, vec.data()); }
-    
-    template<typename S>
-    constexpr S linear_interpolation(T x, const S* data) const
-    {
-        auto nodes ( this->neighbor_nodes(x) );
-        S x0 ( static_cast<S>(std::get<0>(nodes).value()) );
-        if ( !std::get<1>(nodes).is_invalid() ) {
-            S x1 ( static_cast<S>(std::get<1>(nodes).value()) );
-            S y0 ( data[std::get<0>(nodes).index()] );
-            S y1 ( data[std::get<1>(nodes).index()] );
-            return y0 + (y1-y0)*(x-x0)/(x1-x0);
+        if ( !this->out_of_range(x) ) {
+            return static_cast<std::size_t>((x-start_)/step_);
         } else {
-#ifdef DEBUG
-            std::cerr<<"\nMan! i got an invalid node in linear_interpolation.";
-            std::string xstr = std::to_string(x);
-            throw std::runtime_error
-                ("grid_skeleton<>::linear_interpolation() -> out of range (" + xstr + ")" );
-#endif
-            throw std::runtime_error
-                ("grid_skeleton<>::linear_interpolation() -> out of range.");
+            return grid_details::invalid_index;
         }
     }
-};
+    /// Given a value x on the (tick) axis, compute and return the nearest
+    /// node (on the axis), i.e. either the left or the right one. In case x
+    /// is outside limits, either the left-most or the right-most nodes are
+    /// returned.
+    node nearest_neighbor(T x) const noexcept
+    {
+        if ( far_left(x) ) {
+            return node{0, *this}; 
+        } else if ( far_right(x) ) {
+            return node{npts_-1, *this};
+        }
+        return node{static_cast<std::size_t>((x+(step_/(T)2)-start_)/step_),
+                    *this};
+    }
+    std::size_t nearest_neighbor_idx(T x) const noexcept
+    {
+        if (far_left(x)) return 0;
+        if (far_right(x)) return npts_-1;
+        return static_cast<std::size_t>( (x+(step_/(T)2)-start_)/step_ );
+    }
+    /// Perform linear interpolation to compute the value at point x. The
+    /// data parameter should hold the (y) values corresponding to the nodes
+    /// of the axis (i.e. data[0] is the value at the first node and data[npts_]
+    /// is the value at node npts_-1).
+    template<class S, bool bound>
+    S interpolate(T x, const S* data) const noexcept( !bound )
+    {
+        using bound_type = std::integral_constant<bool, bound>;
+        return linear_interpolation_impl_raw(x, data, bound_type{});
+    }
 
-template<typename T, bool RangeCheck>
-class grid_skeleton<T,
-                    RangeCheck,
-                    Grid_Dimension::TwoDim>
-{
 private:
-    tick_axis_impl<T, RangeCheck> xaxis_;
-    tick_axis_impl<T, RangeCheck> yaxis_;
 
-public:
-
-    class node {
-    private:
-        typename tick_axis_impl<T, RangeCheck>::node xnode_;
-        typename tick_axis_impl<T, RangeCheck>::node ynode_;
-    public:
-        explicit constexpr node(std::size_t xindex, std::size_t yindex,
-                                const grid_skeleton* grid = nullptr)
-        noexcept
-            : xnode_(xindex, grid ? &(grid->xaxis_) : nullptr),
-              ynode_(yindex, grid ? &(grid->yaxis_) : nullptr)
-        { if (xnode_.axis()==nullptr) std::cout<<"\nMan! WTF??"; }
-
-        explicit constexpr node(typename tick_axis_impl<T, RangeCheck>::node& xnode,
-                                typename tick_axis_impl<T, RangeCheck>::node& ynode)
-        noexcept
-            : xnode_(xnode), ynode_(ynode)
-        { if (xnode_.axis()==nullptr) std::cout<<"\nMan! WTF??"; }
-        
-        constexpr node(typename tick_axis_impl<T, RangeCheck>::node&& xnode,
-                       typename tick_axis_impl<T, RangeCheck>::node&& ynode)
-        noexcept
-            : xnode_(std::move(xnode)), ynode_(std::move(ynode))
-        { if (xnode_.axis()==nullptr) std::cout<<"\nMan! WTF??"; }
-
-        constexpr node(const node& n) noexcept
-            : xnode_(n.xnode_), ynode_(n.ynode_)
-        { if (xnode_.axis()==nullptr) std::cout<<"\nMan! WTF??"; }
-
-        constexpr node(node&& n) noexcept
-            : xnode_(std::move(n.xnode_)), ynode_(std::move(n.ynode_))
-        { if (xnode_.axis()==nullptr) std::cout<<"\nMan! WTF??"; }
-
-        constexpr node& operator=(const node& n) noexcept
-        {
-            if (this != &n) {
-                xnode_ = n.xnode_;
-                ynode_ = n.ynode_;
-            }
-        if (xnode_.axis()==nullptr) std::cout<<"\nMan! WTF??";
-            return *this;
-        }
-
-        constexpr node& operator=(node&& n) noexcept
-        {
-            xnode_ = std::move(n.xnode_);
-            ynode_ = std::move(n.ynode_);
-        if (xnode_.axis()==nullptr) std::cout<<"\nMan! WTF??";
-            return *this;
-        }
-
-        constexpr std::size_t data_index() const noexcept
-        { return ynode_.index() * xnode_.axis()->size() + xnode_.index(); }
-        
-        constexpr std::size_t data_index_inv() const noexcept 
-        { return (ynode_.axis()->size()-ynode_.index()-1)*
-                 xnode_.axis()->size()+xnode_.index(); }
-
-        /// Return the indexes
-        constexpr std::tuple<std::size_t, std::size_t> node_index() const noexcept
-        { return std::make_tuple( xnode_.index(), ynode_.index() ); }
-
-        /// Return the x-index
-        constexpr std::size_t index_x() const noexcept
-        { return xnode_.node_index(); }
-        
-        /// Return the y-index
-        constexpr std::size_t index_y() const noexcept
-        { return ynode_.node_index(); }
-        
-        /// Return the values at the index(es).
-        constexpr std::tuple<T, T> value() const noexcept
-        { return std::make_tuple( xnode_.value(), ynode_.value() ); }
-        
-        /// Return the x-index value
-        constexpr std::size_t x_value() const noexcept
-        { return xnode_.value(); }
-        
-        /// Return the y-index value
-        constexpr std::size_t y_value() const noexcept
-        { return ynode_.value(); }
-    };
-
-    /// Default constructor.
-#if __cplusplus > 201103L
-    constexpr
-#endif
-    explicit grid_skeleton(T x1, T x2, T dx, T y1, T y2, T dy)
-    noexcept
-        : xaxis_(x1, x2, dx),
-          yaxis_(y1, y2, dy)
-    {}
-  
-    /// Destructor
-    virtual ~grid_skeleton() {};
-
-    /// Number of nodes.
-    constexpr
-    std::size_t size() const noexcept { return xaxis_.size() * yaxis_.size(); }
+    T           start_; ///< left-most tick point.
+    T           stop_;  ///< right-most tick point.
+    T           step_;  ///< step size.
+    std::size_t npts_;  ///< number of tick points.
     
-    /// Number of nodes on the x-axis.
-    constexpr
-    std::size_t x_axis_pts() const noexcept { return xaxis_.size(); }
-    
-    /// Number of nodes on the y-axis.
-    constexpr
-    std::size_t y_axis_pts() const noexcept { return yaxis_.size(); }
-
-    /// Starting node on x-axis.
-    constexpr
-    T x_axis_from() const noexcept { return xaxis_.from(); }
-    
-    /// Ending node on x-axis.
-    constexpr
-    T x_axis_to() const noexcept { return xaxis_.to(); }
-    
-    /// Step of x-axis.
-    constexpr
-    T x_axis_step() const noexcept { return xaxis_.step(); }
-    
-    /// Starting node on y-axis.
-    constexpr
-    T y_axis_from() const noexcept { return yaxis_.from(); }
-    
-    /// Ending node on y-axis.
-    constexpr
-    T y_axis_to() const noexcept { return yaxis_.to(); }
-    
-    /// Step on y-axis.
-    constexpr
-    T y_axis_step() const noexcept { return yaxis_.step(); }
-
-    constexpr auto nearest_neighbor(T x, T y) const noexcept -> node
-    {
-        auto t1 ( xaxis_.nearest_neighbor(x) );
-        auto t2 ( yaxis_.nearest_neighbor(y) );
-        return node( std::move(t1), std::move(t2) );
-    }
-
-    ///   [3]    [2]
-    /// ...+-----+...  -> y_1
-    ///    |     |
-    ///    |   p |
-    /// ...+-----+...  -> y_0
-    ///   [0]    [1]
-    ///    |     |
-    ///    v     v
-    ///   x_0   x_1
-    constexpr auto neighbor_nodes(T x, T y) const noexcept( !RangeCheck )
-    -> std::tuple<node, node, node, node>
-    {
-        auto t1 ( xaxis_.neighbor_nodes(x) );
-        auto t2 ( yaxis_.neighbor_nodes(y) );
-        return std::make_tuple( node(std::get<0>(t1), std::get<0>(t2)),
-                                node(std::get<1>(t1), std::get<0>(t2)),
-                                node(std::get<1>(t1), std::get<1>(t2)),
-                                node(std::get<0>(t1), std::get<1>(t2))
-                              );
-    };
-    
-    ///
+    /// Perform linear interpolation to compute the value at point x. The
+    /// data parameter should hold the (y) values corresponding to the nodes
+    /// of the axis (i.e. data[0] is the value at the first node and data[npts_]
+    /// is the value at node npts_-1). If the value of x is not in the interval
+    /// [start_, stop_] an std::domain_error exception is thrown.
     template<typename S>
-    constexpr S bilinear_interpolation(S x, S y,
-                                    const std::vector<S>& vec)
-    { return this->bilinear_interpolation(x, y, vec.data()); }
-
-    template<typename S>
-    constexpr S bilinear_interpolation(S x, S y, 
-                                    std::tuple<node, node, node, node>& nodes,
-                                    const S* vals)
-    const noexcept( !RangeCheck )
-    {
-        if ( x == x_axis_to() ) {
-            if ( y == y_axis_to() ) {
-#ifdef DEBUG
-                std::cout<<"\n[DEBUG] This is the fucking limit! ("<<x<<","<<y<<")";
-#endif
-                return vals[size()-1];
-            }
-            S x0 (static_cast<S>(std::get<0>(nodes).y_value()));
-            S x1 (static_cast<S>(std::get<2>(nodes).y_value()));
-            S y0 ( vals[std::get<2>(nodes).data_index()] );
-            S y1 ( vals[std::get<3>(nodes).data_index()] );
-            return y0+(y1-y0)*((y-x0)/(x1-x0));
-        }
-
-        if ( y == y_axis_to() ) {
-            xaxis_.interpolate(x, vals);
-        }
-
-        S x0 (static_cast<S>(std::get<0>(nodes).x_value()));
-        S x1 (static_cast<S>(std::get<1>(nodes).x_value()));
-        S y0 (static_cast<S>(std::get<0>(nodes).y_value()));
-        S y1 (static_cast<S>(std::get<2>(nodes).y_value()));
-        S f00 ( vals[std::get<0>(nodes).data_index()] );
-        S f10 ( vals[std::get<1>(nodes).data_index()] );
-        S f11 ( vals[std::get<2>(nodes).data_index()] );
-        S f01 ( vals[std::get<3>(nodes).data_index()] );
-        S denom ( (x1-x0)*(y1-y0) );
-        return ((x1-x)*(y1-y)/denom)*f00
-              +((x-x0)*(y1-y)/denom)*f10
-              +((x1-x)*(y-y0)/denom)*f01
-              +((x-x0)*(y-y0)/denom)*f11;                                                                   
-    }
-
-    template<typename S>
-    constexpr S bilinear_interpolation(S x, S y, const S* vals)
-    const noexcept( !RangeCheck )
-    {
-        auto t1 ( xaxis_.neighbor_nodes(x) );
-        auto t2 ( yaxis_.neighbor_nodes(y) );
-        S x0 (static_cast<S>(std::get<0>(t1).value()));
-        S x1 (static_cast<S>(std::get<1>(t1).value()));
-        S y0 (static_cast<S>(std::get<0>(t2).value()));
-        S y1 (static_cast<S>(std::get<1>(t2).value()));
-        node n00 (std::get<0>(t1), std::get<0>(t2));
-        node n10 (std::get<1>(t1), std::get<0>(t2));
-        node n11 (std::get<1>(t1), std::get<1>(t2));
-        node n01 (std::get<0>(t1), std::get<1>(t2));
-        S f00 ( vals[n00.data_index()] );
-        S f10 ( vals[n10.data_index()] );
-        S f11 ( vals[n11.data_index()] );
-        S f01 ( vals[n01.data_index()] );
-        S denom ( (x1-x0)*(y1-y0) );
-        return ((x1-x)*(y1-y)/denom)*f00
-              +((x-x0)*(y1-y)/denom)*f10
-              +((x1-x)*(y-y0)/denom)*f01
-              +((x-x0)*(y-y0)/denom)*f11;                                                                   
-    }
-
-    // This function will convert a tuple of (x, y) indexes, to an index.
-    // For example, if we have an instance of grid_skeleton assosicated with
-    // a vector<...>, where: 
-    // vector[0] -> (0, 0)
-    // vector[1] -> (1, 0)
-    // ...
-    // and we want to find the index of the vector corresponding to the tuple
-    // (x, y), then this function will compute it.
-    //
-    std::size_t node_to_index(const std::tuple<std::size_t,std::size_t>& t)
+    S /*bounded_*/linear_interpolation_impl_raw(T x, const S* d, std::true_type)
     const
     {
-        auto x = std::get<0>( t );
-        auto y = std::get<1>( t );
-        return y * xaxis_.size() + x;
+        int status = this->out_of_range(x);
+        if ( !status ) {
+            std::size_t left {static_cast<std::size_t>((x-start_)/step_)};
+            if (left <= npts_ - 2) {
+                S x0 = start_ + (S)left * step_;
+                S x1 = x0 + step_;
+                S y0 = d[left];
+                S y1 = d[left+1];
+                return y0 + (y1-y0)*((x-x0)/(x1-x0));
+            } else if (left == npts_ - 1) {
+                return d[npts_-1];
+            }
+        }
+        throw std::domain_error
+            ("tick_axis_imp::bounded_linear_interpolation() -> argument out of range!");
     }
-    std::size_t node_to_index(const std::size_t x, const std::size_t y)
+    /// Perform linear interpolation to compute the value at point x. The
+    /// data parameter should hold the (y) values corresponding to the nodes
+    /// of the axis (i.e. data[0] is the value at the first node and data[npts_-1]
+    /// is the value at node npts_-1). If the value of x is not in the interval
+    /// [start_, stop_] then the closest of the two limiting values is returned.
+    template<typename S>
+    S /*unbounded_*/linear_interpolation_impl_raw(T x, const S* d, std::false_type)
     const noexcept
-    { return y * xaxis_.size() + x; }
+    {
+        if ( far_left(x) ) {
+            return *d;
+        }
+        // if x < start this will be veeeeeery big
+        std::size_t left {static_cast<std::size_t>((x-start_)/step_)};
+        if (left <= npts_ - 2) {
+            S x0 = start_ + (S)left * step_;
+            S x1 = x0 + step_;
+            S y0 = d[left];
+            S y1 = d[left+1];
+            return y0 + (y1-y0)*((x-x0)/(x1-x0));
+        }   
+        return d[npts_-1];
+    }
 
-    /* This function perfoms the same operation as node_to_index(), only it is
-     * used for cases when the y-axis (in the corresponding vector) is filled
-     * in reverse order, i.e.
+}; // tick_axis<T>
+
+enum class grid_dimension : char
+{ one_dim, two_dim };
+
+/// A class to repersent a grid skeleton, i.e. the axis of a grid.
+template<typename       T,
+         grid_dimension D>
+    class grid_skeleton {};
+
+/// Specialization: A class to hold one-dimensional grids. In fact, this is
+/// just a wrapper for the tick_axis class.
+template<typename T>
+    class grid_skeleton<T, grid_dimension::one_dim>
+: public tick_axis<T>
+{
+public:
+    using typename tick_axis<T>::node;
+
+    explicit grid_skeleton(T f, T t, T s) noexcept
+        : tick_axis<T>(f, t, s)
+    {}
+
+}; // grid_skeleton<T,grid_dimension::one_dim>
+
+/// Specialization: A class to hold two-dimensional grids. The axis of this
+/// grid_skeleton are (by convension) called xaxis and yaxis.
+template<typename T>
+    class grid_skeleton<T, grid_dimension::two_dim>
+{
+public:
+    /// A structure to denote the way that values are stored corresponding
+    /// to the grid_skeleton nodes. See the index2index function for more info.
+    struct normal_store    { using t = std::true_type;  };
+    struct reverse_y_store { using t = std::false_type; };
+    /// A class to represent a node in a two-dimensional grids.
+    class node {
+        /// An invalid, past-the end tick point
+        static constexpr std::size_t invalid_index = -1;
+    public:
+        /// Constructor.
+        explicit node(std::size_t x, std::size_t y, const grid_skeleton& g)
+        noexcept
+            : xindex_{x},
+              yindex_{y},
+              grid_  {g}
+        {}
+        /// Return a past-the-end node
+        static constexpr node end(const grid_skeleton& g) noexcept
+        { return node{invalid_index, invalid_index, g}; }
+        /// Return the first node.
+        static constexpr node begin(const grid_skeleton& g) noexcept
+        { return node{0, 0, g}; }
+        /// (Pre-)increment
+        node& operator++() noexcept
+        {
+            if ( yindex_ == invalid_index || xindex_ == invalid_index ) {
+                return *this;
+            }
+
+            if ( yindex_+1 < grid_.yaxis_.size() ) {
+                ++yindex_;
+            } else {
+                yindex_ = 0;
+                if ( xindex_+1 < grid_.xaxis_.size() ) {
+                    ++xindex_;
+                } else {
+                    xindex_ = yindex_ = invalid_index;
+                }
+            }
+            return *this;
+        }
+        /// Postincrement
+        node operator++(int) noexcept
+        {
+            node n (*this);
+            ++(*this);
+            return n;
+        }
+        /// Equality operator.
+        /// \warning Only works for nodes of the same grid.
+        bool operator==(const node& n) const noexcept
+        { return xindex_ == n.xindex_ && yindex_ == n.yindex_; }
+        /// InEquality operator.
+        /// \warning Only works for nodes of the same grid.
+        bool operator!=(const node& n) const noexcept
+        { return !(*this==n); }
+        /// TODO this is only for debuging
+        std::tuple<std::size_t,std::size_t>
+        position() const noexcept
+        { return std::make_tuple(xindex_,yindex_); }
+    private:
+        std::size_t xindex_, yindex_;
+        const grid_skeleton<T, grid_dimension::two_dim>& grid_;
+    }; // node
+
+public:
+    /// Constructor
+    explicit grid_skeleton(T f1, T t1, T s1, T f2, T t2, T s2) noexcept
+        : xaxis_{f1, t1, s1},
+          yaxis_{f2, t2, s2}
+    {}
+    /// Get the first node.
+    node begin() const noexcept
+    { return node::begin(*this); }
+    /// Get one-past-the-end node.
+    node end() const noexcept
+    { return node::end(*this); }
+    /// Start of x-axis
+    T x_axis_from() const noexcept
+    { return xaxis_.from(); }
+    /// Start of y axis
+    T y_axis_from() const noexcept
+    { return yaxis_.from(); }
+    /// Stop of x axis
+    T x_axis_to() const noexcept
+    { return xaxis_.to(); }
+    /// Stop of y axis
+    T y_axis_to() const noexcept
+    { return yaxis_.to(); }
+    /// Step of x axis
+    T x_axis_step() const noexcept
+    { return xaxis_.step(); }
+    /// Step of y axis
+    T y_axis_step() const noexcept
+    { return yaxis_.step(); }
+    /// Return the size (nodes on x axis * nodes on y axis)
+    std::size_t size() const noexcept
+    { return xaxis_.size() * yaxis_.size(); }
+    /// Transform a pair of x-axis/y-axis indexes to the corresponding index
+    /// of a corresponding contiguous array. The template parameter D can be
+    /// either grid_skeleton::normal_store or grid_skeleton::reverse_y_store.
+    /// See the corresponding implementation functions for more details.
+    template<typename D = normal_store>
+    std::size_t index2index(std::size_t xi, std::size_t yi) const noexcept
+    {
+        using t = typename D::t;
+        return resolve_data_index_impl(xi, yi, t{});
+    }
+    /// Return the nearest node given a point x
+    node nearest_neighbor(T x, T y) const  noexcept
+    {
+        return node{xaxis_.nearest_neighbor_idx(x),
+                    yaxis_.nearest_neighbor_idx(y),
+                    *this};
+    }
+    /// Return the nearest node given a point x. What is actually returned, is
+    /// is the index of the nearest neighbot node in a cintiguous memmory array
+    /// holding the grid.
+    node nearest_neighbor_idx(T x, T y) const  noexcept
+    {
+        return index2index(xaxis_.nearest_neighbor_idx(x),
+                           yaxis_.nearest_neighbor_idx(y));
+    }
+    /// Interpolate on x-axis, given **NOT** a x value, but the index of the
+    /// node at the left of some x value. This x value should be check for
+    /// laying outside the grid's range. User also needs to supply the y-index
+    /// (like the x-index) so that the function can locate the correct index
+    /// in the data array.
+    template<typename S>
+        S linear_interpolation_on_x(T x, std::size_t xi, std::size_t yi, const S* d)
+        const noexcept
+    {
+#ifdef GRID_DEBUG
+        std::cout<<"\n\tInterpolating on x-axis";
+#endif
+        std::size_t x0i = resolve_data_index_impl(xi, yi, std::true_type{});
+        if ( xi+1 > xaxis_.size()-1 ) {
+            // std::cout<<"\n\tHit the limit!";
+            return d[x0i];
+        }
+        std::size_t x1i = x0i + 1;
+        S x0 = (S)xaxis_.from() + (S)xaxis_.step()*xi;
+        S x1 = x0 + (S)xaxis_.step();
+        S f0 = d[x0i];
+        S f1 = d[x1i];
+#ifdef GRID_DEBUG
+        std::cout<<"\n\t "<<x0<<"--"<<x<<"--"<<x1;
+#endif
+        return f0 + (f1-f0)*(x-x0)/(x1-x0);
+    }
+    template<typename S>
+        S linear_interpolation_on_y(T y, std::size_t xi, std::size_t yi, const S* d)
+        const noexcept
+    {
+#ifdef GRID_DEBUG
+        std::cout<<"\n\tInterpolating on y-axis";
+#endif
+        std::size_t y0i = resolve_data_index_impl(xi, yi, std::true_type{});
+        if ( yi+1 > yaxis_.size()-1 ) {
+            // std::cout<<"\n\tHit the limit!";
+            return d[y0i];
+        }
+        std::size_t y1i = y0i + xaxis_.size();
+        S y0 = (S)yaxis_.from() + (S)yaxis_.step()*yi;
+        S y1 = y0 + (S)yaxis_.step();
+        S f0 = d[y0i];
+        S f1 = d[y1i];
+#ifdef GRID_DEBUG
+        std::cout<<"\n\t "<<y0<<"--"<<y<<"--"<<y1;
+#endif
+        return f0 + (f1-f0)*(y-y0)/(y1-y0);
+    }
+    /// Perform bilinear interpolation to compute the value at point P(x,y)
+    template<typename S>
+        S bilinear_interpolation(T x, T y, const S* d) const
+    {
+        if ( xaxis_.out_of_range(x) || yaxis_.out_of_range(y) ) {
+            std::string xstr = std::to_string(x);
+            std::string ystr = std::to_string(y);
+            throw std::domain_error
+                ("grid_skeleton::bilinear_interpolation -> out of range ("
+                 +xstr+", "+ystr+") !");
+        }
+#ifdef GRID_DEBUG
+        std::cout<<"\nInterpolating at ("<<x<<", "<<y<<")";
+#endif
+        // left node x-index
+        std::size_t x0i = xaxis_.left_node_idx(x);
+        // left y-index
+        std::size_t y0i = yaxis_.left_node_idx(y);
+        // right x-index; if this falls out of range, then try to
+        // interpolate on the y axis.
+        std::size_t x1i = x0i + 1;
+        if ( x1i >= xaxis_.size() ) {
+            return linear_interpolation_on_y(y, x0i, y0i, d);
+        }
+        // right y-index; if this falls out of range, then try to
+        // interpolate on the x axis.
+        std::size_t y1i = y0i + 1;
+        if ( y1i >= yaxis_.size() ) {
+            return linear_interpolation_on_x(x, x0i, y0i, d);
+        }
+        // find the corresponding indexes on the data array
+        std::size_t bli = resolve_data_index_impl(x0i, y0i, std::true_type{});
+        std::size_t bri = bli + 1;
+        std::size_t tli = bli + xaxis_.size();
+        std::size_t tri = tli + 1;
+        // perform the interpolation
+        S x0  = (S)xaxis_.from() + x0i*(S)xaxis_.step();
+        S x1  = x0 + (S)xaxis_.step();
+        S y0  = (S)yaxis_.from() + y0i*(S)yaxis_.step(); 
+        S y1  = y0 + (S)yaxis_.step();
+        S f00 = d[bli];
+        S f01 = d[bri];
+        S f10 = d[tli];
+        S f11 = d[tri];
+#ifdef GRID_DEBUG
+        std::cout<<"\n\t ("<<x0<<","<<y1<<")        ("<<x1<<","<<y1<<")\n";
+        std::cout<<"\n\t ("<<x0<<","<<y0<<")        ("<<x1<<","<<y0<<")";
+#endif
+        S denom ( (x1-x0)*(y1-y0) );
+        return ((x1-x)*(y1-y)/denom)*f00
+              +((x-x0)*(y1-y)/denom)*f10
+              +((x1-x)*(y-y0)/denom)*f01
+              +((x-x0)*(y-y0)/denom)*f11; 
+    }
+private:
+    tick_axis<T> xaxis_;
+    tick_axis<T> yaxis_;
+    
+    /** Transform a pair of x-axis, y-axis indexes/nodes to the corresponding
+     * data index. For example, if we pass the indexes (2,3), this function
+     * will return 17 if the template parameter is data_order::normal or 2 if
+     * the template parameter is data_order::y_inverted. The given indexes are
+     * **NOT** checked for laying within the bounds of the x/y axis.
     \verbatim
-      A.                   B.
+          A.                   B.
 
-[3]   15--16--17--18--19   0---1---2---3---4
-       |   |   |   |   |   |   |   |   |   |
-[2]   10--11--12--13--14   5---6---7---8---9
-       |   |   |   |   |   |   |   |   |   |
-[1]    5---6---7---8---9  10--11--12--13--14
-       |   |   |   |   |   |   |   |   |   |
-[0]    0---1---2---3---4  15--16--17--18--19
+    [3]   15--16--17--18--19   0---1---2---3---4
+           |   |   |   |   |   |   |   |   |   |
+    [2]   10--11--12--13--14   5---6---7---8---9
+           |   |   |   |   |   |   |   |   |   |
+    [1]    5---6---7---8---9  10--11--12--13--14
+           |   |   |   |   |   |   |   |   |   |
+    [0]    0---1---2---3---4  15--16--17--18--19
 
-     [0]  [1] [2] [3] [4]
-     \endverbatim
-     * Incase the vector is storead in the A. form, use node_to_index(), else
-     * (i.e. for case B.) use node_to_index_inv().
-     */
-    std::size_t node_to_index_inv(const std::size_t x, const std::size_t y)
+         [0]  [1] [2] [3] [4]
+    \endverbatim
+    */
+    std::size_t
+    resolve_data_index_impl(std::size_t xidx, std::size_t yidx, std::true_type)
     const noexcept
-    { return (yaxis_.size() - y -1) * xaxis_.size() + x; }
+    { return yidx * xaxis_.size() + xidx; }
+    /// This is the same as resolve_data_index_impl() but for case B.
+    std::size_t
+    resolve_data_index_impl(std::size_t xidx, std::size_t yidx, std::false_type)
+    const noexcept
+    { return (yaxis_.size() - yidx -1) * xaxis_.size() + xidx; }
 
-};
+}; // grid_skeleton<T,grid_dimension::two_dim>
 
-} // end namespace
-
+} // ngpt
 #endif

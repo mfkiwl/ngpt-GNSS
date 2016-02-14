@@ -1,1 +1,1 @@
-SUBDIRS = src bin test
+SUBDIRS = src bin test py

@@ -63,8 +63,8 @@ public:
         : type_{type},
           eccentricity_vector_{.0e0, .0e0, .0e0}
     {
-      no_azi_pcv_values_.reserve(no_azi_hint);
-      azi_pcv_values_.reserve(azi_hint);
+        no_azi_pcv_values_.reserve(no_azi_hint);
+        azi_pcv_values_.reserve(azi_hint);
     }
 
     /*  Constructor using (optionaly) hints for the sizes of the vectors.
@@ -78,8 +78,8 @@ public:
         : type_(),
           eccentricity_vector_({{.0e0, .0e0, .0e0}})
     {
-      no_azi_pcv_values_.reserve(no_azi_hint);
-      azi_pcv_values_.reserve(azi_hint);
+        no_azi_pcv_values_.reserve(no_azi_hint);
+        azi_pcv_values_.reserve(azi_hint);
     }
 
     /// Destructor.
@@ -225,14 +225,8 @@ template<typename T>
 class antenna_pcv
 {
 
-#ifdef DEBUG
-    typedef grid_skeleton<T, true, Grid_Dimension::OneDim> dim1_grid;
-    typedef grid_skeleton<T, true, Grid_Dimension::TwoDim> dim2_grid;
-#else
-    typedef grid_skeleton<T, false, Grid_Dimension::OneDim> dim1_grid;
-    typedef grid_skeleton<T, false, Grid_Dimension::TwoDim> dim2_grid;
-#endif
-
+typedef ngpt::grid_skeleton<T, ngpt::grid_dimension::one_dim> dim1_grid;
+typedef ngpt::grid_skeleton<T, ngpt::grid_dimension::two_dim> dim2_grid;
 typedef std::vector<frequency_pcv<T>> fr_pcv_vec;
 
 private:
@@ -397,16 +391,15 @@ public:
     //TODO
     T no_azi_pcv(T zenith, std::size_t i) const
     {
-        return no_azi_grid_.linear_interpolation(zenith,
-                                 freq_pcv_[i].no_azi_vector_c());
+        return no_azi_grid_.template interpolate<float, true>(zenith,
+                                 freq_pcv_[i].no_azi_vector_c().data());
     }
     
     //TODO
     T azi_pcv(T zenith, T azimouth, std::size_t i) const
     {
-        // TODO what if elevation == 90 ??
         return azi_grid_->bilinear_interpolation( zenith, azimouth,
-                                     freq_pcv_[i].azi_vector_c() );
+                                     freq_pcv_[i].azi_vector_c().data() );
     }
 
 };
