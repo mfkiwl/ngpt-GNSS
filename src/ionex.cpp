@@ -716,7 +716,7 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
     // so that we can extract it's value. Let's make a 2D grid. For ease, let's
     // set the grid points to long (instead of ints) so that e.g. lat=37.5
     // lon=23.7 will be 3750 and 2370; i.e. use of factor of 100.
-    int factor (100);
+    constexpr int factor (10000);
     typedef ngpt::grid_skeleton<long, ngpt::grid_dimension::two_dim> gstype;
     gstype grid(_lon1*factor, _lon2*factor, _dlon*factor,
                 _lat1*factor, _lat2*factor, _dlat*factor);
@@ -792,8 +792,8 @@ ionex::get_tec_at(const std::vector<std::pair<ionex_grd_type,ionex_grd_type>>& p
             std::size_t j = 0; // point index
             for (const auto& p : points) {
                 tec_vals[j].emplace_back( grid.bilinear_interpolation(
-                                            p.first,
-                                            p.second,
+                                            p.first*factor,
+                                            p.second*factor,
                                             /*cells[j]*/
                                             tec_map.data())
                                         );
