@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include "datetime_v2.hpp"
+#include "satellite.hpp"
 
 namespace ngpt
 {

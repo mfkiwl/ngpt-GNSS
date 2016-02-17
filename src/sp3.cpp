@@ -58,7 +58,7 @@ ngpt::sp3::read_header()
     ngpt::hours hr((int)lint);
     lint = std::strtol(line+17, &end, 10);
     ngpt::minutes mn((int)lint);
-    double decimal_sec = std::strtod(line+20, &end);
+    double decimal_sec (std::strtod(line+20, &end));
     lint = std::strtol(line+32, &end, 10);
     int num_of_epochs ((int)lint);
     std::memcpy(dataUsed, line+40, 5);
@@ -82,25 +82,32 @@ ngpt::sp3::read_header()
         throw std::runtime_error
             ("sp3::read_header() -> Failed reading line #"+ line_str);
     }
-    posVelFlag = line[2];
-    lint = std::strtol(line+3, &end, 10); // next column is blank, so we're cool
-    ngpt::year yr((int)lint);
-    lint = std::strtol(line+8, &end, 10);
-    ngpt::month mn((int)lint);
-    lint = std::strtol(line+11, &end, 10);
-    ngpt::day_of_month dm((int)lint);
-    lint = std::strtol(line+14, &end, 10);
-    ngpt::hours hr((int)lint);
-    lint = std::strtol(line+17, &end, 10);
-    ngpt::minutes mn((int)lint);
-    double decimal_sec = std::strtod(line+20, &end);
-    lint = std::strtol(line+32, &end, 10);
-    int num_of_epochs ((int)lint);
-    std::memcpy(dataUsed, line+40, 5);
-    std::memcpy(coordSys, line+46, 5);
-    std::memcpy(orbType,  line+52, 3);
-    std::memcpy(agency,   line+56, 4);
-    dataUsed[5] = coordSys[5] = orbType[3] = agency[4] = '\0';
+    lint = std::strtol(line+3, &end, 10);
+    int gps_w((int)lint);
+    double sec_of_week (std::strod(line+8, &end));
+    double eph_interval(std::strod(line+24, &end));
+    lint = std::strtol(line+39, &end, 10);
+    ngpt::modified_julian_day mjd((int)lint);
+    double fract_day(std::strtod(line+45, &end));
+    if ( errno == ERANGE ) {
+        errno = prev_errno;
+        std::string line_str = std::to_string(line_nr);
+        throw std::runtime_error
+            ("sp3::read_header() -> Failed reading line #"+line_str);
+    }
+
+    // --------------------------------------
+    //  Read the second third line.
+    // --------------------------------------
+    ++line_nr;
+    if ( !_istream.getline(line, MAX_HEADER_CHARS) ) {
+        std::string line_str = std::to_string(line_nr);
+        throw std::runtime_error
+            ("sp3::read_header() -> Failed reading line #"+ line_str);
+    }
+    lint = std::strtol(line+4, &end, 10);
+    int num_of_sats ((int)lint);
+    
     if ( errno == ERANGE ) {
         errno = prev_errno;
         std::string line_str = std::to_string(line_nr);
