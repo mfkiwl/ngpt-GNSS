@@ -26,11 +26,15 @@ public:
     sp3& operator=(const sp3&) = delete;
 
 private:
+    /// Read sp3 header.
+    int read_header();
+
     std::string   _filename;
     std::ifstream _istream;
     pos_type      _end_of_head;
     datetime_ms   _first_epoch;
     datetime_ms   _last_epoch;
+    ngpt::satellite_system _satsys;
      
 }; // sp3
 

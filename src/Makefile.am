@@ -30,7 +30,9 @@ dist_include_HEADERS = \
 	car2ell.hpp \
 	car2top.hpp \
 	ell2car.hpp \
-	ellipsoid.hpp
+	ellipsoid.hpp \
+	satellite.hpp \
+	sp3.hpp
 
 dist_libngpt_la_SOURCES = \
 	dtalg.cpp \
@@ -40,4 +42,6 @@ dist_libngpt_la_SOURCES = \
 	satsys.cpp \
 	antex.cpp \
 	ionex.cpp \
-	top2daz.cpp
+	top2daz.cpp \
+	satellite.cpp \
+	sp3.cpp

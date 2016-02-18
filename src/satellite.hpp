@@ -21,7 +21,7 @@ public:
     /// Move Constructor
     satellite(satellite&&) noexcept = default;
     /// Assignment
-    satellite& operator=(const satllite&) noexcept = default;
+    satellite& operator=(const satellite&) noexcept = default;
     /// Move assignment
     satellite& operator=(satellite&&) noexcept = default;
     /// Destructor

@@ -84,6 +84,17 @@ namespace datetime_format_options {
     enum class month_format : char { two_digit, short_name, long_name };
 }
 
+/// Time systems
+enum class time_system : char {
+    gps,
+    glonass,
+    galileo,
+    tai,
+    utc,
+    ut,
+    qzss
+};
+
 /// Forward declare cout operator for year ...
 /*
 template<datetime_format_options::year_digits F = datetime_format_options::year_digits::four_digit>

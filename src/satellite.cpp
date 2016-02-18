@@ -1,3 +1,4 @@
+#include <cassert>
 #include "satellite.hpp"
 
 /** Resolve a satellite from a string of type: SXX, where
