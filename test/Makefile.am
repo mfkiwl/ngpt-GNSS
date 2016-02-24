@@ -5,7 +5,8 @@ noinst_PROGRAMS = testReceiver \
 		testAntex \
 		testGeodesy \
 		testDatetime \
-		testIonex
+		testIonex \
+		testSp3
 
 MCXXFLAGS = \
 	-std=c++14 \
@@ -17,10 +18,10 @@ MCXXFLAGS = \
 	-pedantic \
 	-W \
 	-Wshadow \
-	-Winline \
 	-Wdisabled-optimization \
 	-DDEBUG \
 	-DCURSE_IN_GREEK
+#	-Winline
 
 testReceiver_SOURCES  = test_receiver.cpp
 testReceiver_CXXFLAGS = $(MCXXFLAGS) -I$(top_srcdir)/src -L$(top_srcdir)/src
@@ -52,3 +53,7 @@ testDatetime_LDADD     = $(top_srcdir)/src/libngpt.la
 testIonex_SOURCES   = test_ionex.cpp
 testIonex_CXXFLAGS  = $(MCXXFLAGS) -I$(top_srcdir)/src -L$(top_srcdir)/src
 testIonex_LDADD     = $(top_srcdir)/src/libngpt.la
+
+testSp3_SOURCES   = test_sp3.cpp
+testSp3_CXXFLAGS  = $(MCXXFLAGS) -I$(top_srcdir)/src -L$(top_srcdir)/src
+testSp3_LDADD     = $(top_srcdir)/src/libngpt.la

@@ -2,6 +2,7 @@
 #define __SP3__HPP__
 
 #include <fstream>
+#include <vector>
 #include "datetime_v2.hpp"
 #include "satellite.hpp"
 
@@ -29,12 +30,19 @@ private:
     /// Read sp3 header.
     int read_header();
 
-    std::string   _filename;
-    std::ifstream _istream;
-    pos_type      _end_of_head;
-    datetime_ms   _first_epoch;
-    datetime_ms   _last_epoch;
+    std::string     _filename;
+    std::ifstream   _istream;
+    pos_type        _end_of_head;
+    datetime_ms     _first_epoch;
+    datetime_ms     _last_epoch;
+    int             _num_of_epochs;
     ngpt::satellite_system _satsys;
+    char            _coordSys[6];
+    char            _orbType[4];
+    std::vector<ngpt::satellite> _sat_vec;
+    std::vector<short int> _sat_acc;
+    double _base_for_pos;
+    double _base_for_clk;
      
 }; // sp3
 
