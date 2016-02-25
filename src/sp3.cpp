@@ -141,17 +141,30 @@ ngpt::sp3::read_header()
     lint = std::strtol(line+3, &end, 10);
     int gps_w((int)lint);
     double sec_of_week (std::strtod(line+8, &end));
+    */
     double eph_interval(std::strtod(line+24, &end));
+    // the interval should be an INTEGER amount of milliseconds (or better seconds).
+    double float_seconds;
+    eph_interval = std::modf(eph_interval, &float_seconds);
+    if ( std::abs(float_seconds-.0e0) > 1e-8 ) {
+        std::string line_str = std::to_string(eph_interval);
+        throw std::runtime_error
+            ("sp3::read_header() -> Interval (in seconds) is fractional!");
+    } else {
+        ngpt::milliseconds ms__ {(long)eph_interval * 1000L};
+        this->_interval = ms__;
+    }
+    /*
     lint = std::strtol(line+39, &end, 10);
     ngpt::modified_julian_day mjd((int)lint);
     double fract_day(std::strtod(line+45, &end));
+    */
     if ( errno == ERANGE ) {
         errno = prev_errno;
         std::string line_str = std::to_string(line_nr);
         throw std::runtime_error
             ("sp3::read_header() -> Failed reading line #"+line_str);
     }
-    */
 
     // --------------------------------------
     //  Lines #3 - #7
@@ -174,21 +187,15 @@ ngpt::sp3::read_header()
     std::size_t sat_lines = satellite_lines(num_of_sats);
     assert( sat_lines <= sats_max_lines );
     sat_vector.reserve(num_of_sats);
-    while ( sat_vector.size() < num_of_sats ) {
-        for (cptr = line+sat_start_idx; cptr<line+sat_stop_idx; cptr+=3) {
-            sat_vector.emplace_back(cptr);
+    while ( line_nr < 7 ) {
+        if ( sat_vector.size() < num_of_sats ) {
+            for (cptr = line+sat_start_idx; cptr<line+sat_stop_idx; cptr+=3) {
+                sat_vector.emplace_back(cptr);
+                if ( sat_vector.size() == num_of_sats ) {
+                    break;
+                }
+            }
         }
-        if ( !(++line_nr) || !_istream.getline(line, MAX_HEADER_CHARS) ) {
-#ifdef DEBUG
-            std::string line_str = std::to_string(line_nr);
-            throw std::runtime_error
-                ("sp3::read_header() -> Failed reading line #"+ line_str);
-#endif
-            return 1;
-        }
-    }
-    // we have read line_nr lines and need to have read reach line #6
-    while ( line_nr < 3+(int)sats_max_lines ) {
         if ( !(++line_nr) || !_istream.getline(line, MAX_HEADER_CHARS) ) {
 #ifdef DEBUG
             std::string line_str = std::to_string(line_nr);
@@ -217,23 +224,17 @@ ngpt::sp3::read_header()
     }
     std::vector<short int> sat_acc;
     sat_acc.reserve(num_of_sats);
-    while ( sat_vector.size() < num_of_sats ) {
-        for (cptr = line+sat_start_idx; cptr<line+sat_stop_idx; cptr+=3) {
-            std::memcpy(ints, cptr, 3);
-            lint = std::strtol(ints, &end, 10);
-            sat_acc.emplace_back((short int)lint);
+    while ( line_nr < 12 ) {
+        if ( sat_acc.size() < num_of_sats ) {
+            for (cptr = line+sat_start_idx; cptr<line+sat_stop_idx; cptr+=3) {
+                std::memcpy(ints, cptr, 3);
+                lint = std::strtol(ints, &end, 10);
+                sat_acc.emplace_back((short int)lint);
+                if ( sat_acc.size() == num_of_sats ) {
+                    break;
+                }
+            }
         }
-        if ( !(++line_nr) || !_istream.getline(line, MAX_HEADER_CHARS) ) {
-#ifdef DEBUG
-            std::string line_str = std::to_string(line_nr);
-            throw std::runtime_error
-                ("sp3::read_header() -> Failed reading line #"+ line_str);
-#endif
-            return 1;
-        }
-    }
-    // we have read line_nr lines and need to have read 12 lines
-    while ( line_nr < 3+(int)sats_max_lines*2 ) {
         if ( !(++line_nr) || !_istream.getline(line, MAX_HEADER_CHARS) ) {
 #ifdef DEBUG
             std::string line_str = std::to_string(line_nr);
@@ -257,8 +258,18 @@ ngpt::sp3::read_header()
 #endif
         return 1;
     }
-    //this->_satsys = ngpt::char_to_satsys( *(line+3) );
-    std::cout<<"\nRESOLVING SAT SYS: ["<<line[3]<<"]";
+    // it might happen that the identifier is actually in column 5 (not 4)!
+    {
+        bool re_try_sat_sys = false;
+        try {
+            this->_satsys = ngpt::char_to_satsys( *(line+3) );
+        } catch (std::runtime_error& e) {
+            re_try_sat_sys = true;
+        }
+        if ( re_try_sat_sys ) { // if not resolved, let it throw!
+            this->_satsys = ngpt::char_to_satsys( *(line+4) );
+        }
+    }
     // TODO what to do with time system ?
     std::memcpy(ints, line+9, 3);
     
@@ -315,6 +326,70 @@ ngpt::sp3::read_header()
         }
     }
 
+    // next line should be a header record (the first)
+    this->_end_of_head = _istream.tellg();
+
+    // compute the last epoch in file
+    this->_last_epoch = _first_epoch;
+    for (int i = 0; i < _num_of_epochs; ++i) {
+        _last_epoch.add_seconds( _interval );
+    }
+
     // All done
+    return 0;
+}
+
+int
+read_next_pos_n_clock()
+{
+    static long lint;
+    static char line[MAX_HEADER_CHARS];
+    int prev_errno = errno;
+
+    if ( !_istream.getline(line, MAX_HEADER_CHARS) || *line != 'P' )
+    {
+        return 1;
+    }
+
+
+}
+
+int
+read_next_epoch_header(datetime_ms& date)
+{
+    static long lint;
+    static char line[MAX_HEADER_CHARS];
+    int prev_errno = errno;
+
+    if ( !_istream.getline(line, MAX_HEADER_CHARS) || *line != '*' )
+    {
+        return 1;
+    }
+
+    lint = std::strtol(line+3, &end, 10); // next column is blank, so we're cool
+    ngpt::year yr((int)lint);
+    lint = std::strtol(line+8, &end, 10);
+    ngpt::month mt((int)lint);
+    lint = std::strtol(line+11, &end, 10);
+    ngpt::day_of_month dm((int)lint);
+    lint = std::strtol(line+14, &end, 10);
+    ngpt::hours hr((int)lint);
+    lint = std::strtol(line+17, &end, 10);
+    ngpt::minutes mn((int)lint);
+    double decimal_sec (std::strtod(line+20, &end));
+    long mls (std::floor(decimal_sec)*1000); // seconds to milliseconds
+    datetime_ms epoch {yr, mt, dm, hr, mn, ngpt::milliseconds(mls)};
+    
+    if ( errno == ERANGE ) {
+        errno = prev_errno;
+#ifdef DEBUG
+        std::string line_str = std::string(line);
+        throw std::runtime_error
+            ("sp3::read_next_epoch_header() -> Failed reading line ["+line_str+']');
+#endif
+        return 1;
+    }
+
+    date = epoch;
     return 0;
 }

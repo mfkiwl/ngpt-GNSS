@@ -43,6 +43,7 @@ private:
     std::vector<short int> _sat_acc;
     double _base_for_pos;
     double _base_for_clk;
+    ngpt::milliseconds _interval;
      
 }; // sp3
 

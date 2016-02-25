@@ -31,6 +31,17 @@ private:
     int                    _prn;
 }; // satellite
 
+class satellite_state
+{
+public:
+    
+private:
+    double x_, y_, z_;
+    double c_;
+    double sx_, sy_, sz_;
+    double sc_;
+}; // satellite_state
+
 } // ngpt
 
 #endif
