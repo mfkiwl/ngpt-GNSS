@@ -8,8 +8,19 @@
 constexpr std::size_t sat_start_idx  {9}; /// In satellite lines, the sat records start at index: 
 constexpr std::size_t sat_stop_idx   {60};/// One past-the-end index
 constexpr std::size_t sats_per_line  { (sat_stop_idx-sat_start_idx)/3 };
-constexpr std::size_t sats_max_num   {85};
+constexpr std::size_t sats_max_num   {85}; //FIXME this has changed in sp3-d
 constexpr std::size_t sats_max_lines {5};
+
+/// A bad or absent satellite position in the sp3 file is denoted as:
+constexpr double BAD_POS_VALUE { .0e0 };
+
+/// A bad or absent satellite clock correction in the sp3 file is denoted with
+/// a value larger or equal to:
+constexpr double BAD_CLK_VALUE { 999999.0e0 };
+
+/// The exponent value which denotes that the actual accuracy is unknown
+/// or too large to represent, anything larger than:
+constexpr int BAD_EXP_VALUE { 99 };
 
 /// In an sp3 header, each declared satellite is recorded in a string of 3
 /// chars; starting from column 10 up untill column 60. This function will
@@ -340,18 +351,72 @@ ngpt::sp3::read_header()
 }
 
 int
-read_next_pos_n_clock()
+read_next_pos_n_clock(ngpt::satellite& sat, ngpt::satellite_state& state)
 {
-    static long lint;
+    // static long lint;
     static char line[MAX_HEADER_CHARS];
+    static char num[15];
+    std::size_t num_digits = 14;
     int prev_errno = errno;
+    ngpt::satellite_state_flag pos_flag;
 
     if ( !_istream.getline(line, MAX_HEADER_CHARS) || *line != 'P' )
     {
         return 1;
     }
 
+    // Resolve the satellite
+    ngpt::satellite tmp_sat {line+1};
+    sat = std::move(tmp_sat);
 
+    num[14] = '\0';
+    // two consecutive numbers (x,y,x) may be recorded with no whitespace
+    // between them; so better move them to a temp string and cast that to double
+    std::memcpy(num, line+4, num_digits);
+    double x (std::strtod(num));
+    std::memcpy(num, line+18, num_digits);
+    double y (std::strtod(num));
+    std::memcpy(num, line+32, num_digits);
+    double z (std::strtod(num));
+    std::memcpy(num, line+46, num_digits);
+    double c (std::strtod(num));
+    
+    if (   std::abs(x-BAD_POS_VALUE)>1e-10
+        || std::abs(y-BAD_POS_VALUE)>1e-10
+        || std::abs(z-BAD_POS_VALUE)>1e-10 )
+    {
+        pos_flag.set(ngpt::satellite_state_flag::flag_type::bad_or_absent);
+    }
+    
+    long   idev_x = std::strtol(line+61, &end, 10);
+    double sdev_x = std::pow(this->_base_for_pos, (double)idev_x);
+    long   idev_y = std::strtol(line+64, &end, 10);
+    double sdev_y = std::pow(this->_base_for_pos, (double)idev_y);
+    long   idev_z = std::strtol(line+67, &end, 10);
+    double sdev_z = std::pow(this->_base_for_pos, (double)idev_z);
+    long   idev_c = std::strtol(line+70, &end, 10);
+    double sdev_c = std::pow(this->_base_for_clk, (double)idev_c);
+
+    if (   idev_x > BAD_EXP_VALUE
+        || idev_y > BAD_EXP_VALUE 
+        || idev_z > BAD_EXP_VALUE )
+    {
+        pos_flag.set(ngpt::satellite_state_flag::flag_type::unknown_acc);
+    }
+    
+    if ( line[78] == "M" ) {
+        pos_flag.set(ngpt::satellite_state_flag::flag_type::maneuver);
+    }
+
+    if ( line[79] == "P" ) {
+        pos_flag.set(ngpt::satellite_state_flag::flag_type::prediction);
+    }
+
+    ngpt::satellite_state tmp_state {x, y, z, sdev_x, sdev_y, sdev_z, pos_flag};
+    state = std::move(tmp_state);
+
+    // All done
+    return 0;
 }
 
 int
