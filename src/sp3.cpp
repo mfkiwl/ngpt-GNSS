@@ -351,7 +351,7 @@ ngpt::sp3::read_header()
 }
 
 int
-read_next_pos_n_clock(ngpt::satellite& sat, ngpt::satellite_state& state)
+ngpt::sp3::read_next_pos_n_clock(ngpt::satellite& sat, ngpt::satellite_state& state)
 {
     // static long lint;
     static char line[MAX_HEADER_CHARS];
@@ -359,6 +359,7 @@ read_next_pos_n_clock(ngpt::satellite& sat, ngpt::satellite_state& state)
     std::size_t num_digits = 14;
     int prev_errno = errno;
     ngpt::satellite_state_flag pos_flag;
+    char *chr;
 
     if ( !_istream.getline(line, MAX_HEADER_CHARS) || *line != 'P' )
     {
@@ -373,13 +374,13 @@ read_next_pos_n_clock(ngpt::satellite& sat, ngpt::satellite_state& state)
     // two consecutive numbers (x,y,x) may be recorded with no whitespace
     // between them; so better move them to a temp string and cast that to double
     std::memcpy(num, line+4, num_digits);
-    double x (std::strtod(num));
+    double x (std::strtod(num, &chr));
     std::memcpy(num, line+18, num_digits);
-    double y (std::strtod(num));
+    double y (std::strtod(num, &chr));
     std::memcpy(num, line+32, num_digits);
-    double z (std::strtod(num));
+    double z (std::strtod(num, &chr));
     std::memcpy(num, line+46, num_digits);
-    double c (std::strtod(num));
+    double c (std::strtod(num, &chr));
     
     if (   std::abs(x-BAD_POS_VALUE)>1e-10
         || std::abs(y-BAD_POS_VALUE)>1e-10
@@ -388,13 +389,13 @@ read_next_pos_n_clock(ngpt::satellite& sat, ngpt::satellite_state& state)
         pos_flag.set(ngpt::satellite_state_flag::flag_type::bad_or_absent);
     }
     
-    long   idev_x = std::strtol(line+61, &end, 10);
+    long   idev_x = std::strtol(line+61, &chr, 10);
     double sdev_x = std::pow(this->_base_for_pos, (double)idev_x);
-    long   idev_y = std::strtol(line+64, &end, 10);
+    long   idev_y = std::strtol(line+64, &chr, 10);
     double sdev_y = std::pow(this->_base_for_pos, (double)idev_y);
-    long   idev_z = std::strtol(line+67, &end, 10);
+    long   idev_z = std::strtol(line+67, &chr, 10);
     double sdev_z = std::pow(this->_base_for_pos, (double)idev_z);
-    long   idev_c = std::strtol(line+70, &end, 10);
+    long   idev_c = std::strtol(line+70, &chr, 10);
     double sdev_c = std::pow(this->_base_for_clk, (double)idev_c);
 
     if (   idev_x > BAD_EXP_VALUE
@@ -404,11 +405,11 @@ read_next_pos_n_clock(ngpt::satellite& sat, ngpt::satellite_state& state)
         pos_flag.set(ngpt::satellite_state_flag::flag_type::unknown_acc);
     }
     
-    if ( line[78] == "M" ) {
+    if ( line[78] == 'M' ) {
         pos_flag.set(ngpt::satellite_state_flag::flag_type::maneuver);
     }
 
-    if ( line[79] == "P" ) {
+    if ( line[79] == 'P' ) {
         pos_flag.set(ngpt::satellite_state_flag::flag_type::prediction);
     }
 
@@ -420,28 +421,29 @@ read_next_pos_n_clock(ngpt::satellite& sat, ngpt::satellite_state& state)
 }
 
 int
-read_next_epoch_header(datetime_ms& date)
+ngpt::sp3::read_next_epoch_header(datetime_ms& date)
 {
     static long lint;
     static char line[MAX_HEADER_CHARS];
     int prev_errno = errno;
+    char *chr;
 
     if ( !_istream.getline(line, MAX_HEADER_CHARS) || *line != '*' )
     {
         return 1;
     }
 
-    lint = std::strtol(line+3, &end, 10); // next column is blank, so we're cool
+    lint = std::strtol(line+3, &chr, 10); // next column is blank, so we're cool
     ngpt::year yr((int)lint);
-    lint = std::strtol(line+8, &end, 10);
+    lint = std::strtol(line+8, &chr, 10);
     ngpt::month mt((int)lint);
-    lint = std::strtol(line+11, &end, 10);
+    lint = std::strtol(line+11, &chr, 10);
     ngpt::day_of_month dm((int)lint);
-    lint = std::strtol(line+14, &end, 10);
+    lint = std::strtol(line+14, &chr, 10);
     ngpt::hours hr((int)lint);
-    lint = std::strtol(line+17, &end, 10);
+    lint = std::strtol(line+17, &chr, 10);
     ngpt::minutes mn((int)lint);
-    double decimal_sec (std::strtod(line+20, &end));
+    double decimal_sec (std::strtod(line+20, &chr));
     long mls (std::floor(decimal_sec)*1000); // seconds to milliseconds
     datetime_ms epoch {yr, mt, dm, hr, mn, ngpt::milliseconds(mls)};
     

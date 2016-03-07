@@ -13,8 +13,10 @@ class sp3
 {
 /// Let's not write this more than once.
 typedef std::ifstream::pos_type pos_type;
-/// This is the datetime resolution for sp3
-typedef ngpt::datev2<ngpt::milliseconds> datetime_ms;
+
+public:
+    /// This is the datetime resolution for sp3
+    typedef ngpt::datev2<ngpt::milliseconds> datetime_ms;
 
 public:
     /// Constructor from filename.
@@ -29,6 +31,12 @@ public:
 private:
     /// Read sp3 header.
     int read_header();
+
+    ///
+    int read_next_pos_n_clock(ngpt::satellite&, ngpt::satellite_state&);
+
+    ///
+    int read_next_epoch_header(datetime_ms&);
 
     std::string     _filename;
     std::ifstream   _istream;

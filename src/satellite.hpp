@@ -1,7 +1,7 @@
 #ifndef __GNSS_SATELLITES_HPP
 #define __GNSS_SATELLITES_HPP
 
-#include "type_traits"
+#include <type_traits>
 #include "satsys.hpp"
 
 namespace ngpt
@@ -47,9 +47,10 @@ public:
     enum class flag_type : flag_integral_type
     {
         bad_or_absent = 1,
-        unknown_acc   = 2
+        unknown_acc   = 2,
         maneuver      = 4,
         prediction    = 8,
+        no_velocity   = 16
     };
     /// Default constructor (nothing set)
     explicit satellite_state_flag() : _flag{0} {};
@@ -73,16 +74,25 @@ public:
 
 class satellite_state
 {
+
 public:
-    explicit (double x, double y, double z, double sx=0, double sy=0,
-              double sz=0, satellite_state_flag f=satellite_state_flag{})
-        : _x{x}, _y{y}, _z{z}, _sx{sx}, _sy{sy}, _sz{sz}, _flag{flag}
+    explicit satellite_state(double x, double y, double z,
+              double sx=.0f, double sy=.0f, double sz=.0f,
+              satellite_state_flag f=satellite_state_flag{},
+              double vx=.0f, double vy=.0f, double vz=.0f,
+              double svx=.0f, double svy=.0f, double svz=.0f)
+        : _x{x}, _y{y}, _z{z}, _sx{sx}, _sy{sy}, _sz{sz},
+          _flag{f},
+          _vx{vx}, _vy{vy}, _vz{vz}, _svx{svx}, _svy{svy}, _svz{svz}
     {}
 
 private:
-    double  _x,  _y,  _z;
-    double _sx, _sy, _sz;
+    double _x,   _y,   _z;
+    double _sx,  _sy,  _sz;
+    double _vx,  _vy,  _vz;
+    double _svx, _svy, _svz;
     satellite_state_flag _flag;
+
 }; // satellite_state
 
 } // ngpt
