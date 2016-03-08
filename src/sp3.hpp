@@ -28,6 +28,11 @@ public:
     /// Assignment not allowed.
     sp3& operator=(const sp3&) = delete;
 
+    /// get next epoch off from the sp3 file
+    int get_next_epoch(datetime&, std::vector<satellite>,
+        std::vector<satellite_state>&,
+        std::vector<satellite_clock>&);
+
 private:
     /// Read sp3 header.
     int read_header();

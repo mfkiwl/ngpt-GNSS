@@ -454,6 +454,26 @@ ngpt::sp3::read_next_pos_n_clock(ngpt::satellite& sat,
     ngpt::satellite_clock tmp_clk {c, sdev_c, clk_flag};
     clkcor = std::move(tmp_clk);
 
+    // check what the next line starts with; if it is a correllation
+    // or velocity record, read it
+    int  status;
+    char next[2];
+    while ( _istream.get(next, 2) ) {
+        _istream.unget(/*next[1]*/);
+        _istream.unget(/*next[0]*/);
+        if ( next[0] == 'E' &&( next[1] == 'P' || next[1] == 'V') ) {
+            if ( (status = this->read_next_corr()) ) {
+                return status;
+            }
+        } else if ( *next == 'V' ) {
+            if ( (status = this->read_next_vel(sat, state, clkcor)) ) {
+                return status;
+            }
+        } else {
+            break;
+        }
+    }
+
     // All done
     return 0;
 }
