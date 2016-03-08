@@ -19,7 +19,7 @@ constexpr double BAD_POS_VALUE { .0e0 };
 constexpr double BAD_CLK_VALUE { 999999.0e0 };
 
 /// The exponent value which denotes that the actual accuracy is unknown
-/// or too large to represent, anything larger than:
+/// or too large to represent, anything larger or equal to:
 constexpr int BAD_EXP_VALUE { 99 };
 
 /// In an sp3 header, each declared satellite is recorded in a string of 3
@@ -350,15 +350,24 @@ ngpt::sp3::read_header()
     return 0;
 }
 
+///
+/// Exit status:
+/// < 0 -> conversion error
+/// = 0 -> ok
+/// > 0 -> format error
+///
 int
-ngpt::sp3::read_next_pos_n_clock(ngpt::satellite& sat, ngpt::satellite_state& state)
+ngpt::sp3::read_next_pos_n_clock(ngpt::satellite& sat,
+                        ngpt::satellite_state& state,
+                        ngpt::satellite_clock& clkcor)
 {
     // static long lint;
     static char line[MAX_HEADER_CHARS];
     static char num[15];
     std::size_t num_digits = 14;
     int prev_errno = errno;
-    ngpt::satellite_state_flag pos_flag;
+    ngpt::satellite_state_flag pos_flag {satellite_state_flag::flag_type::no_velocity};
+    ngpt::satellite_clock_flag clk_flag {satellite_clock_flag::flag_type::no_velocity};
     char *chr;
 
     if ( !_istream.getline(line, MAX_HEADER_CHARS) || *line != 'P' )
@@ -381,12 +390,21 @@ ngpt::sp3::read_next_pos_n_clock(ngpt::satellite& sat, ngpt::satellite_state& st
     double z (std::strtod(num, &chr));
     std::memcpy(num, line+46, num_digits);
     double c (std::strtod(num, &chr));
+
+    if ( errno == ERANGE ) {
+        errno = prev_errno;
+        return -1;
+    }
     
     if (   std::abs(x-BAD_POS_VALUE)>1e-10
         || std::abs(y-BAD_POS_VALUE)>1e-10
         || std::abs(z-BAD_POS_VALUE)>1e-10 )
     {
         pos_flag.set(ngpt::satellite_state_flag::flag_type::bad_or_absent);
+    }
+
+    if ( c >= BAD_CLK_VALUE ) {
+        clk_flag.set(ngpt::satellite_clock_flag::flag_type::bad_or_absent);
     }
     
     long   idev_x = std::strtol(line+61, &chr, 10);
@@ -397,12 +415,29 @@ ngpt::sp3::read_next_pos_n_clock(ngpt::satellite& sat, ngpt::satellite_state& st
     double sdev_z = std::pow(this->_base_for_pos, (double)idev_z);
     long   idev_c = std::strtol(line+70, &chr, 10);
     double sdev_c = std::pow(this->_base_for_clk, (double)idev_c);
+    
+    if ( errno == ERANGE ) {
+        errno = prev_errno;
+        return -1;
+    }
 
-    if (   idev_x > BAD_EXP_VALUE
-        || idev_y > BAD_EXP_VALUE 
-        || idev_z > BAD_EXP_VALUE )
+    if (   idev_x >= BAD_EXP_VALUE
+        || idev_y >= BAD_EXP_VALUE 
+        || idev_z >= BAD_EXP_VALUE )
     {
         pos_flag.set(ngpt::satellite_state_flag::flag_type::unknown_acc);
+    }
+    
+    if ( idev_c >= BAD_EXP_VALUE ) {
+        clk_flag.set(ngpt::satellite_clock_flag::flag_type::unknown_acc);
+    }
+
+    if ( line[74] == 'E' ) {
+        clk_flag.set(ngpt::satellite_clock_flag::flag_type::discontinuity);
+    }
+
+    if ( line[75] == 'P' ) {
+        clk_flag.set(ngpt::satellite_clock_flag::flag_type::prediction);
     }
     
     if ( line[78] == 'M' ) {
@@ -415,6 +450,115 @@ ngpt::sp3::read_next_pos_n_clock(ngpt::satellite& sat, ngpt::satellite_state& st
 
     ngpt::satellite_state tmp_state {x, y, z, sdev_x, sdev_y, sdev_z, pos_flag};
     state = std::move(tmp_state);
+
+    ngpt::satellite_clock tmp_clk {c, sdev_c, clk_flag};
+    clkcor = std::move(tmp_clk);
+
+    // All done
+    return 0;
+}
+
+/// Read and ingore an 'E[P|V]' line, i.e. a Position & Clock Correlation
+/// information line.
+int
+ngpt::sp3::read_next_corr()
+{
+    static char line[MAX_HEADER_CHARS];
+    if ( !_istream.getline(line, MAX_HEADER_CHARS)
+        || *line != 'E' )
+    {
+        return 1;
+    }
+    return 0;
+}
+
+int
+ngpt::sp3::read_next_vel(const ngpt::satellite s,
+    ngpt::satellite_state& state,
+    ngpt::satellite_clock& clkcor)
+{
+    // static long lint;
+    static char line[MAX_HEADER_CHARS];
+    static char num[15];
+    std::size_t num_digits = 14;
+    int prev_errno = errno;
+    char *chr;
+
+    if ( !_istream.getline(line, MAX_HEADER_CHARS) || *line != 'V' )
+    {
+        return 1;
+    }
+
+    // Resolve the satellit
+    ngpt::satellite tmp_sat {line+1};
+    if ( s != tmp_sat ) {
+        return -2;
+    }
+
+    num[14] = '\0';
+    // two consecutive numbers (x,y,x) may be recorded with no whitespace
+    // between them; so better move them to a temp string and cast that to double
+    std::memcpy(num, line+4, num_digits);
+    double x (std::strtod(num, &chr));
+    std::memcpy(num, line+18, num_digits);
+    double y (std::strtod(num, &chr));
+    std::memcpy(num, line+32, num_digits);
+    double z (std::strtod(num, &chr));
+    std::memcpy(num, line+46, num_digits);
+    double c (std::strtod(num, &chr));
+
+    if ( errno == ERANGE ) {
+        errno = prev_errno;
+        return -1;
+    }
+    
+    if (   std::abs(x-BAD_POS_VALUE)>1e-10
+        || std::abs(y-BAD_POS_VALUE)>1e-10
+        || std::abs(z-BAD_POS_VALUE)>1e-10 )
+    {
+        state.flag().set(ngpt::satellite_state_flag::flag_type::no_velocity);
+    } else {
+        state.vx() = x;
+        state.vy() = y;
+        state.vz() = z;
+    }
+
+    if ( c >= BAD_CLK_VALUE ) {
+        clkcor.flag().set(ngpt::satellite_clock_flag::flag_type::no_velocity);
+    } else {
+        clkcor.c() = c;
+    }
+    
+    long   idev_x = std::strtol(line+61, &chr, 10);
+    double sdev_x = std::pow(this->_base_for_pos, (double)idev_x);
+    long   idev_y = std::strtol(line+64, &chr, 10);
+    double sdev_y = std::pow(this->_base_for_pos, (double)idev_y);
+    long   idev_z = std::strtol(line+67, &chr, 10);
+    double sdev_z = std::pow(this->_base_for_pos, (double)idev_z);
+    long   idev_c = std::strtol(line+70, &chr, 10);
+    double sdev_c = std::pow(this->_base_for_clk, (double)idev_c);
+    
+    if ( errno == ERANGE ) {
+        errno = prev_errno;
+        return -1;
+    }
+
+    if (   idev_x >= BAD_EXP_VALUE
+        || idev_y >= BAD_EXP_VALUE 
+        || idev_z >= BAD_EXP_VALUE )
+    {
+        state.flag().set(ngpt::satellite_state_flag::flag_type::no_vel_acc);
+    } else {
+        state.svx() = sdev_x;
+        state.svy() = sdev_y;
+        state.svz() = sdev_z;
+    }
+    
+    if ( idev_c >= BAD_EXP_VALUE ) {
+        clkcor.flag().set(ngpt::satellite_clock_flag::flag_type::no_vel_acc);
+    } else {
+        clkcor.svc() = sdev_c;
+    }
 
     // All done
     return 0;

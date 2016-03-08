@@ -33,10 +33,18 @@ private:
     int read_header();
 
     ///
-    int read_next_pos_n_clock(ngpt::satellite&, ngpt::satellite_state&);
+    int read_next_pos_n_clock(ngpt::satellite&, ngpt::satellite_state&,
+        ngpt::satellite_clock&);
 
     ///
     int read_next_epoch_header(datetime_ms&);
+
+    ///
+    int read_next_corr();
+
+    ///
+    int read_next_vel(const ngpt::satellite, ngpt::satellite_state&,
+        ngpt::satellite_clock&);
 
     std::string     _filename;
     std::ifstream   _istream;
