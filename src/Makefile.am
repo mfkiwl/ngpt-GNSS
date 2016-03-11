@@ -30,6 +30,7 @@ dist_include_HEADERS = \
 	car2ell.hpp \
 	car2top.hpp \
 	ell2car.hpp \
+	genflags.hpp \
 	ellipsoid.hpp \
 	satellite.hpp \
 	sp3.hpp

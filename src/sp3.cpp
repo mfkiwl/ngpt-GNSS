@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <vector>
 #include "sp3.hpp"
+#include "genflags.hpp"
 
 constexpr std::size_t sat_start_idx  {9}; /// In satellite lines, the sat records start at index: 
 constexpr std::size_t sat_stop_idx   {60};/// One past-the-end index
@@ -32,6 +33,14 @@ int satellite_lines(int sat_nr) noexcept
 
 /// No header line can have more than 80 chars.
 constexpr int MAX_HEADER_CHARS { 82 };
+
+///
+typedef ngpt::satellite_state_option_flag state_flag_option;
+typedef ngpt::flag<state_flag_option>     state_flag;
+
+///
+typedef ngpt::satellite_clock_option_flag clock_flag_option;
+typedef ngpt::flag<clock_flag_option>     clock_flag;
 
 ngpt::sp3::sp3(const char* f)
     : _filename(f),
@@ -155,14 +164,15 @@ ngpt::sp3::read_header()
     */
     double eph_interval(std::strtod(line+24, &end));
     // the interval should be an INTEGER amount of milliseconds (or better seconds).
-    double float_seconds;
-    eph_interval = std::modf(eph_interval, &float_seconds);
-    if ( std::abs(float_seconds-.0e0) > 1e-8 ) {
-        std::string line_str = std::to_string(eph_interval);
+    double f_seconds, i_seconds;
+    f_seconds = std::modf(eph_interval, &i_seconds);
+    if ( std::abs(f_seconds-.0e0) > 1e-8 ) {
+        // std::cout<<"\nfloat seconds="<<float_seconds<<", integral sec="<<eph_interval;
+        std::string line_str = std::to_string(line_nr);
         throw std::runtime_error
-            ("sp3::read_header() -> Interval (in seconds) is fractional!");
+            ("sp3::read_header() -> Interval (in seconds) is fractional! #"+line_str);
     } else {
-        ngpt::milliseconds ms__ {(long)eph_interval * 1000L};
+        ngpt::milliseconds ms__ {(long)i_seconds * 1000L};
         this->_interval = ms__;
     }
     /*
@@ -178,13 +188,14 @@ ngpt::sp3::read_header()
     }
 
     // --------------------------------------
-    //  Lines #3 - #7
+    //  Lines #3 - at least #7 starting with '+ '.
     //  Read the third line and all subsequent lines that contain satellite
-    //  records (that is up to max_sat_lines=5). After this block, we will have
-    //  reached (the end of) line 7.
+    //  records. These are at least 5 lines. At the end of this block, the first
+    //  line starting with '++' should have been read.
     // --------------------------------------
-    ++line_nr;
-    if ( !_istream.getline(line, MAX_HEADER_CHARS) ) {
+    if ( !line_nr 
+        || !_istream.getline(line, MAX_HEADER_CHARS)
+        || std::strncmp(line, "+ ", 2) ) {
 #ifdef DEBUG
         std::string line_str = std::to_string(line_nr);
         throw std::runtime_error
@@ -198,7 +209,7 @@ ngpt::sp3::read_header()
     std::size_t sat_lines = satellite_lines(num_of_sats);
     assert( sat_lines <= sats_max_lines );
     sat_vector.reserve(num_of_sats);
-    while ( line_nr < 7 ) {
+    while ( !std::strncmp(line, "+ ", 2) ) {
         if ( sat_vector.size() < num_of_sats ) {
             for (cptr = line+sat_start_idx; cptr<line+sat_stop_idx; cptr+=3) {
                 sat_vector.emplace_back(cptr);
@@ -219,13 +230,12 @@ ngpt::sp3::read_header()
     this->_sat_vec = std::move(sat_vector);
     
     // --------------------------------------
-    //  Lines #8 - #12
-    //  Read the eighth third line and all subsequent lines that contain satellite
-    //  accuracy records (that is up to max_sat_lines=5). After this block, we will have
-    //  reached (the end of) line 12.
+    //  Lines #? - #?
+    //  Read all subsequent lines that contain satellite
+    //  accuracy records (that is starting with '++'). After this block, we 
+    //  will have reached the first line starting the string '%c'
     // --------------------------------------
-    ++line_nr;
-    if ( !_istream.getline(line, MAX_HEADER_CHARS) ) {
+    if ( std::strncmp(line, "++", 2) ) {
 #ifdef DEBUG
         std::string line_str = std::to_string(line_nr);
         throw std::runtime_error
@@ -235,7 +245,7 @@ ngpt::sp3::read_header()
     }
     std::vector<short int> sat_acc;
     sat_acc.reserve(num_of_sats);
-    while ( line_nr < 12 ) {
+    while ( !std::strncmp(line, "++", 2) ) {
         if ( sat_acc.size() < num_of_sats ) {
             for (cptr = line+sat_start_idx; cptr<line+sat_stop_idx; cptr+=3) {
                 std::memcpy(ints, cptr, 3);
@@ -258,10 +268,9 @@ ngpt::sp3::read_header()
     this->_sat_acc = std::move(sat_acc);
 
     // --------------------------------------
-    //  Read line #13
+    //  Read line #?
     // --------------------------------------
-    ++line_nr;
-    if ( !_istream.getline(line, MAX_HEADER_CHARS) ) {
+    if ( std::strncmp(line, "%c", 2) ) {
 #ifdef DEBUG
         std::string line_str = std::to_string(line_nr);
         throw std::runtime_error
@@ -285,10 +294,11 @@ ngpt::sp3::read_header()
     std::memcpy(ints, line+9, 3);
     
     // --------------------------------------
-    //  Read line #14
+    //  Read line #?
     // -------------------------------------
     ++line_nr;
-    if ( !_istream.getline(line, MAX_HEADER_CHARS) ) {
+    if ( !_istream.getline(line, MAX_HEADER_CHARS) 
+        || std::strncmp(line, "%c", 2) ) {
 #ifdef DEBUG
         std::string line_str = std::to_string(line_nr);
         throw std::runtime_error
@@ -298,10 +308,11 @@ ngpt::sp3::read_header()
     }
     
     // --------------------------------------
-    //  Read line #15
+    //  Read line #?
     // -------------------------------------
     ++line_nr;
-    if ( !_istream.getline(line, MAX_HEADER_CHARS) ) {
+    if ( !_istream.getline(line, MAX_HEADER_CHARS) 
+        || std::strncmp(line, "%f", 2) ) {
 #ifdef DEBUG
         std::string line_str = std::to_string(line_nr);
         throw std::runtime_error
@@ -320,14 +331,40 @@ ngpt::sp3::read_header()
 #endif
         return 1;
     }
+    if ( !++line_nr 
+        || !_istream.getline(line, MAX_HEADER_CHARS) 
+        || std::strncmp(line, "%f", 2) ) {
+#ifdef DEBUG
+        std::string line_str = std::to_string(line_nr);
+        throw std::runtime_error
+            ("sp3::read_header() -> Failed reading line #"+ line_str);
+#endif
+        return 1;
+    }
     
     // --------------------------------------
-    //  Read lines #16 - #22
-    //  Lines [16-22], hold no information; read them without stoping or
-    //  verifying.
+    //  Read lines #? - #? starting with '%i'
     // -------------------------------------
-    for (int i = 16; i < 23; ++i) {
-        if ( !(++line_nr) || !_istream.getline(line, MAX_HEADER_CHARS) ) {
+    for (int i = 0; i < 2; ++i) {
+        if ( !(++line_nr)
+            || !_istream.getline(line, MAX_HEADER_CHARS)
+            || strncmp(line, "%i", 2) ) {
+#ifdef DEBUG
+            std::string line_str = std::to_string(line_nr);
+            throw std::runtime_error
+                ("sp3::read_header() -> Failed reading line #"+ line_str);
+#endif
+            return 1;
+        }
+    }
+
+    // --------------------------------------
+    //  Read lines #? - #? starting with '/*' i.e. comment lines
+    // -------------------------------------
+    while ( _istream.peek() == '/' ) {
+        if ( !(++line_nr)
+            || !_istream.getline(line, MAX_HEADER_CHARS)
+            || strncmp(line, "/*", 2) ) {
 #ifdef DEBUG
             std::string line_str = std::to_string(line_nr);
             throw std::runtime_error
@@ -350,6 +387,38 @@ ngpt::sp3::read_header()
     return 0;
 }
 
+int
+ngpt::sp3::get_next_epoch(datetime_ms& epoch, std::vector<satellite> sats,
+        std::vector<satellite_state>& states,
+        std::vector<satellite_clock>& clocks)
+{
+    if ( !_istream.good() ) { return -1; }
+    
+    ngpt::satellite sat;
+    ngpt::satellite_state state;
+    ngpt::satellite_clock clock;
+    int status;
+
+    // read next epoch
+    status = this->read_next_epoch_header(epoch);
+    std::cout<<"\nNew epoch, status = "<<status<<", epoch: "<<epoch.stringify();
+    if ( status ) { return status; }
+    
+    // read records for the epoch
+    char c = _istream.peek();
+    while ( c == 'P' ) {
+        if ( this->read_next_pos_n_clock(sat, state, clock) ) {
+            return 1;
+        }
+        sats.push_back(sat);
+        states.emplace_back(std::move(state));
+        clocks.emplace_back(std::move(clock));
+        c = _istream.peek();
+    }
+
+    return 0;
+}
+
 ///
 /// Exit status:
 /// < 0 -> conversion error
@@ -366,8 +435,8 @@ ngpt::sp3::read_next_pos_n_clock(ngpt::satellite& sat,
     static char num[15];
     std::size_t num_digits = 14;
     int prev_errno = errno;
-    ngpt::satellite_state_flag pos_flag {satellite_state_flag::flag_type::no_velocity};
-    ngpt::satellite_clock_flag clk_flag {satellite_clock_flag::flag_type::no_velocity};
+    state_flag pos_flag {state_flag_option::no_velocity};
+    clock_flag clk_flag {clock_flag_option::no_velocity};
     char *chr;
 
     if ( !_istream.getline(line, MAX_HEADER_CHARS) || *line != 'P' )
@@ -400,12 +469,10 @@ ngpt::sp3::read_next_pos_n_clock(ngpt::satellite& sat,
         || std::abs(y-BAD_POS_VALUE)>1e-10
         || std::abs(z-BAD_POS_VALUE)>1e-10 )
     {
-        pos_flag.set(ngpt::satellite_state_flag::flag_type::bad_or_absent);
+        pos_flag.set(state_flag_option::bad_or_absent);
     }
 
-    if ( c >= BAD_CLK_VALUE ) {
-        clk_flag.set(ngpt::satellite_clock_flag::flag_type::bad_or_absent);
-    }
+    if ( c >= BAD_CLK_VALUE ) { clk_flag.set(clock_flag_option::bad_or_absent); }
     
     long   idev_x = std::strtol(line+61, &chr, 10);
     double sdev_x = std::pow(this->_base_for_pos, (double)idev_x);
@@ -425,28 +492,18 @@ ngpt::sp3::read_next_pos_n_clock(ngpt::satellite& sat,
         || idev_y >= BAD_EXP_VALUE 
         || idev_z >= BAD_EXP_VALUE )
     {
-        pos_flag.set(ngpt::satellite_state_flag::flag_type::unknown_acc);
+        pos_flag.set(state_flag_option::unknown_acc);
     }
     
-    if ( idev_c >= BAD_EXP_VALUE ) {
-        clk_flag.set(ngpt::satellite_clock_flag::flag_type::unknown_acc);
-    }
+    if ( idev_c >= BAD_EXP_VALUE ) { clk_flag.set(clock_flag_option::unknown_acc); }
 
-    if ( line[74] == 'E' ) {
-        clk_flag.set(ngpt::satellite_clock_flag::flag_type::discontinuity);
-    }
+    if ( line[74] == 'E' ) { clk_flag.set(clock_flag_option::discontinuity); }
 
-    if ( line[75] == 'P' ) {
-        clk_flag.set(ngpt::satellite_clock_flag::flag_type::prediction);
-    }
+    if ( line[75] == 'P' ) { clk_flag.set(clock_flag_option::prediction); }
     
-    if ( line[78] == 'M' ) {
-        pos_flag.set(ngpt::satellite_state_flag::flag_type::maneuver);
-    }
+    if ( line[78] == 'M' ) { pos_flag.set(state_flag_option::maneuver); }
 
-    if ( line[79] == 'P' ) {
-        pos_flag.set(ngpt::satellite_state_flag::flag_type::prediction);
-    }
+    if ( line[79] == 'P' ) { pos_flag.set(state_flag_option::prediction); }
 
     ngpt::satellite_state tmp_state {x, y, z, sdev_x, sdev_y, sdev_z, pos_flag};
     state = std::move(tmp_state);
@@ -458,7 +515,7 @@ ngpt::sp3::read_next_pos_n_clock(ngpt::satellite& sat,
     // or velocity record, read it
     int  status;
     char next[2];
-    while ( _istream.get(next, 2) ) {
+    while ( _istream.get(next, 3) ) { /* basic_istream& get( char_type* s, std::streamsize count ) reads at most count-1 characters */
         _istream.unget(/*next[1]*/);
         _istream.unget(/*next[0]*/);
         if ( next[0] == 'E' &&( next[1] == 'P' || next[1] == 'V') ) {
@@ -536,7 +593,7 @@ ngpt::sp3::read_next_vel(const ngpt::satellite s,
         || std::abs(y-BAD_POS_VALUE)>1e-10
         || std::abs(z-BAD_POS_VALUE)>1e-10 )
     {
-        state.flag().set(ngpt::satellite_state_flag::flag_type::no_velocity);
+        state.flag().set(state_flag_option::no_velocity);
     } else {
         state.vx() = x;
         state.vy() = y;
@@ -544,7 +601,7 @@ ngpt::sp3::read_next_vel(const ngpt::satellite s,
     }
 
     if ( c >= BAD_CLK_VALUE ) {
-        clkcor.flag().set(ngpt::satellite_clock_flag::flag_type::no_velocity);
+        clkcor.flag().set(clock_flag_option::no_velocity);
     } else {
         clkcor.c() = c;
     }
@@ -567,7 +624,7 @@ ngpt::sp3::read_next_vel(const ngpt::satellite s,
         || idev_y >= BAD_EXP_VALUE 
         || idev_z >= BAD_EXP_VALUE )
     {
-        state.flag().set(ngpt::satellite_state_flag::flag_type::no_vel_acc);
+        state.flag().set(state_flag_option::no_vel_acc);
     } else {
         state.svx() = sdev_x;
         state.svy() = sdev_y;
@@ -575,7 +632,7 @@ ngpt::sp3::read_next_vel(const ngpt::satellite s,
     }
     
     if ( idev_c >= BAD_EXP_VALUE ) {
-        clkcor.flag().set(ngpt::satellite_clock_flag::flag_type::no_vel_acc);
+        clkcor.flag().set(clock_flag_option::no_vel_acc);
     } else {
         clkcor.svc() = sdev_c;
     }
@@ -584,6 +641,8 @@ ngpt::sp3::read_next_vel(const ngpt::satellite s,
     return 0;
 }
 
+
+/// A return value of 999 signals EOF
 int
 ngpt::sp3::read_next_epoch_header(datetime_ms& date)
 {
@@ -594,6 +653,7 @@ ngpt::sp3::read_next_epoch_header(datetime_ms& date)
 
     if ( !_istream.getline(line, MAX_HEADER_CHARS) || *line != '*' )
     {
+        if ( !std::strncmp(line, "EOF", 3) ) { return 999; }
         return 1;
     }
 

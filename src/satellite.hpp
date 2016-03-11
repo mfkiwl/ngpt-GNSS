@@ -3,6 +3,7 @@
 
 #include <type_traits>
 #include "satsys.hpp"
+#include "genflags.hpp"
 
 namespace ngpt
 {
@@ -38,53 +39,29 @@ private:
     int                    _prn;
 }; // satellite
 
-
-/// Enumeration type to classify a satellite state vector.
-class satellite_state_flag
+/// A satellite state vector can be:
+enum class satellite_state_option_flag
+    : int
 {
-public:
-    /// underlying enumeration type.
-    typedef int flag_integral_type;
-private:
-    /// The actual flag
-    flag_integral_type _flag;
-public:
-    /// A satellite state vector can be:
-    enum class flag_type : flag_integral_type
-    {
-        bad_or_absent = 1,
-        unknown_acc   = 2,
-        maneuver      = 4,
-        prediction    = 8,
-        no_velocity   = 16,
-        no_vel_acc    = 32
-    };
-    /// Default constructor (nothing set)
-    explicit satellite_state_flag() : _flag{0} {};
-    /// Constructor from state
-    explicit satellite_state_flag(flag_type f)
-        : _flag(static_cast<flag_integral_type>(f))
-    {}
-    /// Cast to (flag) underlying type
-    flag_integral_type as_integral() const noexcept { return _flag; }
-    /// Set a flag
-    void set(flag_type f) noexcept
-    { _flag |= static_cast<flag_integral_type>(f); }
-    /// Clear a flag
-    void clear(flag_type f) noexcept
-    { _flag &= ~(static_cast<flag_integral_type>(f)); }
-    /// Check if a flag is set
-    bool check(flag_type f) const noexcept
-    { return _flag & static_cast<flag_integral_type>(f); }
-
-}; // satellite_position_flag
+    bad_or_absent = 1,
+    unknown_acc   = 2,
+    maneuver      = 4,
+    prediction    = 8,
+    no_velocity   = 16,
+    no_vel_acc    = 32
+};
 
 class satellite_state
 {
 public:
-    explicit satellite_state(double x, double y, double z,
+    typedef ngpt::satellite_state_option_flag flag_option;
+    typedef ngpt::flag<flag_option>           state_flag;
+
+public:
+    explicit satellite_state(double x=.0f, double y=.0f, double z=.0f,
               double sx=.0f, double sy=.0f, double sz=.0f,
-              satellite_state_flag f=satellite_state_flag{},
+              /*flag_option f=flag_option::bad_or_absent,*/
+              state_flag f=state_flag(),
               double vx=.0f, double vy=.0f, double vz=.0f,
               double svx=.0f, double svy=.0f, double svz=.0f)
     noexcept
@@ -93,9 +70,8 @@ public:
           _flag{f}
     {}
 
-    satellite_state_flag& flag()       noexcept { return _flag; }
-    satellite_state_flag  flag() const noexcept { return _flag; }
-
+    state_flag& flag()       noexcept { return _flag; }
+    state_flag  flag() const noexcept { return _flag; }
     double&   x()       noexcept { return _x; }
     double    x() const noexcept { return _x; }
     double&   y()       noexcept { return _y; }
@@ -126,63 +102,40 @@ private:
     double _sx,  _sy,  _sz;
     double _vx,  _vy,  _vz;
     double _svx, _svy, _svz;
-    satellite_state_flag _flag;
+    state_flag _flag;
 
 }; // satellite_state
 
-/// Enumeration type to classify a satellite clock information (correction).
-class satellite_clock_flag
+/// A satellite clock state vector can be:
+enum class satellite_clock_option_flag
+    : int
 {
-public:
-    /// underlying enumeration type.
-    typedef int flag_integral_type;
-private:
-    /// The actual flag
-    flag_integral_type _flag;
-public:
-    /// A satellite state vector can be:
-    enum class flag_type : flag_integral_type
-    {
-        bad_or_absent = 1,
-        unknown_acc   = 2,
-        discontinuity = 4,
-        prediction    = 8,
-        no_velocity   = 16,
-        no_vel_acc    = 32
-    };
-    /// Default constructor (nothing set)
-    explicit satellite_clock_flag() : _flag{0} {};
-    /// Constructor from state
-    explicit satellite_clock_flag(flag_type f)
-        : _flag(static_cast<flag_integral_type>(f))
-    {}
-    /// Cast to (flag) underlying type
-    flag_integral_type as_integral() const noexcept { return _flag; }
-    /// Set a flag
-    void set(flag_type f) noexcept
-    { _flag |= static_cast<flag_integral_type>(f); }
-    /// Clear a flag
-    void clear(flag_type f) noexcept
-    { _flag &= ~(static_cast<flag_integral_type>(f)); }
-    /// Check if a flag is set
-    bool check(flag_type f) const noexcept
-    { return _flag & static_cast<flag_integral_type>(f); }
-
-}; // satellite_clock_flag
+    bad_or_absent = 1,
+    unknown_acc   = 2,
+    discontinuity = 4,
+    prediction    = 8,
+    no_velocity   = 16,
+    no_vel_acc    = 32
+};
 
 /// A class to hold a satellite's clock correction (and drift).
 class satellite_clock
 {
 public:
-    explicit satellite_clock(double c, double sc=.0f,
-                satellite_clock_flag f=satellite_clock_flag{},
+    typedef ngpt::satellite_clock_option_flag flag_option;
+    typedef ngpt::flag<flag_option>           clock_flag;
+
+public:
+    explicit satellite_clock(double c=.0f, double sc=.0f,
+                /*flag_option f=satellite_clock_option_flag::bad_or_absent,*/
+                clock_flag f=clock_flag(),
                 double vc=.0f, double svc=.0f)
     noexcept
         : _c{c}, _sc{sc}, _vc{vc}, _svc{svc}, _flag{f}
     {}
     
-    satellite_clock_flag& flag()       noexcept { return _flag; }
-    satellite_clock_flag  flag() const noexcept { return _flag; }
+    clock_flag& flag()       noexcept { return _flag; }
+    clock_flag  flag() const noexcept { return _flag; }
     double&   c()       noexcept { return _c; }
     double    c() const noexcept { return _c; }
     double&  sc()       noexcept { return _sc; }
@@ -195,7 +148,7 @@ public:
 private:
     double _c,  _sc;
     double _vc, _svc;
-    satellite_clock_flag _flag;
+    clock_flag _flag;
 }; // satellite_clock
 
 } // ngpt

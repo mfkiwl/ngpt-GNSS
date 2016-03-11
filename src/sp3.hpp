@@ -28,8 +28,11 @@ public:
     /// Assignment not allowed.
     sp3& operator=(const sp3&) = delete;
 
+    int         num_of_epochs() const noexcept { return _num_of_epochs; }
+    std::size_t num_of_sats()   const noexcept { return _sat_vec.size(); }
+
     /// get next epoch off from the sp3 file
-    int get_next_epoch(datetime&, std::vector<satellite>,
+    int get_next_epoch(datetime_ms&, std::vector<satellite>,
         std::vector<satellite_state>&,
         std::vector<satellite_clock>&);
 
