@@ -14,7 +14,8 @@ using ngpt::gnss_obs_details::_rawobs_;
 char
 ngpt::obstype_to_char(ngpt::observable_type ot)
 {
-    switch ( ot ) {
+    switch ( ot )
+    {
         case ngpt::observable_type::pseudorange             :  return 'C';
         case ngpt::observable_type::carrier_phase           :  return 'L';
         case ngpt::observable_type::doppler                 :  return 'D';
@@ -37,7 +38,8 @@ ngpt::observable_type
 ngpt::char_to_obstype(char c)
 {
 
-    switch ( c ) {
+    switch ( c )
+    {
         case 'C' : return ngpt::observable_type::pseudorange;
         case 'L' : return ngpt::observable_type::carrier_phase;
         case 'D' : return ngpt::observable_type::doppler;

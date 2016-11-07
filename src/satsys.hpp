@@ -59,16 +59,10 @@ namespace ngpt
 /// \note Each of the enumerations recorded here, should have a specialized
 ///       ngpt::satellite_system_traits<> template.
 ///
-enum class satellite_system : char
+enum class satellite_system
+: char
 {
-    gps,
-    glonass,
-    sbas,
-    galileo,
-    beidou,
-    qzss,
-    irnss,
-    mixed
+    gps, glonass, sbas, galileo, beidou, qzss, irnss, mixed
 };
 
 /// Traits for Satellite Systems. A collection of satellite system - specific
@@ -78,146 +72,146 @@ enum class satellite_system : char
 ///
 template<satellite_system S>
     struct satellite_system_traits
-    {};
+{};
 
 /// Specialize traits for Satellite System Gps
 template<>
     struct satellite_system_traits<satellite_system::gps>
-    {
-        /// Identifier
-        static constexpr char identifier { 'G' };
+{
+    /// Identifier
+    static constexpr char identifier { 'G' };
 
-        /// Dictionary holding pairs of <frequency band, freq. value>.
-        static const std::map<int, double> frequency_map;
-       
-        /// Dictionary holding pairs of <frequency band, std::string>. The
-        /// string is a seqeuence of (the **only**) valid attributes for
-        /// each frequency band.
-        static const std::map<int, std::string> valid_atributes;
-    };
+    /// Dictionary holding pairs of <frequency band, freq. value>.
+    static const std::map<int, double> frequency_map;
+
+    /// Dictionary holding pairs of <frequency band, std::string>. The
+    /// string is a seqeuence of (the **only**) valid attributes for
+    /// each frequency band.
+    static const std::map<int, std::string> valid_atributes;
+};
 
 /// Specialize traits for Satellite System Glonass
 template<>
     struct satellite_system_traits<satellite_system::glonass>
-    {
-        /// Identifier
-        static constexpr char identifier { 'R' };
+{
+    /// Identifier
+    static constexpr char identifier { 'R' };
 
-        /// Dictionary holding pairs of <frequency band, freq. value>.
-        static const std::map<int, double> frequency_map;
-        
-        /// Dictionary holding pairs of <frequency band, std::string>. The
-        /// string is a seqeuence of (the **only**) valid attributes for
-        /// each frequency band.
-        static const std::map<int, std::string> valid_atributes;
-    };
+    /// Dictionary holding pairs of <frequency band, freq. value>.
+    static const std::map<int, double> frequency_map;
+    
+    /// Dictionary holding pairs of <frequency band, std::string>. The
+    /// string is a seqeuence of (the **only**) valid attributes for
+    /// each frequency band.
+    static const std::map<int, std::string> valid_atributes;
+};
 
 /// Specialize traits for Satellite System Galileo
 template<>
     struct satellite_system_traits<satellite_system::galileo>
-    {
-        /// Identifier
-        static constexpr char identifier { 'E' };
+{
+    /// Identifier
+    static constexpr char identifier { 'E' };
 
-        /// Dictionary holding pairs of <frequency band, freq. value>.
-        static const std::map<int, double> frequency_map;
-        
-        /// Dictionary holding pairs of <frequency band, std::string>. The
-        /// string is a seqeuence of (the **only**) valid attributes for
-        /// each frequency band.
-        static const std::map<int, std::string> valid_atributes;
-    };
+    /// Dictionary holding pairs of <frequency band, freq. value>.
+    static const std::map<int, double> frequency_map;
+    
+    /// Dictionary holding pairs of <frequency band, std::string>. The
+    /// string is a seqeuence of (the **only**) valid attributes for
+    /// each frequency band.
+    static const std::map<int, std::string> valid_atributes;
+};
 
 /// Specialize traits for Satellite System SBAS
 template<>
     struct satellite_system_traits<satellite_system::sbas>
-    {
-        /// Identifier
-        static constexpr char identifier { 'S' };
+{
+    /// Identifier
+    static constexpr char identifier { 'S' };
 
-        /// Dictionary holding pairs of <frequency band, freq. value>.
-        static const std::map<int, double> frequency_map;
-        
-        /// Dictionary holding pairs of <frequency band, std::string>. The
-        /// string is a seqeuence of (the **only**) valid attributes for
-        /// each frequency band.
-        static const std::map<int, std::string> valid_atributes;
-    };
+    /// Dictionary holding pairs of <frequency band, freq. value>.
+    static const std::map<int, double> frequency_map;
+
+    /// Dictionary holding pairs of <frequency band, std::string>. The
+    /// string is a seqeuence of (the **only**) valid attributes for
+    /// each frequency band.
+    static const std::map<int, std::string> valid_atributes;
+};
 
 /// Specialize traits for Satellite System QZSS
 template<>
     struct satellite_system_traits<satellite_system::qzss>
-    {
-        /// Identifier
-        static constexpr char identifier { 'J' };
+{
+    /// Identifier
+    static constexpr char identifier { 'J' };
 
-        /// Dictionary holding pairs of <frequency band, freq. value>.
-        static const std::map<int, double> frequency_map;
-        
-        /// Dictionary holding pairs of <frequency band, std::string>. The
-        /// string is a seqeuence of (the **only**) valid attributes for
-        /// each frequency band.
-        static const std::map<int, std::string> valid_atributes;
-    };
+    /// Dictionary holding pairs of <frequency band, freq. value>.
+    static const std::map<int, double> frequency_map;
+
+    /// Dictionary holding pairs of <frequency band, std::string>. The
+    /// string is a seqeuence of (the **only**) valid attributes for
+    /// each frequency band.
+    static const std::map<int, std::string> valid_atributes;
+};
 
 /// Specialize traits for Satellite System BDS
 template<>
     struct satellite_system_traits<satellite_system::beidou>
-    {
-        /// Identifier
-        static constexpr char identifier { 'C' };
+{
+    /// Identifier
+    static constexpr char identifier { 'C' };
 
-        /// Dictionary holding pairs of <frequency band, freq. value>.
-        static const std::map<int, double> frequency_map;
-        
-        /// Dictionary holding pairs of <frequency band, std::string>. The
-        /// string is a seqeuence of (the **only**) valid attributes for
-        /// each frequency band.
-        static const std::map<int, std::string> valid_atributes;
-    };
+    /// Dictionary holding pairs of <frequency band, freq. value>.
+    static const std::map<int, double> frequency_map;
+
+    /// Dictionary holding pairs of <frequency band, std::string>. The
+    /// string is a seqeuence of (the **only**) valid attributes for
+    /// each frequency band.
+    static const std::map<int, std::string> valid_atributes;
+};
 
 /// Specialize traits for Satellite System IRNSS
 template<>
     struct satellite_system_traits<satellite_system::irnss>
-    {
-        /// Identifier
-        static constexpr char identifier { 'I' };
+{
+    /// Identifier
+    static constexpr char identifier { 'I' };
 
-        /// Dictionary holding pairs of <frequency band, freq. value>.
-        static const std::map<int, double> frequency_map;
-        
-        /// Dictionary holding pairs of <frequency band, std::string>. The
-        /// string is a seqeuence of (the **only**) valid attributes for
-        /// each frequency band.
-        static const std::map<int, std::string> valid_atributes;
-    };
+    /// Dictionary holding pairs of <frequency band, freq. value>.
+    static const std::map<int, double> frequency_map;
+
+    /// Dictionary holding pairs of <frequency band, std::string>. The
+    /// string is a seqeuence of (the **only**) valid attributes for
+    /// each frequency band.
+    static const std::map<int, std::string> valid_atributes;
+};
 
 /// Specialize traits for Satellite System MIXED
 template<>
     struct satellite_system_traits<satellite_system::mixed>
-    {
-        /// Identifier
-        static constexpr char identifier { 'M' };
+{
+    /// Identifier
+    static constexpr char identifier { 'M' };
 
-        /// Number of frequency bands.
-        static const std::size_t num_of_bands { 0 };
-        
-        /// Dictionary holding pairs of <frequency band, std::string>. The
-        /// string is a seqeuence of (the **only**) valid attributes for
-        /// each frequency band.
-        static const std::map<int, std::string> valid_atributes;
-    };
+    /// Number of frequency bands.
+    static const std::size_t num_of_bands { 0 };
+
+    /// Dictionary holding pairs of <frequency band, std::string>. The
+    /// string is a seqeuence of (the **only**) valid attributes for
+    /// each frequency band.
+    static const std::map<int, std::string> valid_atributes;
+};
 
 /// Given a satellite system, return its identifier (i.e. the <em>identifying
 /// char</em>).
-char satsys_identifier( satellite_system );
+char satsys_identifier(satellite_system);
 
 /// Given a char (i.e. the <em>identifyingchar</em>), return the corresponding 
 /// satellite system.
-satellite_system char_to_satsys( char );
+satellite_system char_to_satsys(char);
 
 /// Given a frequency band (index) and a satellite system, return the nominal 
-/// frequency value.
+/// frequency value (Hz).
 double nominal_frequency(int band, satellite_system s);
 
 } // end namespace

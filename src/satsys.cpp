@@ -1,12 +1,10 @@
 #include <stdexcept>
 #include "satsys.hpp"
 
-typedef std::map<int, double>      idmap;
-typedef std::map<int, std::string> vamap;
-
-/// Initialize the static frequency map for GPS.
-const idmap
-ngpt::satellite_system_traits<ngpt::satellite_system::gps>::frequency_map =
+/// Initialize the static frequency map for GPS. Values are {index, frequency}.
+const std::map<int, double>
+ngpt::satellite_system_traits<ngpt::satellite_system::gps>
+    ::frequency_map =
 {
     { 1, 1575.42e0 },
     { 2, 1227.60e0 },
@@ -14,8 +12,9 @@ ngpt::satellite_system_traits<ngpt::satellite_system::gps>::frequency_map =
 };
 
 /// Initialize the static frequency map for GPS.
-const vamap
-ngpt::satellite_system_traits<ngpt::satellite_system::gps>::valid_atributes =
+const std::map<int, std::string>
+ngpt::satellite_system_traits<ngpt::satellite_system::gps>
+    ::valid_atributes =
 {
     { 1, std::string("CSLXPWYMN?" ) },
     { 2, std::string("CDSLXPWYMN?") },
@@ -23,16 +22,18 @@ ngpt::satellite_system_traits<ngpt::satellite_system::gps>::valid_atributes =
 };
 
 /// Initialize the static frequency map for GLONASS.
-const idmap
-ngpt::satellite_system_traits<ngpt::satellite_system::glonass>::frequency_map =
+const std::map<int, double>
+ngpt::satellite_system_traits<ngpt::satellite_system::glonass>
+    ::frequency_map =
 {
     { 1, 1602.000e0 },
     { 2, 1246.000e0 },
     { 3, 1202.025e0 }
 };
 
-const vamap
-ngpt::satellite_system_traits<ngpt::satellite_system::glonass>::valid_atributes =
+const std::map<int, std::string>
+ngpt::satellite_system_traits<ngpt::satellite_system::glonass>
+    ::valid_atributes =
 {
     { 1, std::string("CP?" ) },
     { 2, std::string("CP?" ) },
@@ -40,8 +41,9 @@ ngpt::satellite_system_traits<ngpt::satellite_system::glonass>::valid_atributes 
 };
 
 /// Initialize the static frequency map for GALILEO.
-const idmap
-ngpt::satellite_system_traits<ngpt::satellite_system::galileo>::frequency_map =
+const std::map<int, double>
+ngpt::satellite_system_traits<ngpt::satellite_system::galileo>
+    ::frequency_map =
 {
     { 1, 1575.420e0 }, ///< E1
     { 5, 1176.450e0 }, ///< E5a
@@ -50,8 +52,9 @@ ngpt::satellite_system_traits<ngpt::satellite_system::galileo>::frequency_map =
     { 6, 1278.750e0 }  ///< E6
 };
 
-const vamap
-ngpt::satellite_system_traits<ngpt::satellite_system::galileo>::valid_atributes =
+const std::map<int, std::string>
+ngpt::satellite_system_traits<ngpt::satellite_system::galileo>
+    ::valid_atributes =
 {
     { 1, std::string("ABCXZ?") },
     { 5, std::string("IQX?"  ) },
@@ -61,23 +64,26 @@ ngpt::satellite_system_traits<ngpt::satellite_system::galileo>::valid_atributes 
 };
 
 /// Initialize the static frequency map for SBAS.
-const idmap
-ngpt::satellite_system_traits<ngpt::satellite_system::sbas>::frequency_map =
+const std::map<int, double>
+ngpt::satellite_system_traits<ngpt::satellite_system::sbas>
+    ::frequency_map =
 {
     { 1, 1575.42e0 },
     { 5, 1176.45e0 }
 };
 
-const vamap
-ngpt::satellite_system_traits<ngpt::satellite_system::sbas>::valid_atributes =
+const std::map<int, std::string>
+ngpt::satellite_system_traits<ngpt::satellite_system::sbas>
+    ::valid_atributes =
 {
     { 1, std::string("C?"  ) },
     { 5, std::string("IQX?") }
 };
 
 /// Initialize the static frequency map for QZSS.
-const idmap
-ngpt::satellite_system_traits<ngpt::satellite_system::qzss>::frequency_map =
+const std::map<int, double>
+ngpt::satellite_system_traits<ngpt::satellite_system::qzss>
+    ::frequency_map =
 {
     { 1, 1575.42e0 },
     { 2, 1227.60e0 },
@@ -85,8 +91,9 @@ ngpt::satellite_system_traits<ngpt::satellite_system::qzss>::frequency_map =
     { 6, 1278.75e0 } ///< LEX
 };
 
-const vamap
-ngpt::satellite_system_traits<ngpt::satellite_system::qzss>::valid_atributes =
+const std::map<int, std::string>
+ngpt::satellite_system_traits<ngpt::satellite_system::qzss>
+    ::valid_atributes =
 {
     { 1, std::string("CSLXZ?") },
     { 2, std::string("SLX?"  ) },
@@ -95,16 +102,18 @@ ngpt::satellite_system_traits<ngpt::satellite_system::qzss>::valid_atributes =
 };
 
 /// Initialize the static frequency map for BDS.
-const idmap
-ngpt::satellite_system_traits<ngpt::satellite_system::beidou>::frequency_map =
+const std::map<int, double>
+ngpt::satellite_system_traits<ngpt::satellite_system::beidou>
+    ::frequency_map =
 {
     { 1, 1561.098e0 },
     { 2, 1207.140e0 },
     { 3, 1268.520e0 }
 };
 
-const vamap
-ngpt::satellite_system_traits<ngpt::satellite_system::beidou>::valid_atributes =
+const std::map<int, std::string>
+ngpt::satellite_system_traits<ngpt::satellite_system::beidou>
+    ::valid_atributes =
 {
     { 1, std::string("IQX?") },
     { 2, std::string("IQX?") },
@@ -113,15 +122,17 @@ ngpt::satellite_system_traits<ngpt::satellite_system::beidou>::valid_atributes =
 
 /// Initialize the static frequency map for IRNSS.
 /// \todo in \cite rnx303 the 2nd frequency band is denoted as 'S'
-const idmap
-ngpt::satellite_system_traits<ngpt::satellite_system::irnss>::frequency_map =
+const std::map<int, double>
+ngpt::satellite_system_traits<ngpt::satellite_system::irnss>
+    ::frequency_map =
 {
     { 5, 1176.450e0 },
     { 9, 2492.028e0 }
 };
 
-const vamap
-ngpt::satellite_system_traits<ngpt::satellite_system::irnss>::valid_atributes =
+const std::map<int, std::string>
+ngpt::satellite_system_traits<ngpt::satellite_system::irnss>
+    ::valid_atributes =
 {
     { 5, std::string("ABCX?") },
     { 9, std::string("ABCX?") }
@@ -136,7 +147,8 @@ ngpt::satellite_system_traits<ngpt::satellite_system::irnss>::valid_atributes =
  *
  *  \throw       std::runtime_error if no matching satellite system is found.
  */
-char ngpt::satsys_identifier( ngpt::satellite_system s )
+char
+ngpt::satsys_identifier(ngpt::satellite_system s)
 {
     using ngpt::satellite_system;
 
@@ -181,7 +193,7 @@ char ngpt::satsys_identifier( ngpt::satellite_system s )
  *  \throw       std::runtime_error if no matching satellite system is found.
  */
 ngpt::satellite_system
-ngpt::char_to_satsys( char c )
+ngpt::char_to_satsys(char c)
 {
     using ngpt::satellite_system;
 
@@ -214,7 +226,7 @@ ngpt::char_to_satsys( char c )
  *
  *  \param[in]   band The frequency band.
  *  \param[in]   s    The satellite system.
- *  \return      The corresponding satellite system
+ *  \return           The corresponding (band/system) nominal frequency in Hz.
  *
  *  \throw       std::runtime_error if no matching satellite system or 
  *               satellite system / frequency band pair is not found.

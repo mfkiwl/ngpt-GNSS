@@ -5,8 +5,8 @@
 #include <type_traits>
 #include <tuple>
 #ifdef DEBUG
-    #include <iostream>
-    #include <string>
+#include <iostream>
+#include <string>
 #endif
 #include "satsys.hpp"
 
@@ -51,7 +51,8 @@ namespace ngpt
 
 /// Enumeration for known Obsrvation Types. This is extracted from 
 /// \cite rnx303 .
-enum class observable_type : char 
+enum class observable_type
+: char 
 {
     pseudorange,
     carrier_phase,
@@ -74,19 +75,14 @@ char_to_obstype(char);
 /// \note There is a special attribute with value '?', which describes an
 ///       unknown attribute.
 ///
-class obs_attribute
+struct obs_attribute
 {
-public:
-    explicit 
-    obs_attribute(char c = '?')
-    noexcept 
-    : c_(c) 
-    {}
+    // Default constructor.
+    explicit obs_attribute(char c = '?') noexcept : c_(c) {}
     
-    /// Assignment op; ust compare the underlying char.
+    /// Assignment op; just compare the underlying char.
     bool
-    operator==(const obs_attribute& a)
-    const noexcept 
+    operator==(const obs_attribute& a) const noexcept 
     { return (c_ == a.c_); }
 
     /// A char as defined in \cite rnx303
